@@ -1,0 +1,8 @@
+.vs
+.vscode
+.xmake
+vsxmake*
+build
+out
+CMakeSettings.json
+private/

@@ -1,0 +1,20 @@
+# find_package(CUDA REQUIRED)
+# find_package(glm REQUIRED)
+# find_package(OptiX REQUIRED)
+# include_directories("${OptiX_INCLUDE}")
+
+FILE(GLOB HostUtilsSrc Utils/HostUtils/*.cpp)
+add_library(Optix-HostUtils STATIC ${HostUtilsSrc})
+target_link_libraries(Optix-HostUtils PRIVATE spdlog::spdlog)
+
+FILE(GLOB CoreSrc Core/*.cpp)
+add_library(Optix-Core STATIC ${CoreSrc})
+target_include_directories(Optix-Core PUBLIC Core Utils)
+target_link_libraries(Optix-Core PUBLIC Optix-HostUtils spdlog::spdlog glm::glm)
+
+option(OPTIX_DEV OFF)
+if(OPTIX_DEV)
+    find_package(re2 REQUIRED)
+    target_compile_definitions(Optix-Core PRIVATE NEED_AUTO_PROGRAM_CONFIG)
+    target_link_libraries(Optix-Core PRIVATE re2::re2)
+endif()
