@@ -5,4 +5,4 @@ vsxmake*
 build
 out
 CMakeSettings.json
-private/
+private

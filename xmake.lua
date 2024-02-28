@@ -1,4 +1,5 @@
-set_project("Optix test")
+set_xmakever("2.8.2")
+set_project("Wayland")
 
 add_rules("mode.asan", "mode.debug", "mode.release", "mode.releasedbg")
 add_rules("mode.debug-dev", "mode.releasedbg-dev", "mode.release-dev")
