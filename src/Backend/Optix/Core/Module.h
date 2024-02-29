@@ -21,7 +21,6 @@ class Module
         "-m64",
         "-rdc true",
         "--use_fast_math",
-        "--std c++20",
         "--generate-line-info",
         R"(-Xcompiler "/utf-8")"
     };

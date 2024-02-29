@@ -7,7 +7,7 @@ if is_mode("release") then
     set_policy("build.optimization.lto", true)
 end
 
--- add_rules("plugin.vsxmake.autoupdate")
+add_rules("plugin.vsxmake.autoupdate")
 add_rules("plugin.compile_commands.autoupdate", {outputdir = ".vscode"})
 
 set_languages("cxxlatest")
@@ -24,4 +24,4 @@ add_requires("spdlog", {configs={std_format=true}})
 add_requires("optix", "glm")
 add_packages("cuda", "optix", "spdlog", "glm")
 
-includes("src", "private")
+includes("src")

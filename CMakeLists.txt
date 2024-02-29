@@ -4,26 +4,44 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CUDA_STANDARD 20)
 set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+set(CMAKE_BINARY_DIR build)
 
 find_package(CUDAToolkit)
 link_libraries(CUDA::cuda_driver)
 link_libraries(CUDA::cudart)
 
-file(GLOB LibPaths build/vcpkg/pkgs/*/share/*)
-
 set(CMAKE_PREFIX_PATH "${LibPaths}")
 
+include(FetchContent)
+include(ExternalProject)
+
+set(SPDLOG_USE_STD_FORMAT ON)
+if(MSVC)
+    add_compile_options(/wd4996)
+endif()
+
+FetchContent_Declare(
+  spdlog
+  GIT_REPOSITORY    https://github.com/gabime/spdlog.git
+  GIT_TAG           v1.13.0
+)
+
+FetchContent_Declare(
+  glm
+  GIT_REPOSITORY    https://github.com/g-truc/glm.git
+  GIT_TAG           1.0.1
+)
+
+FetchContent_MakeAvailable(spdlog glm)
 include_directories(SYSTEM
-    "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.3/include"
-    "D:/Work/CS/Graphics/Optix/include")
+    "${CUDAToolkit_INCLUDE_DIRS}"
+    "$ENV{OptiX_ROOT}/include")
 
 add_definitions(-DSPDLOG_USE_STD_FORMAT)
-find_package(spdlog REQUIRED)
-find_package(glm REQUIRED)
 
 # Enable UTF-8 and warnings.
 if(MSVC)
-    add_compile_options(/utf-8 /W3 /wd4996) # 4996 is warning from spdlog.
+    add_compile_options(/utf-8 /W3) # 4996 is warning from spdlog.
 else()
     add_compile_options(-fexec-charset=UTF-8 -finput-charset=UTF-8 -Wall)
 endif()
@@ -41,4 +59,3 @@ if(RELEASE)
 endif()
 
 add_subdirectory(src)
-add_subdirectory(private)

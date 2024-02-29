@@ -130,7 +130,7 @@ Module::Module(std::string_view fileName, const ModuleConfig &moduleConfig,
 {
     auto outPath = GetNewSavePath();
     std::string command = std::format(
-        "nvcc -I{} {} {} {} -o {}", s_optixSDKPath,
+        R"(nvcc -I"{}" {} {} {} -o {})", s_optixSDKPath,
         stdv::join_with(compileOptions, ' ') | stdr::to<std::string>(),
         JoinArgs(s_additionalArgs), fileName, outPath);
     auto fileContents = GetOutputFile(command.c_str(), outPath.c_str());
@@ -144,7 +144,7 @@ Module::Module(const std::vector<std::string> &fileNames,
 {
     auto outPath = GetNewSavePath();
     std::string command = std::format(
-        "nvcc -I{} {} {} {} -o {}", s_optixSDKPath,
+        R"(nvcc -I"{}" {} {} {} -o {})", s_optixSDKPath,
         stdv::join_with(compileOptions, ' ') | stdr::to<std::string>(),
         JoinArgs(s_additionalArgs),
         stdv::join_with(fileNames, ' ') | stdr::to<std::string>(), outPath);

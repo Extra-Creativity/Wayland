@@ -72,15 +72,17 @@ class PipelineConfig
 {
     OptixPipelineCompileOptions option_;
 
-    static const inline OptixPipelineCompileOptions s_defaultModuleOptions{
+    static const inline OptixPipelineCompileOptions s_defaultModuleOptions
+    {
         .usesMotionBlur = false,
         .traversableGraphFlags = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_ANY,
-        .numPayloadValues = 0,
-        .numAttributeValues = 0,
+        .numPayloadValues = 0, .numAttributeValues = 0,
         .exceptionFlags = OPTIX_EXCEPTION_FLAG_NONE,
         .pipelineLaunchParamsVariableName = "param",
         .usesPrimitiveTypeFlags = 0,
+#if OPTIX_VERSION >= 8000
         .allowOpacityMicromaps = 0
+#endif
     };
 
     constexpr PipelineConfig(const OptixPipelineCompileOptions &init_option)
@@ -119,8 +121,10 @@ public:
     DEFINE_SIMPLE_CHAINED_SETTER(ExceptionFlags, option_.exceptionFlags);
     DEFINE_SIMPLE_CHAINED_SETTER(PrimitiveTypeFlags,
                                  option_.usesPrimitiveTypeFlags);
+#if OPTIX_VERSION >= 8000
     DEFINE_SIMPLE_CHAINED_SETTER(AllowOpacityMicroMaps,
                                  option_.allowOpacityMicromaps);
+#endif
 };
 
 inline void LogProcedureInfo(std::size_t logStringSize,

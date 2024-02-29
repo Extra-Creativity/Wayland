@@ -238,7 +238,9 @@ static void FillBuildInputByInstanceDataBuffer(
     auto &info = newBuildInput.instanceArray;
     info.instances = newData.GetInstanceBufferPtr();
     info.numInstances = instanceNum;
+#if OPTIX_VERSION >= 8000
     info.instanceStride = 0;
+#endif
 }
 
 void InstanceBuildInputArray::AddBuildInput(

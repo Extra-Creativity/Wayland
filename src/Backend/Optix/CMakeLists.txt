@@ -11,7 +11,22 @@ option(OPTIX_DEV OFF)
 option(NEED_RE2 "Re2 is a fast regex library; otherwise the standard library will be used, which is much slower." OFF)
 if(OPTIX_DEV)
     if(NEED_RE2)
-        find_package(re2 REQUIRED)
+        set(ABSL_ENABLE_INSTALL ON)
+        set(ABSL_PROPAGATE_CXX_STD ON)
+        FetchContent_Declare(
+            absl
+            GIT_REPOSITORY https://github.com/abseil/abseil-cpp.git
+            GIT_TAG 20240116.1
+            OVERRIDE_FIND_PACKAGE
+        )
+        FetchContent_MakeAvailable(absl)
+
+        FetchContent_Declare(
+            re2
+            GIT_REPOSITORY    https://github.com/google/re2.git
+            GIT_TAG           2024-02-01
+        )
+        FetchContent_MakeAvailable(re2)
         target_compile_definitions(Optix-Core PRIVATE NEED_RE2)
         target_link_libraries(Optix-Core PRIVATE re2::re2)
     endif()
