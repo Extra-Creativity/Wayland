@@ -16,6 +16,7 @@ set_policy("build.warning", true)
 set_warnings("all")
 
 set_encodings("utf-8")
+set_exceptions("cxx")
 
 -- cudadevrt -> to use thrust
 -- cuda -> to use driver lib
