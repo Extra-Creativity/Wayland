@@ -3,6 +3,12 @@ if is_mode("debug") or is_mode("debug-dev") then
                 "NEED_VALID_DEVICE_POINTER_CHECK", "NEED_SAFE_INT_CHECK")
 end
 
+add_requires("re2", {optional=true})
+option("need-re2")
+    set_values(true, false)
+    set_default(false)
+    set_showmenu(true)
+
 rule("need-host-utils")
     on_load(function (target) 
         target:add("deps", "HostUtils")
@@ -22,7 +28,10 @@ rule("mode.debug-dev")
             target:set("symbols", "debug")
             target:set("optimize", "none")
             target:add("defines", "NEED_AUTO_PROGRAM_CONFIG")
-            target:add("packages", "re2")
+            if get_config("need-re2") then
+                target:add("packages", "re2")
+                target:add("defines", "NEED_RE2")
+            end
         end
     end)
 rule_end()
@@ -34,7 +43,10 @@ rule("mode.releasedbg-dev")
             target:set("optimize", "fastest")
             target:set("strip", "all")
             target:add("defines", "NEED_AUTO_PROGRAM_CONFIG")
-            target:add("packages", "re2")
+            if get_config("need-re2") then
+                target:add("packages", "re2")
+                target:add("defines", "NEED_RE2")
+            end
         end
     end)
 rule_end()
@@ -46,13 +58,14 @@ rule("mode.release-dev")
             target:set("optimize", "fastest")
             target:set("strip", "all")
             target:add("defines", "NEED_AUTO_PROGRAM_CONFIG")
-            target:add("packages", "re2")
+            if get_config("need-re2") then
+                target:add("packages", "re2")
+                target:add("defines", "NEED_RE2")
+            end
             target:set("policy", "build.optimization.lto", true)
         end
     end)
 rule_end()
-
-add_requires("re2", {optional=true})
 
 target("HostUtils")
     set_kind("static")

@@ -7,8 +7,6 @@
 #include <sstream>
 #include <type_traits>
 
-#include "re2/re2.h"
-
 #define FUNCTION_SIG_HEAD_REGEX \
     R"++(extern(?:\s+?)"C"(?:\s+?)__global__(?:\s+?)void(?:\s+?))++"
 // Function name of programs must begin with __.
@@ -18,9 +16,17 @@
 #define FUNCTION_SIG_NAME_REGEX R"((__[_0-9a-zA-Z\-]+?))"
 #define FUNCTION_SIG_END_REGEX R"((?:\s*?)\(\))"
 
+#ifdef NEED_RE2
+#include "re2/re2.h"
 static re2::RE2 s_funcRegex{
     FUNCTION_SIG_HEAD_REGEX FUNCTION_SIG_NAME_REGEX FUNCTION_SIG_END_REGEX
 };
+#else
+#include <regex>
+static std::regex s_funcRegex{
+    FUNCTION_SIG_HEAD_REGEX FUNCTION_SIG_NAME_REGEX FUNCTION_SIG_END_REGEX
+};
+#endif
 
 enum ProgramType
 {
@@ -123,11 +129,23 @@ void Module::IdentifyPrograms(const std::vector<std::string> &identifyFiles,
             continue;
         }
 
+#ifdef NEED_RE2
         re2::StringPiece view{ fileContent.view().data(), (size_t)pos };
         re2::StringPiece matchedPart;
         while (re2::RE2::FindAndConsume(&view, s_funcRegex, &matchedPart))
             ClassifyProgram({ matchedPart.data(), matchedPart.size() },
                             hitGroupInfos, *this, arr);
+#else
+        auto beginPtr = fileContent.view().data();
+        for (std::cregex_iterator it{ beginPtr, beginPtr + (size_t)pos,
+                                      s_funcRegex };
+             it != std::cregex_iterator{}; it++)
+        {
+            auto &matchedResult = (*it)[1];
+            ClassifyProgram({ matchedResult.first, matchedResult.second },
+                            hitGroupInfos, *this, arr);
+        }
+#endif
 
         fileContent.seekp(0); // restore the file content.
         // Note: we don't use fileContent.str("") because it will release the

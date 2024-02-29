@@ -24,4 +24,4 @@ add_requires("spdlog", {configs={std_format=true}})
 add_requires("optix", "glm")
 add_packages("cuda", "optix", "spdlog", "glm")
 
-includes("src")
+includes("src", "private")

@@ -17,8 +17,9 @@ include_directories(SYSTEM
     "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.3/include"
     "D:/Work/CS/Graphics/Optix/include")
 
-find_package(spdlog CONFIG REQUIRED)
-find_package(glm CONFIG REQUIRED)
+add_definitions(-DSPDLOG_USE_STD_FORMAT)
+find_package(spdlog REQUIRED)
+find_package(glm REQUIRED)
 
 # Enable UTF-8 and warnings.
 if(MSVC)
@@ -40,4 +41,4 @@ if(RELEASE)
 endif()
 
 add_subdirectory(src)
-add_subdirectory(test)
+add_subdirectory(private)
