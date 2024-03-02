@@ -2,7 +2,7 @@
 #include "CommonHeaders.h"
 #include <source_location>
 
-namespace HostUtils
+namespace Wayland::HostUtils
 {
 constexpr bool OnlyLog = true; // used by users to make it self-explainable.
 
@@ -57,4 +57,4 @@ inline void CheckError(bool, const char *log,
 }
 
 #endif
-} // namespace HostUtils
+} // namespace Wayland::HostUtils

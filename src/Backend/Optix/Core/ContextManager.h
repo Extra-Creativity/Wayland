@@ -10,6 +10,10 @@
 #include <utility>
 #include <vector>
 
+namespace Wayland::Optix
+{
+
+/// @brief Where the optix context is created.
 class ContextManager
 {
     friend class LocalContextSetter;
@@ -34,8 +38,13 @@ class ContextManager
     };
 
 public:
+    /// @brief All visible devices will be used to initialize cuda context and
+    /// optix contexts. If any device fails to do so, it will be skipped.
     ContextManager();
-    // int is to be same as CUDA APIs to represent devices.
+    /// @brief Provided visible device IDs, contexts are initialized on the
+    /// regulated devices. If the id exceeds available devices, it will be
+    /// skipped.
+    /// @note int is to be same as CUDA APIs to represent devices.
     ContextManager(std::span<const int> visibleDevices);
 
     struct ContextInfo
@@ -43,6 +52,8 @@ public:
         int deviceID;
         OptixDeviceContextWrapper context;
         CUDAStreamWrapper stream;
+        /// @brief Used to check whether managed memory can be used without
+        /// synchonizing.
         int canAsyncAccessUnifiedMemory;
     };
 
@@ -53,9 +64,12 @@ public:
     }
     int GetDeviceID(int idx) const
     {
-        return HostUtils::Access(contexts_, idx).deviceID;
+        return Wayland::HostUtils::Access(contexts_, idx).deviceID;
     }
 
+    /// @param path set cache paths of all devices to path.
+    /// @note optix has a default cache path, so it's optional to call this
+    /// method to make the whole procedures work.
     void SetCachePath(const std::string &path);
 
 private:
@@ -63,13 +77,20 @@ private:
     std::vector<ContextInfo> contexts_;
 };
 
+/// @brief almost all necessary APIs of optix needs an OptixContext, so
+/// LocalContextSetter is used to set the current active OptixContext to save
+/// troubles of passing them over and over again.
+/// @note This setter is thread-safe; each thread has its own active setter.
 class LocalContextSetter
 {
 public:
+    /// @brief Set the current active OptixContext.
+    /// @param manager the related context manager
+    /// @param idx device index.
     LocalContextSetter(ContextManager &manager, int idx)
     {
         auto deviceID = manager.GetDeviceID(idx);
-        HostUtils::CheckCUDAError(cudaSetDevice(deviceID));
+        Wayland::HostUtils::CheckCUDAError(cudaSetDevice(deviceID));
         currentContext_ = &(manager.contexts_[idx]);
     }
 
@@ -100,3 +121,5 @@ public:
 private:
     static thread_local ContextManager::ContextInfo *currentContext_;
 };
+
+} // namespace Wayland::Optix

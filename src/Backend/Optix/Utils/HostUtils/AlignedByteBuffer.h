@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <memory>
 
-namespace HostUtils
+namespace Wayland::HostUtils
 {
 
 template<typename T>
@@ -24,4 +24,4 @@ auto MakeAlignedByteBuffer(std::size_t size)
 template<typename T>
 using AlignedBufferType = decltype(MakeAlignedByteBuffer<T>(1));
 
-} // namespace HostUtils
+} // namespace Wayland::HostUtils

@@ -10,6 +10,8 @@
 
 #include "DeviceAllocators.h"
 
+using namespace Wayland;
+
 template<unsigned int... Macros>
 auto ForceClangInstantiation(
     std::integer_sequence<unsigned int, Macros...> int_seq)

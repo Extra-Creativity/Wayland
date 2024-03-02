@@ -6,6 +6,17 @@
 constexpr std::size_t s_programLogSize = 1024;
 static char s_programLog[s_programLogSize];
 
+using namespace Wayland;
+
+namespace Wayland::Optix
+{
+
+/// @brief Safely add program group, so that when the insertion fails,
+/// programNames can be correctly popped up to release memory timely. This
+/// achieves strong exception guarantee.
+/// @param desc program group description that is used to create a program
+/// group.
+/// @param popNum when insertion fails, how many names should be removed.
 void ProgramGroupArray::AddProgramGroup_(const OptixProgramGroupDesc &desc,
                                          std::size_t popNum = 1)
 {
@@ -74,10 +85,14 @@ static FillHandleType s_fillHandles[3]{
     }
 };
 
-/// @brief We don't add strict constraints since it's a private method.
-/// @param module
-/// @param names
-/// @param handle
+/// @brief Add hit program group safely (i.e. strong exception guarantee). We
+/// don't add strict constraints since it's a private method.
+/// @param module either a single module, or container of modules.
+/// @param names array of program names of hit group.
+/// @param handle a function that accepts an index (0 means IS, 1 means AH, 2
+/// means CH, same as regulations in public APIs) and names (i.e. the provided
+/// parameter here), and returns a raw name of hit program. The returned name
+/// will be pushed into the program names.
 void ProgramGroupArray::GeneralAddHitProgramGroup_(auto &&module, auto &&names,
                                                    auto &&handle)
 {
@@ -178,3 +193,5 @@ ProgramGroupArray &ProgramGroupArray::AddMissProgramGroup(const Module &module,
 {
     return AddRawMissProgramGroup(module, "__miss__" + std::string{ name });
 }
+
+} // namespace Wayland::Optix

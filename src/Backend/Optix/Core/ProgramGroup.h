@@ -6,6 +6,10 @@
 
 #include <vector>
 
+namespace Wayland::Optix
+{
+
+/// @brief Array of program group to be linked as pipeline and used SBT.
 class ProgramGroupArray
 {
     void AddProgramGroup_(const OptixProgramGroupDesc &, std::size_t);
@@ -23,21 +27,45 @@ public:
     {
         for (auto programGroup : programGroups_)
         {
-            HostUtils::CheckOptixError<HostUtils::OnlyLog>(
+            Wayland::HostUtils::CheckOptixError<Wayland::HostUtils::OnlyLog>(
                 optixProgramGroupDestroy(programGroup));
         }
     }
 
+    /// @brief Add raygen program to the array, with pure name.
+    /// @param module module that the program is in; this should be guaranteed
+    /// by the user.
+    /// @param name name without prefix (i.e.__raygen__).
+    /// @return changed array, so that setters can be chained.
     ProgramGroupArray &AddRaygenProgramGroup(const Module &module,
                                              std::string_view name);
+    /// @brief Add hit program to the array, with pure name.
+    /// @param module module that the program is in; this should be guaranteed
+    /// by the user.
+    /// @param names names without prefix, the order should be IS, AH and CH
+    /// (i.e. __intersection__, __anyhit__, __closesthit__).
+    /// @return changed array, so that setters can be chained.
     ProgramGroupArray &AddHitProgramGroup(
         const Module &module, const std::array<std::string_view, 3> &names);
+
+    /// @brief Add hit program to the array, with pure name.
+    /// @param modules array of modules that each program is in, the order
+    /// should be IS, AH and CH; this should be guaranteed by the user.
+    /// @param names names without prefix, the order should be IS, AH and CH
+    /// (i.e. __intersection__, __anyhit__, __closesthit__).
+    /// @return changed array, so that setters can be chained.
     ProgramGroupArray &AddHitProgramGroup(
         const std::array<const Module *, 3> &modules,
         const std::array<std::string_view, 3> &names);
+    /// @brief Add miss program to the array, with pure name.
+    /// @param module module that the program is in; this should be guaranteed
+    /// by the user.
+    /// @param name name without prefix (i.e.__miss__).
+    /// @return changed array, so that setters can be chained.
     ProgramGroupArray &AddMissProgramGroup(const Module &module,
                                            std::string_view name);
 
+    // For raw APIs, prefix should be added by the user.
     ProgramGroupArray &AddRawRaygenProgramGroup(const Module &module,
                                                 std::string rawName);
     ProgramGroupArray &AddRawHitProgramGroup(
@@ -54,3 +82,5 @@ private:
     std::vector<std::string> programNames_;
     std::vector<OptixProgramGroup> programGroups_;
 };
+
+} // namespace Wayland::Optix

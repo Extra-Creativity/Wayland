@@ -1,5 +1,6 @@
 #pragma once
 #include "HostUtils/CommonHeaders.h"
+#include "HostUtils/DebugUtils.h"
 #include "HostUtils/ErrorCheck.h"
 #include "HostUtils/SpecialMacros.h"
 
@@ -8,10 +9,15 @@
 #include <span>
 #include <string_view>
 
+namespace Wayland::Optix
+{
+
+/// @brief Wrapper of OptixModuleCompileOptions, providing chained setter.
 class ModuleConfig
 {
     OptixModuleCompileOptions option_;
 
+    // In fact all zero.
     static const inline OptixModuleCompileOptions s_defaultModuleOptions{
         .maxRegisterCount = OPTIX_COMPILE_DEFAULT_MAX_REGISTER_COUNT,
         .optLevel = OPTIX_COMPILE_OPTIMIZATION_DEFAULT,
@@ -39,27 +45,22 @@ public:
     const auto &GetRawOptions() const noexcept { return option_; }
     auto &SetPayload(std::span<OptixPayloadType> payloads)
     {
-        using PayloadTypeNumType = decltype(option_.numPayloadTypes);
-        HostUtils::CheckError(
-            payloads.size() <= (std::numeric_limits<PayloadTypeNumType>::max)(),
+        Wayland::HostUtils::CheckError(
+            Wayland::HostUtils::CheckInRangeAndSet(payloads.size(),
+                                                   option_.numPayloadTypes),
             "Too many payloads");
         option_.payloadTypes = payloads.data();
-        option_.numPayloadTypes =
-            static_cast<PayloadTypeNumType>(payloads.size());
         return *this;
     }
 
     auto &SetBoundValue(
         std::span<OptixModuleCompileBoundValueEntry> boundValues)
     {
-        using BoundValueNumType = decltype(option_.numBoundValues);
-        HostUtils::CheckError(
-            boundValues.size() <=
-                (std::numeric_limits<BoundValueNumType>::max)(),
+        Wayland::HostUtils::CheckError(
+            Wayland::HostUtils::CheckInRangeAndSet(boundValues.size(),
+                                                   option_.numBoundValues),
             "Too many bound values");
         option_.boundValues = boundValues.data();
-        option_.numBoundValues =
-            static_cast<BoundValueNumType>(boundValues.size());
         return *this;
     }
 
@@ -80,7 +81,7 @@ class PipelineConfig
         .exceptionFlags = OPTIX_EXCEPTION_FLAG_NONE,
         .pipelineLaunchParamsVariableName = "param",
         .usesPrimitiveTypeFlags = 0,
-#if OPTIX_VERSION >= 8000
+#if OPTIX_VERSION >= 80000
         .allowOpacityMicromaps = 0
 #endif
     };
@@ -121,7 +122,7 @@ public:
     DEFINE_SIMPLE_CHAINED_SETTER(ExceptionFlags, option_.exceptionFlags);
     DEFINE_SIMPLE_CHAINED_SETTER(PrimitiveTypeFlags,
                                  option_.usesPrimitiveTypeFlags);
-#if OPTIX_VERSION >= 8000
+#if OPTIX_VERSION >= 80000
     DEFINE_SIMPLE_CHAINED_SETTER(AllowOpacityMicroMaps,
                                  option_.allowOpacityMicromaps);
 #endif
@@ -137,3 +138,5 @@ inline void LogProcedureInfo(std::size_t logStringSize,
     else if (logStringSize != 0) // i.e. not only a null termination.
         SPDLOG_INFO("{}", std::string_view{ logPtr, logStringSize });
 }
+
+} // namespace Wayland::Optix

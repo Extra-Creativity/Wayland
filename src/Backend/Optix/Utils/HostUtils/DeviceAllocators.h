@@ -13,7 +13,7 @@
 #include <span>
 #include <type_traits>
 
-namespace HostUtils
+namespace Wayland::HostUtils
 {
 using AllocType = cudaError_t (*)(void **, std::size_t);
 using DeallocType = cudaError_t (*)(void *);
@@ -225,4 +225,4 @@ struct DeviceUniquePtrHelper<T[]>
 template<typename T>
 using DeviceUniquePtr = Details::DeviceUniquePtrHelper<T>::type;
 
-} // namespace HostUtils
+} // namespace Wayland::HostUtils

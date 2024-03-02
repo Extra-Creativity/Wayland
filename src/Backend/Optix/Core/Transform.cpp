@@ -8,11 +8,14 @@
 #include <algorithm>
 #include <limits>
 
-#define TEST(FIRST_ARG, ...) FIRST_ARG + __VA_ARGS__
+using namespace Wayland;
 
 static constexpr auto cs_singleMatrixTransformSize = 12;
 static constexpr auto cs_singleMatrixTransformBytesNum =
     cs_singleMatrixTransformSize * sizeof(float);
+
+namespace Wayland::Optix
+{
 
 static void SetTransformOfStaticTransform(OptixStaticTransform &result,
                                           const glm::mat3x4 &trans)
@@ -216,3 +219,5 @@ SRTMotionTransform::SRTMotionTransform(std::span<const OptixSRTData> transforms,
     SetUpTraversableHandle_<OPTIX_TRAVERSABLE_TYPE_SRT_MOTION_TRANSFORM>(
         { buffer.GetBufferPtr(), buffer.GetSize() });
 }
+
+} // namespace Wayland::Optix

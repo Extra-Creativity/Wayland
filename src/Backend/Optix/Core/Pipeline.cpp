@@ -8,6 +8,11 @@
 static constexpr std::size_t s_pipelineLogSize = 1024;
 static char s_pipelineLog[s_pipelineLogSize];
 
+using namespace Wayland;
+
+namespace Wayland::Optix
+{
+
 // RAII to prevent pipeline leak. Its GetRaw() is supposed to be
 // transferred before it's destructed if no exception is thrown.
 class PipelineWrapper
@@ -25,7 +30,7 @@ public:
         const auto &programGroups = arr.GetHandleArr();
         auto size = programGroups.size();
         HostUtils::CheckError(
-            size <= (std::numeric_limits<unsigned int>::max)(),
+            HostUtils::CheckInRange<unsigned int>(size),
             "Too many program groups to construct a pipeline.");
 
         OptixPipelineLinkOptions pipelineLinkOptions = {};
@@ -130,3 +135,5 @@ Pipeline::Pipeline(
         maxTraversableDepth));
     pipeline_ = pipeline.GetRaw();
 }
+
+} // namespace Wayland::Optix

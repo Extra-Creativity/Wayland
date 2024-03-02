@@ -7,6 +7,11 @@
 #include <algorithm>
 #include <ranges>
 
+using namespace Wayland;
+
+namespace Wayland::Optix
+{
+
 void ShaderBindingTable::SetSBTHeader_(void *ptr,
                                        const ProgramGroupArray &programGroups,
                                        std::size_t idx)
@@ -15,6 +20,9 @@ void ShaderBindingTable::SetSBTHeader_(void *ptr,
         HostUtils::Access(programGroups.GetHandleArr(), idx), ptr));
 }
 
+/// @brief Copy all things to a single buffer with proper alignments.
+/// @param[in, out] copyInfos host buffer and pointer of destination;
+/// destination will be set to the address of device buffers.
 void ShaderBindingTable::CopyToBuffer_(
     std::initializer_list<CopyInfo> copyInfos)
 {
@@ -43,3 +51,5 @@ void ShaderBindingTable::CopyToBuffer_(
     }
     return;
 }
+
+} // namespace Wayland::Optix

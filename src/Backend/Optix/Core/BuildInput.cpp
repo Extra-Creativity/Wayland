@@ -13,6 +13,11 @@
 #undef max
 #undef min
 
+using namespace Wayland;
+
+namespace Wayland::Optix
+{
+
 FlagVariant::FlagVariant(std::span<const GeometryFlags> flags)
 {
     if (auto size = flags.size(); size == 0)
@@ -57,20 +62,29 @@ using TriangleVertexNumType =
 using TriangleIndexNumType =
     decltype(OptixBuildInputTriangleArray::numIndexTriplets);
 
+/// @brief Check all preconditions for vertex array and triangle, like having
+/// proper size, the triangle index is within the number of vertex, etc., and
+/// set type of build input as triangles.
+/// @param[out] buildInput build input whose type will be filled.
+/// @param verticesArr array of vertex span
+/// @param triangles span of triangle index; copied by value, so not expect a
+/// owning type like vector.
+/// @return pair of vertex number and triangle number, both are with proper type
+/// and within proper limit.
 static inline std::pair<TriangleVertexNumType, TriangleIndexNumType>
 PrepareTriangleBuildInput(OptixBuildInput &buildInput, const auto &verticesArr,
                           auto triangles)
 {
     TriangleIndexNumType triangleNum;
     HostUtils::CheckError(
-        HostUtils::CheckInRange(std::size(triangles), triangleNum),
+        HostUtils::CheckInRangeAndSet(std::size(triangles), triangleNum),
         "Too many triangles");
     assert(triangleNum > 0 && triangleNum % 3 == 0 && !std::empty(verticesArr));
     triangleNum /= 3;
 
     TriangleVertexNumType vertNum;
     HostUtils::CheckError(
-        HostUtils::CheckInRange(std::size(verticesArr[0]), vertNum),
+        HostUtils::CheckInRangeAndSet(std::size(verticesArr[0]), vertNum),
         "Too many vertices");
     assert(vertNum > 0 && vertNum % 3 == 0);
     vertNum = vertNum / 3;
@@ -107,6 +121,13 @@ static inline void FillTriangleBuildInputFormatAndStrides(
     info.sbtIndexOffsetStrideInBytes = sStride;
 }
 
+/// @brief Fill the build input with triangle data; notice that stride and
+/// format isn't set here.
+/// @param[out] newBuildInput
+/// @param newData triangle data buffer, used to fill vertex buffer, index
+/// buffer and flag buffer of build input.
+/// @param vertNum number of vertices
+/// @param triNum number of triangles
 static void FillBuildInputByTriangleDataBuffer(
     OptixBuildInput &newBuildInput, const TriangleDataBuffer &newData,
     TriangleVertexNumType vertNum, TriangleIndexNumType triNum)
@@ -117,11 +138,20 @@ static void FillBuildInputByTriangleDataBuffer(
     info.numVertices = vertNum;
     info.indexBuffer = newData.GetTrianglesPtr();
     info.numIndexTriplets = triNum;
-    HostUtils::CheckInRange(newData.GetFlagNum(), info.numSbtRecords);
+    // TODO: here optix seems to have stricter requirements?
+    HostUtils::CheckError(
+        HostUtils::CheckInRangeAndSet(newData.GetFlagNum(), info.numSbtRecords),
+        "Too many sbt records, it should be within unsigned int.");
     info.flags = newData.GetFlagPtr();
     info.sbtIndexOffsetBuffer = newData.GetSBTIndexOffsetBuffer();
 }
 
+/// @brief Construct triangle buffer; all vertices will be allocated on the same
+/// buffer with proper alignment.
+/// @param verticesArr array of vertex span
+/// @param triangles span of triangle index; copied by value, so not expect a
+/// owning type like vector.
+/// @param flags span of flags or a single flag; copied by value.
 TriangleDataBuffer::TriangleDataBuffer(const auto &verticesArr, auto triangles,
                                        auto flags)
     : flagBuffer_{ flags }
@@ -154,14 +184,29 @@ TriangleDataBuffer::TriangleDataBuffer(const auto &verticesArr, auto triangles,
     motionKeyNum_ = motionKeyNum;
 }
 
+/// @brief Construct triangle buffer; all vertices will be allocated on the same
+/// buffer with proper alignment.
+/// @param verticesArr array of vertex span
+/// @param triangles span of triangle index; copied by value, so not expect a
+/// owning type like vector.
+/// @param flags span of flags or a single flag; copied by value.
+/// @param sbtOffsets span of sbt offsets; copied by value.
 TriangleDataBuffer::TriangleDataBuffer(const auto &verticesArr, auto triangles,
                                        auto flags, auto sbtOffsets)
     : TriangleDataBuffer{ verticesArr, triangles, flags }
 {
+    HostUtils::CheckError(sbtOffsets.size() == triangles.size() / 3,
+                          "SBT offset should match the size of primitives.");
     sbtIndexOffsetBuffer_ =
         HostUtils::DeviceMakeUnique<std::byte[]>(std::as_bytes(sbtOffsets));
 }
 
+/// @brief Add build input when the triangle data buffer is pushed back in
+/// handle. When an exception is thrown, the data buffer will be popped up, so
+/// that number of build input and data buffer matches and memory is released
+/// timely. This is the source of exception guarantee.
+/// @param handle providing newly-pushed build input, handle should fill it and
+/// push a new data buffer correspondingly.
 void TriangleBuildInputArray::GeneralAddBuildInput_(auto &&handle)
 {
     auto &newBuildInput = buildInputs_.emplace_back();
@@ -238,25 +283,30 @@ static void FillBuildInputByInstanceDataBuffer(
     auto &info = newBuildInput.instanceArray;
     info.instances = newData.GetInstanceBufferPtr();
     info.numInstances = instanceNum;
-#if OPTIX_VERSION >= 8000
+#if OPTIX_VERSION >= 80000
     info.instanceStride = 0;
 #endif
 }
 
 void InstanceBuildInputArray::AddBuildInput(
-    std::span<const OptixInstance> instances,
-    std::span<const Traversable *> children)
+    std::span<OptixInstance> instances, std::span<const Traversable *> children)
 {
     auto size = instances.size();
-    HostUtils::CheckError(size <= std::numeric_limits<InstanceNumType>::max(),
+    HostUtils::CheckError(size == children.size(),
+                          "Number of instances and number of children should "
+                          "be the same.");
+    InstanceNumType safeSize;
+    HostUtils::CheckError(HostUtils::CheckInRangeAndSet(size, safeSize),
                           "Too many instances to build a build input.");
+
+    for (std::size_t i = 0; i < size; i++)
+        instances[i].traversableHandle = children[i]->GetHandle();
 
     auto &newBuildInput = buildInputs_.emplace_back();
     try
     {
         auto &newData = dataBuffers_.emplace_back(instances);
-        FillBuildInputByInstanceDataBuffer(static_cast<InstanceNumType>(size),
-                                           newBuildInput, newData);
+        FillBuildInputByInstanceDataBuffer(safeSize, newBuildInput, newData);
         children_.push_back(children | std::ranges::to<std::vector>());
     }
     catch (...)
@@ -276,6 +326,7 @@ void InstanceBuildInputArray::RemoveBuildInput(std::size_t idx) noexcept
     children_.erase(children_.begin() + idx);
 }
 
+/// @brief Traverse all children to get the deepest depth.
 unsigned int InstanceBuildInputArray::GetDepth() const noexcept
 {
     return 1 +
@@ -290,3 +341,5 @@ unsigned int InstanceBuildInputArray::GetDepth() const noexcept
                        }));
                }));
 }
+
+} // namespace Wayland::Optix

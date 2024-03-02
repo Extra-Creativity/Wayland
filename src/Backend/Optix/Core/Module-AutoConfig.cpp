@@ -54,6 +54,7 @@ static_assert(s_programPrefix[AnyHit] == "anyhit__");
 static_assert(s_programPrefix[ClosestHit] == "closesthit__");
 static_assert(s_programPrefix[Miss] == "miss__");
 
+// This guarantee is used by ClassifyProgram.
 static_assert(AnyHit - Intersection == 1 && ClosestHit - AnyHit == 1);
 
 struct HitgroupInfo
@@ -68,6 +69,9 @@ struct HitgroupInfo
         return name.ends_with(suffix);
     }
 };
+
+namespace Wayland::Optix
+{
 
 static void ClassifyProgram(std::string_view funcName,
                             std::vector<HitgroupInfo> &hitGroupInfos,
@@ -96,6 +100,7 @@ static void ClassifyProgram(std::string_view funcName,
     case AnyHit:
         [[fallthrough]];
     case ClosestHit: {
+        // why not std::ranges::find: we don't need operator<=> of HitGroupInfo.
         auto pos =
             std::find(hitGroupInfos.begin(), hitGroupInfos.end(), funcName);
         auto funcNameSuffix =
@@ -109,7 +114,10 @@ static void ClassifyProgram(std::string_view funcName,
     case Miss:
         arr.AddRawMissProgramGroup(module, std::string{ funcName });
         return;
-    default:
+    default: // TODO: things like exception program.
+        SPDLOG_WARN("Currently other program types isn't supported, so program "
+                    "{} will be omitted.",
+                    funcName);
         return;
     }
 }
@@ -151,7 +159,7 @@ void Module::IdentifyPrograms(const std::vector<std::string> &identifyFiles,
         // Note: we don't use fileContent.str("") because it will release the
         // buffer and allocate again, which is unnecessary.
     }
-
+    // Add all hitgroups to program array.
     std::array<std::string, 3> hitGroupNames;
     for (auto &info : hitGroupInfos)
     {
@@ -169,4 +177,6 @@ void Module::IdentifyPrograms(const std::vector<std::string> &identifyFiles,
     }
     return;
 }
+
+} // namespace Wayland::Optix
 #endif

@@ -1,7 +1,7 @@
 set_xmakever("2.8.2")
 set_project("Wayland")
 
-add_rules("mode.asan", "mode.debug", "mode.release", "mode.releasedbg")
+add_rules("mode.debug", "mode.release", "mode.releasedbg")
 add_rules("mode.debug-dev", "mode.releasedbg-dev", "mode.release-dev")
 if is_mode("release") then 
     set_policy("build.optimization.lto", true)

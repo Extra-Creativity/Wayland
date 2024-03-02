@@ -5,7 +5,7 @@
 #include <cassert>
 #include <stacktrace>
 
-namespace HostUtils
+namespace Wayland::HostUtils
 {
 
 #ifdef ERROR_DEBUG
@@ -92,4 +92,4 @@ template void CheckError<true>(bool success, const char *log,
                                const std::source_location &loc);
 
 #endif
-} // namespace HostUtils
+} // namespace Wayland::HostUtils

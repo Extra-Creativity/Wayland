@@ -2,6 +2,10 @@
 #include "HostUtils/CommonHeaders.h"
 #include <string>
 
+namespace Wayland::Optix
+{
+
+/// @brief ABC for all traversables, like AS and transforms.
 class Traversable
 {
 public:
@@ -25,3 +29,5 @@ protected:
 
     OptixTraversableHandle handle_;
 };
+
+} // namespace Wayland::Optix

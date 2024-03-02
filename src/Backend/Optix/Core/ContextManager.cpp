@@ -9,6 +9,10 @@
 #include <string_view>
 #include <version>
 
+using namespace Wayland;
+
+namespace Wayland::Optix
+{
 thread_local ContextManager::ContextInfo *LocalContextSetter::currentContext_ =
     nullptr;
 
@@ -198,3 +202,5 @@ void ContextManager::SetCachePath(const std::string &path)
             info.context.context, path.c_str()));
     }
 }
+
+} // namespace Wayland::Optix

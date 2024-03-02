@@ -14,9 +14,16 @@
 
 #include "spdlog/spdlog.h"
 
+using namespace Wayland;
+
 namespace stdv = std::views;
 namespace stdr = std::ranges;
 
+/// @brief Create a temporary directory to store modules.
+/// @details The directory is created when the program is initialized, and the
+/// name is `./tmp/{date}-{time}-{subsecond}/bin`. When the program exits
+/// normally (i.e. not quited by exception or abort), then all contents and the
+/// directory will be removed.
 struct TemporaryDirectory
 {
     std::filesystem::path dir;
@@ -72,13 +79,13 @@ struct TemporaryDirectory
 };
 
 static const TemporaryDirectory s_binSaveDir{};
-static std::atomic<std::uint64_t> s_uid{};
+static std::atomic<std::uint64_t> s_uid{}; // used as id of binary module code.
 static constexpr std::size_t s_moduleLogSize = 1024;
 static char s_moduleLog[s_moduleLogSize];
 
 static std::string GetNewSavePath()
 {
-    return std::format("{}/module-{}.oir", s_binSaveDir.dir.string(),
+    return std::format("{}/module-{}.optixir", s_binSaveDir.dir.string(),
                        s_uid.fetch_add(1, std::memory_order_relaxed));
 }
 
@@ -86,6 +93,9 @@ static std::string JoinArgs(const std::vector<std::string> &args)
 {
     return args | stdv::join_with(' ') | stdr::to<std::string>();
 }
+
+namespace Wayland::Optix
+{
 
 std::string Module::s_optixSDKPath{};
 std::vector<std::string> Module::s_additionalArgs;
@@ -106,9 +116,15 @@ static auto GetOutputFile(const char *command, const char *path)
     return str;
 }
 
+#if OPTIX_VERSION >= 77000
+#define optixModuleCreate optixModuleCreate
+#else
+#define optixModuleCreate optixModuleCreateFromPTX
+#endif
+
 /// @brief It should be called as the final procedure, otherwise exception may
 ///        leave module_ not destroyed.
-/// @param view
+/// @param view byte view of binary code.
 /// @param moduleConfig
 /// @param pipelineConfig
 void Module::CreateModule_(std::string_view view,
@@ -130,7 +146,7 @@ Module::Module(std::string_view fileName, const ModuleConfig &moduleConfig,
 {
     auto outPath = GetNewSavePath();
     std::string command = std::format(
-        R"(nvcc -I"{}" {} {} {} -o {})", s_optixSDKPath,
+        R"(nvcc -I"{}" {} {} "{}" -o "{}")", s_optixSDKPath,
         stdv::join_with(compileOptions, ' ') | stdr::to<std::string>(),
         JoinArgs(s_additionalArgs), fileName, outPath);
     auto fileContents = GetOutputFile(command.c_str(), outPath.c_str());
@@ -144,7 +160,7 @@ Module::Module(const std::vector<std::string> &fileNames,
 {
     auto outPath = GetNewSavePath();
     std::string command = std::format(
-        R"(nvcc -I"{}" {} {} {} -o {})", s_optixSDKPath,
+        R"(nvcc -I"{}" {} {} "{}" -o "{}")", s_optixSDKPath,
         stdv::join_with(compileOptions, ' ') | stdr::to<std::string>(),
         JoinArgs(s_additionalArgs),
         stdv::join_with(fileNames, ' ') | stdr::to<std::string>(), outPath);
@@ -164,3 +180,5 @@ Module::~Module()
 {
     HostUtils::CheckOptixError<HostUtils::OnlyLog>(optixModuleDestroy(module_));
 }
+
+} // namespace Wayland::Optix

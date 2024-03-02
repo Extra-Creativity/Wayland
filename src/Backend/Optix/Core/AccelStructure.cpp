@@ -7,20 +7,25 @@
 #undef max
 #undef min
 
+using namespace Wayland;
+
 static auto CheckBuildInputArrLimit(const auto &buildInputs)
 {
-    using LimitInt = AccelStructure::BuildInputNumLimitInt;
+    using LimitInt = Optix::AccelStructure::BuildInputNumLimitInt;
 
     auto buildInputNum = buildInputs.size();
     HostUtils::CheckError(buildInputNum >= 1, "No build inputs.",
                           "At least one build input should be provided to "
                           "build acceleration structure.");
     HostUtils::CheckError(
-        buildInputNum <= std::numeric_limits<LimitInt>::max(),
+        HostUtils::CheckInRange<LimitInt>(buildInputNum),
         "Too many build inputs.",
         "Number of build inputs should be within limits of unsigned int");
     return static_cast<LimitInt>(buildInputNum);
 }
+
+namespace Wayland::Optix
+{
 
 AccelStructure::AccelStructure(const BuildInputArray &arr, BuildFlags flags)
     : arrPtr_{ &arr }, accelOptions_{ .buildFlags = std::to_underlying(flags),
@@ -29,6 +34,16 @@ AccelStructure::AccelStructure(const BuildInputArray &arr, BuildFlags flags)
 {
 }
 
+/// @brief Prepare the output buffer and return necessary information for
+/// optixBuild. The temporary buffer is returned by return value because
+/// StaticAS doesn't need to preserve it after build, so it's the duty of caller
+/// to decide how to process the temporary buffer.
+/// @param arr build input array of the current build.
+/// @param flags build flag of the current build.
+/// @param[out] bufferSizes fill buffer sizes with proper values.
+/// @return ASConstructData, i.e. A) buildInputsPtr, raw pointer of arr.
+/// B) buildInputNum, checked size with proper integer type.
+/// C) tempBuffer, allocated temporary buffer.
 AccelStructure::ASConstructData AccelStructure::PrepareBuffer_(
     const BuildInputArray &arr, BuildFlags flags,
     OptixAccelBufferSizes &bufferSizes)
@@ -47,6 +62,12 @@ AccelStructure::ASConstructData AccelStructure::PrepareBuffer_(
                  bufferSizes.tempSizeInBytes) };
 }
 
+/// @brief Compact AS if
+/// @param outputBufferSize original size of the output buffer.
+/// @param accelBuild handle to build the acceleration, which should accept
+/// (const OptixAccelEmitDesc *emittedProperties, unsigned int propertyNum) to
+/// call optixBuild.
+/// @return new size of the output buffer, possibly compacted.
 std::size_t AccelStructure::TryCompactAS_(std::size_t outputBufferSize,
                                           auto &&accelBuild)
 {
@@ -54,6 +75,7 @@ std::size_t AccelStructure::TryCompactAS_(std::size_t outputBufferSize,
     OptixAccelEmitDesc desc{
         .type = OptixAccelPropertyType::OPTIX_PROPERTY_TYPE_COMPACTED_SIZE
     };
+    // get compacted size; use unified memory if possible.
     if (LocalContextSetter::CurrentCanAsyncAccessUnifiedMemory())
     {
         auto compactSizePtr = HostUtils::DeviceMakeUninitializedUnique<
@@ -114,7 +136,7 @@ StaticAccelStructure::StaticAccelStructure(const BuildInputArray &arr,
     {
         accelBuild(nullptr, 0);
         return;
-    }
+    } // build directly, else try to compact.
     TryCompactAS_(bufferSizes.outputSizeInBytes, accelBuild);
 }
 
@@ -140,6 +162,7 @@ DynamicAccelStructure::DynamicAccelStructure(const BuildInputArray &arr,
         outputBufferSize_ = bufferSizes.outputSizeInBytes;
         if (HostUtils::TestEnum(flags, BuildFlags::Update))
         {
+            // if temp buffer is big enough, use it as update buffer directly.
             if (bufferSizes.tempUpdateSizeInBytes <=
                 bufferSizes.tempSizeInBytes)
             {
@@ -162,7 +185,7 @@ DynamicAccelStructure::DynamicAccelStructure(const BuildInputArray &arr,
         accelBuild(nullptr, 0);
         return;
     }
-
+    // build directly, else try to compact.
     outputBufferSize_ =
         TryCompactAS_(bufferSizes.outputSizeInBytes, accelBuild);
 }
@@ -223,6 +246,9 @@ void DynamicAccelStructure::Rebuild(const BuildInputArray &arr)
     outputBufferSize_ = TryCompactAS_(outputBufferSize_, accelBuild);
 }
 
+/// @brief Enlarge the output buffer to make it suitable for rebuild.
+/// @param buildInputsPtr pointer of buildinputs
+/// @param buildInputNum checked size of build input.
 void DynamicAccelStructure::EnlargeBuffers_(
     const OptixBuildInput *buildInputsPtr, BuildInputNumLimitInt buildInputNum)
 {
@@ -239,7 +265,7 @@ void DynamicAccelStructure::EnlargeBuffers_(
     }
     if (auto newSize = std::max(bufferSizes.tempSizeInBytes,
                                 bufferSizes.tempUpdateSizeInBytes);
-        newSize < updateBufferSize_)
+        newSize > updateBufferSize_)
     {
         updateBuffer_.reset();
         updateBuffer_ =
@@ -247,3 +273,5 @@ void DynamicAccelStructure::EnlargeBuffers_(
         updateBufferSize_ = newSize;
     }
 }
+
+} // namespace Wayland::Optix
