@@ -1,9 +1,12 @@
 FILE(GLOB HostUtilsSrc Utils/HostUtils/*.cpp)
-add_library(Optix-HostUtils STATIC ${HostUtilsSrc})
+FILE(GLOB HostUtilsHeaders Utils/HostUtils/*.h)
+FILE(GLOB UniUtilsHeaders Utils/UniUtils/*.h)
+add_library(Optix-HostUtils STATIC ${HostUtilsSrc} ${HostUtilsHeaders} ${UniUtilsHeaders})
 target_link_libraries(Optix-HostUtils PRIVATE spdlog::spdlog)
 
 FILE(GLOB CoreSrc Core/*.cpp)
-add_library(Optix-Core STATIC ${CoreSrc})
+FILE(GLOB CoreHeaders Core/*.h)
+add_library(Optix-Core STATIC ${CoreSrc} ${CoreHeaders})
 target_include_directories(Optix-Core PUBLIC Core Utils)
 target_link_libraries(Optix-Core PUBLIC Optix-HostUtils spdlog::spdlog glm::glm)
 
