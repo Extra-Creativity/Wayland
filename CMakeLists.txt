@@ -39,6 +39,18 @@ include_directories(SYSTEM
 
 add_definitions(-DSPDLOG_USE_STD_FORMAT)
 
+# build glfw
+set(OpenGL_GL_PREFERENCE LEGACY)
+if (WIN32)
+#  set(glfw_dir ${PROJECT_SOURCE_DIR}/submodules/glfw/)
+  set(glfw_dir ${PROJECT_SOURCE_DIR}/3rdParty/glfw/)
+  include_directories(${glfw_dir}/include)
+  add_subdirectory(${glfw_dir})
+else()
+  find_package(glfw3 REQUIRED)
+endif()
+
+
 # Enable UTF-8 and warnings.
 if(MSVC)
     add_compile_options(/utf-8 /W3) # 4996 is warning from spdlog.
