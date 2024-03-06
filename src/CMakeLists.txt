@@ -1,4 +1,2 @@
-add_subdirectory(
-    "Backend/Optix"
-#  "Frontend"
-)
+add_subdirectory(Backend/Optix)
+add_subdirectory(Frontend)
