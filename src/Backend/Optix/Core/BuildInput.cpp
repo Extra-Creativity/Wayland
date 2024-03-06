@@ -18,45 +18,6 @@ using namespace Wayland;
 namespace Wayland::Optix
 {
 
-FlagVariant::FlagVariant(std::span<const GeometryFlags> flags)
-{
-    if (auto size = flags.size(); size == 0)
-        flagNum_ = 1, data_.singleFlag = OPTIX_GEOMETRY_FLAG_NONE;
-    else if (size == 1)
-        flagNum_ = 1, data_.singleFlag = (UnderlyingType)flags[0];
-    else [[likely]]
-    {
-        flagNum_ = size;
-        new (&data_) decltype(data_.flags){
-            std::make_unique_for_overwrite<UnderlyingType[]>(size)
-        };
-        std::ranges::copy_n(
-            reinterpret_cast<const UnderlyingType *>(flags.data()), size,
-            data_.flags.get());
-    }
-}
-
-FlagVariant::FlagVariant(FlagVariant &&another) noexcept
-    : flagNum_{ another.flagNum_ }
-{
-    if (IsSingleFlag_())
-        data_.singleFlag = another.data_.singleFlag;
-    else
-        new (&data_) decltype(data_.flags){ std::move(another.data_.flags) };
-}
-
-FlagVariant &FlagVariant::operator=(FlagVariant &&another) noexcept
-{
-    Clear_();
-    flagNum_ = another.flagNum_;
-    if (IsSingleFlag_())
-        data_.singleFlag = another.data_.singleFlag;
-    else
-        new (&data_) decltype(data_.flags){ std::move(another.data_.flags) };
-
-    return *this;
-}
-
 using TriangleVertexNumType =
     decltype(OptixBuildInputTriangleArray::numVertices);
 using TriangleIndexNumType =
@@ -142,7 +103,9 @@ static void FillBuildInputByTriangleDataBuffer(
     HostUtils::CheckError(
         HostUtils::CheckInRangeAndSet(newData.GetFlagNum(), info.numSbtRecords),
         "Too many sbt records, it should be within unsigned int.");
-    info.flags = newData.GetFlagPtr();
+    info.flags =
+        reinterpret_cast<const std::underlying_type_t<GeometryFlags> *>(
+            newData.GetFlagPtr());
     info.sbtIndexOffsetBuffer = newData.GetSBTIndexOffsetBuffer();
 }
 
@@ -268,78 +231,54 @@ void TriangleBuildInputArray::RemoveBuildInput(std::size_t idx) noexcept
     dataBuffers_.erase(dataBuffers_.begin() + idx);
 }
 
-InstanceDataBuffer::InstanceDataBuffer(auto instances)
-    : instancesBuffer_{ HostUtils::DeviceMakeUnique<OptixInstance[]>(
-          instances) }
+auto TriangleBuildInputArray::GetSBTSetterParamInfo() const
+    -> SBTSetterParamInfo
 {
+    SBTSetterParamInfo info;
+    auto size = dataBuffers_.size();
+    HostUtils::CheckError(
+        HostUtils::CheckInRangeAndSet(size, info.buildInputNum_),
+        "Too many build inputs");
+    auto sbtRecordIDs = std::make_unique_for_overwrite<unsigned int[]>(size);
+    for (auto i = 0; i < size; i++)
+        sbtRecordIDs[i] = dataBuffers_[i].GetFlagNum();
+    return info;
 }
 
 using InstanceNumType = decltype(OptixBuildInputInstanceArray::numInstances);
 
-static void FillBuildInputByInstanceDataBuffer(
-    InstanceNumType instanceNum, OptixBuildInput &newBuildInput,
-    const InstanceDataBuffer &newData)
+void InstanceBuildInputArray::AddBuildInput(OptixInstance &instance,
+                                            const Traversable *child)
 {
-    auto &info = newBuildInput.instanceArray;
-    info.instances = newData.GetInstanceBufferPtr();
-    info.numInstances = instanceNum;
-#if OPTIX_VERSION >= 80000
-    info.instanceStride = 0;
-#endif
-}
+    instance.traversableHandle = child->GetHandle();
 
-void InstanceBuildInputArray::AddBuildInput(
-    std::span<OptixInstance> instances, std::span<const Traversable *> children)
-{
-    auto size = instances.size();
-    HostUtils::CheckError(size == children.size(),
-                          "Number of instances and number of children should "
-                          "be the same.");
-    InstanceNumType safeSize;
-    HostUtils::CheckError(HostUtils::CheckInRangeAndSet(size, safeSize),
-                          "Too many instances to build a build input.");
-
-    for (std::size_t i = 0; i < size; i++)
-        instances[i].traversableHandle = children[i]->GetHandle();
-
-    auto &newBuildInput = buildInputs_.emplace_back();
+    children_.push_back(child);
     try
     {
-        auto &newData = dataBuffers_.emplace_back(instances);
-        FillBuildInputByInstanceDataBuffer(safeSize, newBuildInput, newData);
-        children_.push_back(children | std::ranges::to<std::vector>());
+        deviceInstances_.push_back(instance);
     }
     catch (...)
     {
-        buildInputs_.pop_back(); // maintain the same number of build input and
-                                 // data buffer.
-        if (buildInputs_.size() != dataBuffers_.size())
-            dataBuffers_.pop_back();
+        children_.pop_back(); // maintain the same number of instances and
+                              // children.
         throw;
     }
 }
 
 void InstanceBuildInputArray::RemoveBuildInput(std::size_t idx) noexcept
 {
-    BuildInputArray::RemoveBuildInput(idx);
-    dataBuffers_.erase(dataBuffers_.begin() + idx);
+    deviceInstances_.erase(deviceInstances_.begin() + idx);
     children_.erase(children_.begin() + idx);
 }
 
 /// @brief Traverse all children to get the deepest depth.
 unsigned int InstanceBuildInputArray::GetDepth() const noexcept
 {
-    return 1 +
-           std::ranges::max(
-               children_ |
-               std::views::transform([](const auto &singleChildren) {
-                   // For each instance group, get the maximum depth;
-                   return std::ranges::max(
-                       singleChildren |
-                       std::views::transform([](const Traversable *childPtr) {
-                           return childPtr->GetDepth();
-                       }));
-               }));
+    return 1 + std::ranges::max(
+                   children_ |
+                   std::views::transform([](const Traversable *childPtr) {
+                       return childPtr->GetDepth();
+                   }));
 }
 
 } // namespace Wayland::Optix

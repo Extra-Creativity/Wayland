@@ -2,6 +2,8 @@
 #include "HostUtils/CommonHeaders.h"
 #include "HostUtils/DeviceAllocators.h"
 
+#include "SBTData.h"
+
 namespace Wayland::Optix
 {
 

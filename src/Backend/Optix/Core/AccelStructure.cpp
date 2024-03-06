@@ -7,6 +7,16 @@
 #undef max
 #undef min
 
+template<typename T>
+class FunctionTraits;
+
+template<typename Result, typename... Args>
+class FunctionTraits<std::function<Result(Args...)>>
+{
+public:
+    using arguments = std::tuple<Args...>;
+};
+
 using namespace Wayland;
 
 static auto CheckBuildInputArrLimit(const auto &buildInputs)
@@ -26,6 +36,13 @@ static auto CheckBuildInputArrLimit(const auto &buildInputs)
 
 namespace Wayland::Optix
 {
+
+static_assert(      // The first argument of SBTSetter is id of build input
+    std::is_same_v< // which should be same as build input num limit.
+        std::tuple_element_t<
+            0,
+            FunctionTraits<GeometryBuildInputArray::SBTSetterProxy>::arguments>,
+        AccelStructure::BuildInputNumLimitInt>);
 
 AccelStructure::AccelStructure(const BuildInputArray &arr, BuildFlags flags)
     : arrPtr_{ &arr }, accelOptions_{ .buildFlags = std::to_underlying(flags),
@@ -271,6 +288,23 @@ void DynamicAccelStructure::EnlargeBuffers_(
         updateBuffer_ =
             HostUtils::DeviceMakeUninitializedUnique<std::byte[]>(newSize);
         updateBufferSize_ = newSize;
+    }
+}
+
+// Below is those types that can fill SBT directly.
+
+SBTProvider::SBTProvider(GeometryBuildInputArray &arr,
+                         SBTSetterGatherFlag gatherFlag)
+    : paramInfo_{ arr.GetSBTSetterParamInfo() }
+{
+    if (gatherFlag == SBTSetterGatherFlag::Copy)
+        sbtSetter_ = arr.GetSBTSetterProxy();
+    else if (gatherFlag == SBTSetterGatherFlag::Move)
+        sbtSetter_ = std::move(arr).GetSBTSetterProxy();
+    else
+    {
+        SPDLOG_ERROR("Unknown Setter Gather Flag, copy by default.");
+        sbtSetter_ = arr.GetSBTSetterProxy();
     }
 }
 

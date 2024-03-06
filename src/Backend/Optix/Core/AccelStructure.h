@@ -25,6 +25,12 @@ enum class BuildFlags : unsigned int
 #endif
 };
 
+enum class SBTSetterGatherFlag
+{
+    Copy,
+    Move
+};
+
 } // namespace Wayland::Optix
 ENABLE_BINARY_OP_FOR_SCOPED_ENUM(Wayland::Optix::BuildFlags);
 
@@ -109,6 +115,98 @@ private:
 
     Wayland::HostUtils::DeviceUniquePtr<std::byte[]> updateBuffer_;
     std::size_t updateBufferSize_ = 0;
+};
+
+class SBTProvider
+{
+public:
+    // Why not const: may move away its setter.
+    SBTProvider(GeometryBuildInputArray &arr, SBTSetterGatherFlag gatherFlag);
+
+    void FillSBT(unsigned int rayTypeNum, std::any &buffer) const
+    {
+        for (unsigned int buildInputID = 0;
+             buildInputID < paramInfo_.buildInputNum_; buildInputID++)
+        {
+            auto sbtRecordNum = paramInfo_.sbtRecordIDs_[buildInputID];
+            for (unsigned int sbtRecordID = 0; sbtRecordID < sbtRecordNum;
+                 sbtRecordID++)
+            {
+                for (unsigned int rayType = 0; rayType < rayTypeNum; rayType++)
+                    sbtSetter_(buildInputID, sbtRecordID, rayType, buffer);
+            }
+        }
+    }
+
+private:
+    GeometryBuildInputArray::SBTSetterProxy sbtSetter_;
+    GeometryBuildInputArray::SBTSetterParamInfo paramInfo_;
+};
+
+class StaticGeometryAccelStructure : public StaticAccelStructure
+{
+public:
+    StaticGeometryAccelStructure(
+        GeometryBuildInputArray &arr,
+        SBTSetterGatherFlag gatherFlag = SBTSetterGatherFlag::Copy,
+        BuildFlags buildFlag = BuildFlags::None)
+        : StaticAccelStructure{ arr, buildFlag }, provider_{ arr, gatherFlag }
+    {
+    }
+
+    void FillSBT(unsigned int rayTypeNum, std::any &buffer) const override
+    {
+        provider_.FillSBT(rayTypeNum, buffer);
+    }
+
+private:
+    SBTProvider provider_;
+};
+
+class DynamicGeometryAccelStructure : public DynamicAccelStructure
+{
+public:
+    DynamicGeometryAccelStructure(
+        GeometryBuildInputArray &arr,
+        SBTSetterGatherFlag gatherFlag = SBTSetterGatherFlag::Copy,
+        BuildFlags buildFlag = BuildFlags::None)
+        : DynamicAccelStructure{ arr, buildFlag }, provider_{ arr, gatherFlag }
+    {
+    }
+
+    void FillSBT(unsigned int rayTypeNum, std::any &buffer) const override
+    {
+        provider_.FillSBT(rayTypeNum, buffer);
+    }
+
+private:
+    SBTProvider provider_;
+};
+
+class StaticInstanceAccelStrucutre : public StaticAccelStructure
+{
+public:
+    StaticInstanceAccelStrucutre(const InstanceBuildInputArray &arr,
+                                 BuildFlags buildFlag = BuildFlags::None)
+        : StaticAccelStructure{ arr, buildFlag }
+    {
+        std::vector<unsigned int> instanceOffsets;
+        sbtSetter_ = [children = arr.GetChildren()](unsigned int rayNum,
+                                                    std::any &buffer) {
+            for (const auto &child : children)
+            {
+                child->FillSBT(rayNum, buffer);
+            }
+        };
+    }
+
+    void FillSBT(unsigned int rayTypeNum, std::any &buffer) const override
+    {
+        throw std::runtime_error{ "Not implemented yet." };
+    }
+
+private:
+    std::function<void(unsigned int, std::any &)> sbtSetter_;
 };
 
 } // namespace Wayland::Optix

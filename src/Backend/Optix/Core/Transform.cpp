@@ -34,7 +34,7 @@ static void SetTransformOfStaticTransform(OptixStaticTransform &result,
 
 StaticTransform::StaticTransform(const glm::mat3x4 &init_trans,
                                  const Traversable &childTraversable)
-    : childTraversablePtr_{ &childTraversable }
+    : TransformBase{ childTraversable }
 {
     OptixStaticTransform cpuTransform{ .child = childTraversable.GetHandle() };
     SetTransformOfStaticTransform(cpuTransform, init_trans);

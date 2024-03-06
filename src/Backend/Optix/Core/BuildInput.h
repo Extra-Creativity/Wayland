@@ -1,8 +1,17 @@
 #pragma once
 #include "HostUtils/CommonHeaders.h"
+#include "HostUtils/CompactVariant.h"
 #include "HostUtils/DeviceAllocators.h"
 #include "HostUtils/EnumUtils.h"
+
+#include "SBTData.h"
+
+#include <any>
+#include <functional>
 #include <span>
+#include <vector>
+
+#include "thrust/device_vector.h"
 
 namespace Wayland::Optix
 {
@@ -44,46 +53,6 @@ enum class GeometryFlags : unsigned int
     FaceCulling = OPTIX_GEOMETRY_FLAG_DISABLE_TRIANGLE_FACE_CULLING
 };
 
-// @brief Store either a flag or an array of flags; when flag number is one, use
-// the single flag; otherwise allocate dynamically. Used by primitive types like
-// triangles.
-// @note Why not std::variant: we want to use "index" of variant to store the
-// number (which is also unique!), to reduce the space needed.
-class FlagVariant
-{
-    using UnderlyingType = std::underlying_type_t<GeometryFlags>;
-
-    std::size_t flagNum_;
-    union Data {
-        Data() {}
-        UnderlyingType singleFlag;
-        std::unique_ptr<UnderlyingType[]> flags;
-        ~Data() {}
-    } data_;
-    bool IsSingleFlag_() const noexcept { return flagNum_ == 1; }
-    void Clear_() const noexcept
-    {
-        if (!IsSingleFlag_())
-            data_.flags.~unique_ptr();
-    }
-
-public:
-    auto GetFlagNum() const noexcept { return flagNum_; }
-    auto GetFlagPtr() const noexcept
-    {
-        return IsSingleFlag_() ? &data_.singleFlag : data_.flags.get();
-    }
-
-    FlagVariant(GeometryFlags flag) : flagNum_{ 1 }
-    {
-        data_.singleFlag = std::to_underlying(flag);
-    }
-    ~FlagVariant() { Clear_(); }
-    FlagVariant(std::span<const GeometryFlags> flags);
-    FlagVariant(FlagVariant &&another) noexcept;
-    FlagVariant &operator=(FlagVariant &&another) noexcept;
-};
-
 /// @brief data buffer of triangle build input array; this shouldn't be used
 /// by others, but TriangleBuildInputArray.
 class TriangleDataBuffer
@@ -99,15 +68,15 @@ public:
         return Wayland::HostUtils::ToDriverPointer(trianglesBuffer_.get());
     }
     auto GetMotionKeyNum() const noexcept { return motionKeyNum_; }
-    auto GetFlagNum() const noexcept { return flagBuffer_.GetFlagNum(); }
-    auto GetFlagPtr() const noexcept { return flagBuffer_.GetFlagPtr(); }
+    auto GetFlagNum() const noexcept { return flagBuffer_.GetSize(); }
+    auto GetFlagPtr() const noexcept { return flagBuffer_.GetPtr(); }
     auto GetSBTIndexOffsetBuffer() const noexcept
     {
         return Wayland::HostUtils::ToDriverPointer(sbtIndexOffsetBuffer_.get());
     }
 
 private:
-    FlagVariant flagBuffer_;
+    Wayland::HostUtils::CompactVariant<GeometryFlags> flagBuffer_;
     Wayland::HostUtils::DeviceUniquePtr<std::byte[]> sbtIndexOffsetBuffer_;
     Wayland::HostUtils::DeviceUniquePtr<std::byte[]> verticesBuffer_;
     Wayland::HostUtils::DeviceUniquePtr<std::byte[]> trianglesBuffer_;
@@ -119,8 +88,61 @@ private:
     std::size_t motionKeyNum_;
 };
 
+/// @details Parameters' meaning:
+/// + unsigned int: build input id.
+/// + unsigned int: sbt record id (<= numSbtRecord of the build input);
+/// + unsigned int: ray type.
+template<typename T>
+using SBTSetter =
+    std::function<SBTData<T>(unsigned int, unsigned int, unsigned int)>;
+
+class GeometryBuildInputArray : public BuildInputArray
+{
+public:
+    GeometryBuildInputArray() = default;
+    GeometryBuildInputArray(std::size_t expectBuildInputNum)
+        : BuildInputArray{ expectBuildInputNum }
+    {
+    }
+
+    using SBTSetterProxy =
+        std::function<void(unsigned int, unsigned int, unsigned int, std::any)>;
+
+    /// @note Set an automatic setter for build inputs.
+    template<typename T>
+    void SetSBTSetter(SBTSetter<T> &&init_setter)
+    {
+        sbtSetter_ = [setter =
+                          std::forward<decltype(init_setter)>(init_setter)](
+                         unsigned int buildInputID, unsigned int sbtRecordID,
+                         unsigned int rayType, std::any &sbtBuffer) {
+            using ContainerType = std::invoke_result_t<
+                decltype(GetSBTHitRecordBuffer<SBTData<T>>), unsigned int,
+                const Traversable &>;
+            auto buffer = std::any_cast<ContainerType>(&sbtBuffer);
+            HostUtils::CheckError(buffer,
+                                  "Type of buffer and setter doesn't match.");
+            buffer->emplace_back(setter(buildInputID, sbtRecordID, rayType));
+        };
+    }
+
+    const auto &GetSBTSetterProxy() const & { return sbtSetter_; }
+    auto GetSBTSetterProxy() && { return std::move(sbtSetter_); }
+
+    struct SBTSetterParamInfo
+    {
+        unsigned int buildInputNum_;
+        std::unique_ptr<unsigned int[]> sbtRecordIDs_;
+    };
+
+    virtual SBTSetterParamInfo GetSBTSetterParamInfo() const = 0;
+
+private:
+    SBTSetterProxy sbtSetter_;
+};
+
 /// @brief Buildinput array for triangle type, mostly used type.
-class TriangleBuildInputArray : public BuildInputArray
+class TriangleBuildInputArray : public GeometryBuildInputArray
 {
     void GeneralAddBuildInput_(auto &&);
 
@@ -131,7 +153,7 @@ public:
     /// @param expectBuildInputNum expected number of build inputs so that
     /// memory will be reserved to proper size.
     TriangleBuildInputArray(std::size_t expectBuildInputNum)
-        : BuildInputArray{ expectBuildInputNum }
+        : GeometryBuildInputArray{ expectBuildInputNum }
     {
         dataBuffers_.reserve(expectBuildInputNum);
     }
@@ -158,56 +180,63 @@ public:
 
     unsigned int GetDepth() const noexcept override { return 1; }
 
+    SBTSetterParamInfo GetSBTSetterParamInfo() const override;
+
 private:
     std::vector<TriangleDataBuffer> dataBuffers_;
-};
-
-/// @brief data buffer of instance build input array; this shouldn't be used
-/// by others, but InstanceBuildInputArray.
-class InstanceDataBuffer
-{
-public:
-    InstanceDataBuffer(auto instances);
-    auto GetInstanceBufferPtr() const noexcept
-    {
-        return Wayland::HostUtils::ToDriverPointer(instancesBuffer_.get());
-    }
-
-private:
-    Wayland::HostUtils::DeviceUniquePtr<OptixInstance[]> instancesBuffer_;
 };
 
 class Traversable;
 class InstanceBuildInputArray : public BuildInputArray
 {
 public:
-    InstanceBuildInputArray() = default;
+    InstanceBuildInputArray() { buildInputs_.resize(1); }
     /// @brief Create build input array, with reserved memory to prevent
     /// reallocation when AddBuildInput.
     /// @param expectBuildInputNum expected number of build inputs so that
     /// memory will be reserved to proper size.
     InstanceBuildInputArray(std::size_t expectBuildInputNum)
-        : BuildInputArray{ expectBuildInputNum }
     {
+        buildInputs_.resize(1);
+        deviceInstances_.reserve(expectBuildInputNum);
     }
 
     /// @brief Add a build input constructed by parameters.
     /// @param instances instances to be added, whose traversable handle can be
-    /// unset (i.e. the ctor will set it).
-    /// @param children children of the instances, used to get depth and set
+    /// not set (i.e. the ctor will set it).
+    /// @param child child of the instance, used to get depth and set
     /// traverable handles.
-    void AddBuildInput(std::span<OptixInstance> instances,
-                       std::span<const Traversable *> children);
+    void AddBuildInput(OptixInstance &instance, const Traversable *child);
 
     void RemoveBuildInput(std::size_t idx) noexcept;
 
     unsigned int GetDepth() const noexcept override;
 
+    const auto &GetChildren() const noexcept { return children_; }
+
+    const auto &GetInstances() const noexcept { return instances_; }
+
+    void SyncToDevice()
+    {
+        auto size = instances_.size();
+        if (deviceInstances_.size() < size)
+            deviceInstances_.resize(size);
+
+        thrust::copy(instances_.begin(), instances_.end(),
+                     deviceInstances_.begin());
+        assert(!buildInputs_.empty());
+        auto &instanceArr = buildInputs_.front().instanceArray;
+        instanceArr.instances =
+            HostUtils::ToDriverPointer(deviceInstances_.data());
+        instanceArr.numInstances = size;
+    }
+
 private:
     /// @brief This member is used to get depth of the traversable, otherwise
     /// unnecessary.
-    std::vector<std::vector<const Traversable *>> children_;
-    std::vector<InstanceDataBuffer> dataBuffers_;
+    std::vector<const Traversable *> children_;
+    std::vector<OptixInstance> instances_;
+    thrust::device_vector<OptixInstance> deviceInstances_;
 };
 
 enum class InstanceFlags : unsigned int
