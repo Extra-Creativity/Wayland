@@ -110,21 +110,24 @@ public:
     template<typename T>
     void SetSBTSetter(T &&init_setter)
     {
-        using RecordType =
+        using ResultType =
             std::invoke_result_t<T, unsigned int, unsigned int, unsigned int>;
+        using RecordType = std::tuple_element_t<0, ResultType>;
+        using HitDataType = RecordType::value_type;
 
-        sbtSetter_ = [setter = SBTSetter<RecordType>{ std::forward<T>(
+        sbtSetter_ = [setter = SBTSetter<ResultType>{ std::forward<T>(
                           init_setter) }](
                          unsigned int buildInputID, unsigned int sbtRecordID,
                          unsigned int rayType, std::any &sbtBuffer) {
-            using ContainerType =
-                std::invoke_result_t<decltype(GetSBTHitRecordBuffer<
-                                              typename RecordType::value_type>),
-                                     unsigned int, const Traversable &>;
-            auto buffer = std::any_cast<ContainerType>(&sbtBuffer);
-            HostUtils::CheckError(buffer,
+            using InfoType = std::invoke_result_t<
+                decltype(GetSBTHitRecordBuffer<HitDataType>), unsigned int,
+                const Traversable &>;
+            auto info = std::any_cast<InfoType>(&sbtBuffer);
+            HostUtils::CheckError(info,
                                   "Type of buffer and setter doesn't match.");
-            buffer->emplace_back(setter(buildInputID, sbtRecordID, rayType));
+            auto &&[result, idx] = setter(buildInputID, sbtRecordID, rayType);
+            info->hitRecords.emplace_back(std::move(result));
+            info->groupIndices.push_back(idx);
         };
     }
 

@@ -9,17 +9,26 @@
 namespace Wayland::Optix
 {
 
+template<typename T>
+struct SBTHitRecordInfo
+{
+    std::vector<SBTData<T>> hitRecords;
+    std::vector<std::size_t> groupIndices;
+};
+
 class SBTHitRecordBufferProxy
 {
 public:
     template<typename T>
-    SBTHitRecordBufferProxy(std::vector<SBTData<T>> cont)
+    SBTHitRecordBufferProxy(SBTHitRecordInfo<T> cont)
         : hiddenBuffer_{ std::move(cont) },
           offsetChecker_{ [](std::any &object, std::size_t currOffset) {
-              auto &buffer = std::any_cast<std::vector<SBTData<T>> &>(object);
-              if (auto size = buffer.size(); size != currOffset)
+              auto &[hitRecords, groupIndices] =
+                  std::any_cast<SBTHitRecordInfo<T> &>(object);
+              if (auto size = hitRecords.size(); size != currOffset)
               {
-                  buffer.resize(currOffset);
+                  hitRecords.resize(currOffset);
+                  groupIndices.resize(currOffset);
                   return size;
               }
               return currOffset;
@@ -75,14 +84,12 @@ protected:
 };
 
 template<typename T>
-std::vector<SBTData<T>> GetSBTHitRecordBuffer(unsigned int rayTypeNum,
-                                              const Traversable &root)
+SBTHitRecordInfo<T> GetSBTHitRecordBuffer(unsigned int rayTypeNum,
+                                          const Traversable &root)
 {
-    using ContainerType = std::vector<SBTData<T>>;
-
-    SBTHitRecordBufferProxy proxy{ ContainerType{} };
+    SBTHitRecordBufferProxy proxy{ SBTHitRecordInfo<T>{} };
     root.FillSBT(rayTypeNum, proxy);
-    return std::any_cast<ContainerType &&>(std::move(proxy).GetBuffer());
+    return std::any_cast<SBTHitRecordInfo<T> &&>(std::move(proxy).GetBuffer());
 }
 
 } // namespace Wayland::Optix
