@@ -23,9 +23,10 @@ public:
         return UncheckedGetDepthForSingleChild_(childTraversablePtr_);
     }
 
-    void FillSBT(unsigned int rayTypeNum, std::any &buffer) const override
+    void FillSBT(unsigned int rayTypeNum,
+                 SBTHitRecordBufferProxy &buffer) const override
     {
-        childTraversablePtr_->FillSBT(rayTypeNum, buffer);
+        return childTraversablePtr_->FillSBT(rayTypeNum, buffer);
     }
 
 private:
@@ -51,7 +52,7 @@ class MotionTransformBase : public TransformBase
 {
 public:
     MotionTransformBase(const Traversable &childTraversable)
-        : TransformBase{ &childTraversable }
+        : TransformBase{ childTraversable }
     {
     }
 

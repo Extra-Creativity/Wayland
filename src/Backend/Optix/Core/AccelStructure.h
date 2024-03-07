@@ -4,6 +4,8 @@
 #include "HostUtils/EnumUtils.h"
 #include "Traversable.h"
 
+#include <algorithm>
+
 namespace Wayland::Optix
 {
 
@@ -117,14 +119,16 @@ private:
     std::size_t updateBufferSize_ = 0;
 };
 
-class SBTProvider
+class GASSBTProvider
 {
 public:
     // Why not const: may move away its setter.
-    SBTProvider(GeometryBuildInputArray &arr, SBTSetterGatherFlag gatherFlag);
+    GASSBTProvider(GeometryBuildInputArray &arr,
+                   SBTSetterGatherFlag gatherFlag);
 
-    void FillSBT(unsigned int rayTypeNum, std::any &buffer) const
+    void FillSBT(unsigned int rayTypeNum, SBTHitRecordBufferProxy &proxy) const
     {
+        auto &buffer = proxy.GetBuffer();
         for (unsigned int buildInputID = 0;
              buildInputID < paramInfo_.buildInputNum_; buildInputID++)
         {
@@ -154,13 +158,14 @@ public:
     {
     }
 
-    void FillSBT(unsigned int rayTypeNum, std::any &buffer) const override
+    void FillSBT(unsigned int rayTypeNum,
+                 SBTHitRecordBufferProxy &proxy) const override
     {
-        provider_.FillSBT(rayTypeNum, buffer);
+        return provider_.FillSBT(rayTypeNum, proxy);
     }
 
 private:
-    SBTProvider provider_;
+    GASSBTProvider provider_;
 };
 
 class DynamicGeometryAccelStructure : public DynamicAccelStructure
@@ -174,13 +179,28 @@ public:
     {
     }
 
-    void FillSBT(unsigned int rayTypeNum, std::any &buffer) const override
+    void FillSBT(unsigned int rayTypeNum,
+                 SBTHitRecordBufferProxy &proxy) const override
     {
-        provider_.FillSBT(rayTypeNum, buffer);
+        return provider_.FillSBT(rayTypeNum, proxy);
     }
 
 private:
-    SBTProvider provider_;
+    GASSBTProvider provider_;
+};
+
+class IASSBTProvider
+{
+public:
+    IASSBTProvider(const InstanceBuildInputArray &arr);
+
+    void FillSBT(unsigned int rayTypeNum, SBTHitRecordBufferProxy &proxy) const
+    {
+        sbtSetter_(rayTypeNum, proxy);
+    }
+
+private:
+    std::function<void(unsigned int, SBTHitRecordBufferProxy &)> sbtSetter_;
 };
 
 class StaticInstanceAccelStrucutre : public StaticAccelStructure
@@ -188,25 +208,37 @@ class StaticInstanceAccelStrucutre : public StaticAccelStructure
 public:
     StaticInstanceAccelStrucutre(const InstanceBuildInputArray &arr,
                                  BuildFlags buildFlag = BuildFlags::None)
-        : StaticAccelStructure{ arr, buildFlag }
+        : StaticAccelStructure{ arr, buildFlag }, provider_{ arr }
     {
-        std::vector<unsigned int> instanceOffsets;
-        sbtSetter_ = [children = arr.GetChildren()](unsigned int rayNum,
-                                                    std::any &buffer) {
-            for (const auto &child : children)
-            {
-                child->FillSBT(rayNum, buffer);
-            }
-        };
     }
 
-    void FillSBT(unsigned int rayTypeNum, std::any &buffer) const override
+    void FillSBT(unsigned int rayTypeNum,
+                 SBTHitRecordBufferProxy &proxy) const override
     {
-        throw std::runtime_error{ "Not implemented yet." };
+        return provider_.FillSBT(rayTypeNum, proxy);
     }
 
 private:
-    std::function<void(unsigned int, std::any &)> sbtSetter_;
+    IASSBTProvider provider_;
+};
+
+class DynamicInstanceAccelStrucutre : public DynamicAccelStructure
+{
+public:
+    DynamicInstanceAccelStrucutre(const InstanceBuildInputArray &arr,
+                                  BuildFlags buildFlag = BuildFlags::None)
+        : DynamicAccelStructure{ arr, buildFlag }, provider_{ arr }
+    {
+    }
+
+    void FillSBT(unsigned int rayTypeNum,
+                 SBTHitRecordBufferProxy &proxy) const override
+    {
+        return provider_.FillSBT(rayTypeNum, proxy);
+    }
+
+private:
+    IASSBTProvider provider_;
 };
 
 } // namespace Wayland::Optix

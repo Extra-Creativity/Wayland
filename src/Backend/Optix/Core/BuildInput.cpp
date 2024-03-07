@@ -239,9 +239,14 @@ auto TriangleBuildInputArray::GetSBTSetterParamInfo() const
     HostUtils::CheckError(
         HostUtils::CheckInRangeAndSet(size, info.buildInputNum_),
         "Too many build inputs");
-    auto sbtRecordIDs = std::make_unique_for_overwrite<unsigned int[]>(size);
+    info.sbtRecordIDs_ = std::make_unique_for_overwrite<unsigned int[]>(size);
     for (auto i = 0; i < size; i++)
-        sbtRecordIDs[i] = dataBuffers_[i].GetFlagNum();
+    {
+        HostUtils::CheckError(
+            HostUtils::CheckInRangeAndSet(dataBuffers_[i].GetFlagNum(),
+                                          info.sbtRecordIDs_[i]),
+            "Too many SBT records.");
+    }
     return info;
 }
 
@@ -255,7 +260,7 @@ void InstanceBuildInputArray::AddBuildInput(OptixInstance &instance,
     children_.push_back(child);
     try
     {
-        deviceInstances_.push_back(instance);
+        instances_.push_back(instance);
     }
     catch (...)
     {
@@ -267,7 +272,7 @@ void InstanceBuildInputArray::AddBuildInput(OptixInstance &instance,
 
 void InstanceBuildInputArray::RemoveBuildInput(std::size_t idx) noexcept
 {
-    deviceInstances_.erase(deviceInstances_.begin() + idx);
+    instances_.erase(instances_.begin() + idx);
     children_.erase(children_.begin() + idx);
 }
 
@@ -279,6 +284,22 @@ unsigned int InstanceBuildInputArray::GetDepth() const noexcept
                    std::views::transform([](const Traversable *childPtr) {
                        return childPtr->GetDepth();
                    }));
+}
+
+void InstanceBuildInputArray::SyncToDevice()
+{
+    auto size = instances_.size();
+    if (deviceInstanceNum_ < size)
+        deviceInstances_ =
+            HostUtils::DeviceMakeUninitializedUnique<OptixInstance[]>(size);
+    thrust::copy(instances_.begin(), instances_.end(), deviceInstances_.get());
+
+    assert(!buildInputs_.empty());
+    auto &instanceArr = buildInputs_.front().instanceArray;
+    instanceArr.instances = HostUtils::ToDriverPointer(deviceInstances_.get());
+    HostUtils::CheckError(
+        HostUtils::CheckInRangeAndSet(size, instanceArr.numInstances),
+        "Too many instances.");
 }
 
 } // namespace Wayland::Optix

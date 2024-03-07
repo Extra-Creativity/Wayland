@@ -2,10 +2,15 @@
 #include "ContextManager.h"
 
 #include <limits>
+#include <ranges>
+
 #include <spdlog/spdlog.h>
 
 #undef max
 #undef min
+
+namespace stdr = std::ranges;
+namespace stdv = std::views;
 
 template<typename T>
 class FunctionTraits;
@@ -16,6 +21,13 @@ class FunctionTraits<std::function<Result(Args...)>>
 public:
     using arguments = std::tuple<Args...>;
 };
+
+static_assert(      // The first argument of SBTSetter is id of build input
+    std::is_same_v< // which should be same as build input num limit.
+        std::tuple_element_t<
+            0, FunctionTraits<Wayland::Optix::GeometryBuildInputArray::
+                                  SBTSetterProxy>::arguments>,
+        Wayland::Optix::AccelStructure::BuildInputNumLimitInt>);
 
 using namespace Wayland;
 
@@ -36,13 +48,6 @@ static auto CheckBuildInputArrLimit(const auto &buildInputs)
 
 namespace Wayland::Optix
 {
-
-static_assert(      // The first argument of SBTSetter is id of build input
-    std::is_same_v< // which should be same as build input num limit.
-        std::tuple_element_t<
-            0,
-            FunctionTraits<GeometryBuildInputArray::SBTSetterProxy>::arguments>,
-        AccelStructure::BuildInputNumLimitInt>);
 
 AccelStructure::AccelStructure(const BuildInputArray &arr, BuildFlags flags)
     : arrPtr_{ &arr }, accelOptions_{ .buildFlags = std::to_underlying(flags),
@@ -293,8 +298,8 @@ void DynamicAccelStructure::EnlargeBuffers_(
 
 // Below is those types that can fill SBT directly.
 
-SBTProvider::SBTProvider(GeometryBuildInputArray &arr,
-                         SBTSetterGatherFlag gatherFlag)
+GASSBTProvider::GASSBTProvider(GeometryBuildInputArray &arr,
+                               SBTSetterGatherFlag gatherFlag)
     : paramInfo_{ arr.GetSBTSetterParamInfo() }
 {
     if (gatherFlag == SBTSetterGatherFlag::Copy)
@@ -306,6 +311,32 @@ SBTProvider::SBTProvider(GeometryBuildInputArray &arr,
         SPDLOG_ERROR("Unknown Setter Gather Flag, copy by default.");
         sbtSetter_ = arr.GetSBTSetterProxy();
     }
+}
+
+IASSBTProvider::IASSBTProvider(const InstanceBuildInputArray &arr)
+{
+    auto GetInstanceOffsets = [](const InstanceBuildInputArray &arr) {
+        return arr.GetInstances() | stdv::transform([](const auto &instance) {
+                   return instance.sbtOffset;
+               }) |
+               stdr::to<std::vector>();
+    };
+
+    sbtSetter_ = [children = arr.GetChildren(),
+                  instanceOffsets = GetInstanceOffsets(arr)](
+                     unsigned int rayNum, SBTHitRecordBufferProxy &buffer) {
+        for (auto [child, offset] : stdv::zip(children, instanceOffsets))
+        {
+            if (auto realSize = buffer.CheckCurrOffset(offset);
+                realSize != offset)
+            {
+                SPDLOG_WARN("Unmatched instance offset (value = {}) and "
+                            "current record number (value = {}).",
+                            offset, realSize);
+            }
+            child->FillSBT(rayNum, buffer);
+        }
+    };
 }
 
 } // namespace Wayland::Optix

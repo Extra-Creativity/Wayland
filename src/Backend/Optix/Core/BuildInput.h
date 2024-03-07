@@ -5,13 +5,12 @@
 #include "HostUtils/EnumUtils.h"
 
 #include "SBTData.h"
+#include "Traversable.h"
 
 #include <any>
 #include <functional>
 #include <span>
 #include <vector>
-
-#include "thrust/device_vector.h"
 
 namespace Wayland::Optix
 {
@@ -93,8 +92,7 @@ private:
 /// + unsigned int: sbt record id (<= numSbtRecord of the build input);
 /// + unsigned int: ray type.
 template<typename T>
-using SBTSetter =
-    std::function<SBTData<T>(unsigned int, unsigned int, unsigned int)>;
+using SBTSetter = std::function<T(unsigned int, unsigned int, unsigned int)>;
 
 class GeometryBuildInputArray : public BuildInputArray
 {
@@ -105,20 +103,24 @@ public:
     {
     }
 
-    using SBTSetterProxy =
-        std::function<void(unsigned int, unsigned int, unsigned int, std::any)>;
+    using SBTSetterProxy = std::function<void(unsigned int, unsigned int,
+                                              unsigned int, std::any &)>;
 
     /// @note Set an automatic setter for build inputs.
     template<typename T>
-    void SetSBTSetter(SBTSetter<T> &&init_setter)
+    void SetSBTSetter(T &&init_setter)
     {
-        sbtSetter_ = [setter =
-                          std::forward<decltype(init_setter)>(init_setter)](
+        using RecordType =
+            std::invoke_result_t<T, unsigned int, unsigned int, unsigned int>;
+
+        sbtSetter_ = [setter = SBTSetter<RecordType>{ std::forward<T>(
+                          init_setter) }](
                          unsigned int buildInputID, unsigned int sbtRecordID,
                          unsigned int rayType, std::any &sbtBuffer) {
-            using ContainerType = std::invoke_result_t<
-                decltype(GetSBTHitRecordBuffer<SBTData<T>>), unsigned int,
-                const Traversable &>;
+            using ContainerType =
+                std::invoke_result_t<decltype(GetSBTHitRecordBuffer<
+                                              typename RecordType::value_type>),
+                                     unsigned int, const Traversable &>;
             auto buffer = std::any_cast<ContainerType>(&sbtBuffer);
             HostUtils::CheckError(buffer,
                                   "Type of buffer and setter doesn't match.");
@@ -198,7 +200,8 @@ public:
     InstanceBuildInputArray(std::size_t expectBuildInputNum)
     {
         buildInputs_.resize(1);
-        deviceInstances_.reserve(expectBuildInputNum);
+        children_.reserve(expectBuildInputNum);
+        instances_.reserve(expectBuildInputNum);
     }
 
     /// @brief Add a build input constructed by parameters.
@@ -216,27 +219,15 @@ public:
 
     const auto &GetInstances() const noexcept { return instances_; }
 
-    void SyncToDevice()
-    {
-        auto size = instances_.size();
-        if (deviceInstances_.size() < size)
-            deviceInstances_.resize(size);
-
-        thrust::copy(instances_.begin(), instances_.end(),
-                     deviceInstances_.begin());
-        assert(!buildInputs_.empty());
-        auto &instanceArr = buildInputs_.front().instanceArray;
-        instanceArr.instances =
-            HostUtils::ToDriverPointer(deviceInstances_.data());
-        instanceArr.numInstances = size;
-    }
+    void SyncToDevice();
 
 private:
     /// @brief This member is used to get depth of the traversable, otherwise
     /// unnecessary.
     std::vector<const Traversable *> children_;
     std::vector<OptixInstance> instances_;
-    thrust::device_vector<OptixInstance> deviceInstances_;
+    Wayland::HostUtils::DeviceUniquePtr<OptixInstance[]> deviceInstances_;
+    std::size_t deviceInstanceNum_ = 0;
 };
 
 enum class InstanceFlags : unsigned int
