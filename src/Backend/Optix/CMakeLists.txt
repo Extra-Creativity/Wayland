@@ -2,9 +2,14 @@ FILE(GLOB HostUtilsSrc Utils/HostUtils/*.cpp)
 add_library(Optix-HostUtils STATIC ${HostUtilsSrc})
 target_link_libraries(Optix-HostUtils PRIVATE spdlog::spdlog)
 
+FILE(GLOB DeviceUtilsSrc Utils/DeviceUtils/*.cu)
+FILE(GLOB DeviceUtilsHeaders Utils/DeviceUtils/*.h)
+add_library(Optix-DeviceUtils STATIC ${DeviceUtilsSrc} ${DeviceUtilsHeaders})
+target_link_libraries(Optix-DeviceUtils PRIVATE glm::glm)
+
 FILE(GLOB CoreSrc Core/*.cpp)
 add_library(Optix-Core STATIC ${CoreSrc})
-target_include_directories(Optix-Core PUBLIC Core Utils)
+target_include_directories(Optix-Core PUBLIC Utils)
 target_link_libraries(Optix-Core PUBLIC Optix-HostUtils spdlog::spdlog glm::glm)
 
 option(OPTIX_DEV OFF)

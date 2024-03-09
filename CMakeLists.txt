@@ -1,10 +1,13 @@
 cmake_minimum_required(VERSION 3.17)
-project(Wayland)
+project(Wayland LANGUAGES CXX CUDA)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CUDA_STANDARD 20)
 set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 set(CMAKE_BINARY_DIR build)
+
+set(ENV{http_proxy} "http://127.0.0.1:7890")
+set(ENV{https_proxy} "http://127.0.0.1:7890")
 
 find_package(CUDAToolkit)
 link_libraries(CUDA::cuda_driver)
@@ -60,3 +63,8 @@ endif()
 
 add_subdirectory(src)
 add_subdirectory(private)
+
+option(NEED_BACKEND_EXAMPLE OFF)
+if (NEED_BACKEND_EXAMPLE)
+    add_subdirectory(examples)
+endif()

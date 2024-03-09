@@ -1,6 +1,7 @@
 #pragma once
 #include "HostUtils/CommonHeaders.h"
 #include "HostUtils/CompactVariant.h"
+#include "HostUtils/DebugUtils.h"
 #include "HostUtils/DeviceAllocators.h"
 #include "HostUtils/EnumUtils.h"
 
@@ -35,6 +36,8 @@ public:
     {
         buildInputs_.erase(buildInputs_.begin() + idx);
     }
+
+    auto GetBuildInputNum() const noexcept { return buildInputs_.size(); }
 
     virtual unsigned int GetDepth() const noexcept = 0;
 
@@ -112,8 +115,7 @@ public:
     {
         using ResultType =
             std::invoke_result_t<T, unsigned int, unsigned int, unsigned int>;
-        using RecordType = std::tuple_element_t<0, ResultType>;
-        using HitDataType = RecordType::value_type;
+        using HitDataType = std::tuple_element_t<0, ResultType>;
 
         sbtSetter_ = [setter = SBTSetter<ResultType>{ std::forward<T>(
                           init_setter) }](
@@ -126,7 +128,8 @@ public:
             HostUtils::CheckError(info,
                                   "Type of buffer and setter doesn't match.");
             auto &&[result, idx] = setter(buildInputID, sbtRecordID, rayType);
-            info->hitRecords.emplace_back(std::move(result));
+            info->hitRecords.emplace_back(
+                SBTData<HitDataType>{ .data = std::move(result) });
             info->groupIndices.push_back(idx);
         };
     }
@@ -171,21 +174,29 @@ public:
     /// @param triangles triangle sequence, it's unrelated to motion.
     /// @param flag a single geometry flag, usual case for a whole mesh.
     void AddBuildInput(const std::vector<std::span<const float>> &vertices,
-                       std::span<const int> triangles,
+                       std::span<const unsigned int> triangles,
                        GeometryFlags flag = GeometryFlags::None);
 
     /// @param flags use more than one flag, whose size specifies numSbtRecords.
     /// @param sbtIndexOffset use sbt index to set every primitive, should have
     /// the same size as triangles.
     void AddBuildInput(const std::vector<std::span<const float>> &vertices,
-                       std::span<const int> triangles,
+                       std::span<const unsigned int> triangles,
                        std::span<GeometryFlags> flags,
                        std::span<const std::uint32_t> sbtIndexOffset);
     void RemoveBuildInput(std::size_t idx) noexcept;
 
+    void SyncIfSingleFlag() noexcept;
+
     unsigned int GetDepth() const noexcept override { return 1; }
 
     SBTSetterParamInfo GetSBTSetterParamInfo() const override;
+
+    void *GetTriangleIndicesBuffer(std::size_t idx) const
+    {
+        return reinterpret_cast<void *>(
+            HostUtils::Access(dataBuffers_, idx).GetTrianglesPtr());
+    }
 
 private:
     std::vector<TriangleDataBuffer> dataBuffers_;

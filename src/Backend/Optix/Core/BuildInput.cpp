@@ -192,7 +192,7 @@ void TriangleBuildInputArray::GeneralAddBuildInput_(auto &&handle)
 
 void TriangleBuildInputArray::AddBuildInput(
     const std::vector<std::span<const float>> &vertices,
-    std::span<const int> triangles, GeometryFlags flag)
+    std::span<const unsigned int> triangles, GeometryFlags flag)
 {
     GeneralAddBuildInput_([&, this](OptixBuildInput &newBuildInput) {
         auto [vertNum, triNum] =
@@ -208,7 +208,7 @@ void TriangleBuildInputArray::AddBuildInput(
 
 void TriangleBuildInputArray::AddBuildInput(
     const std::vector<std::span<const float>> &vertices,
-    std::span<const int> triangles, std::span<GeometryFlags> flags,
+    std::span<const unsigned int> triangles, std::span<GeometryFlags> flags,
     std::span<const std::uint32_t> sbtIndexOffset)
 {
     GeneralAddBuildInput_([&, this](OptixBuildInput &newBuildInput) {
@@ -229,6 +229,18 @@ void TriangleBuildInputArray::RemoveBuildInput(std::size_t idx) noexcept
 {
     BuildInputArray::RemoveBuildInput(idx);
     dataBuffers_.erase(dataBuffers_.begin() + idx);
+}
+
+// Reasone: when moved, flag on stack will change its position.
+void TriangleBuildInputArray::SyncIfSingleFlag() noexcept
+{
+    for (auto [buildInput, dataBuffer] :
+         std::views::zip(buildInputs_, dataBuffers_))
+    {
+        buildInput.triangleArray.flags =
+            reinterpret_cast<const std::underlying_type_t<GeometryFlags> *>(
+                dataBuffer.GetFlagPtr());
+    }
 }
 
 auto TriangleBuildInputArray::GetSBTSetterParamInfo() const
