@@ -16,6 +16,8 @@ void FillColors(const aiMaterial *material, Example::Phong::HitData &data)
 
     material->Get(AI_MATKEY_COLOR_SPECULAR, color);
     data.ks = { color.r, color.g, color.b };
+    if (data.ks == glm::zero<glm::vec3>()) // add a slight specular effect.
+        data.ks = glm::vec3{ 0.1f };
 
     material->Get(AI_MATKEY_COLOR_AMBIENT, color);
     data.ka = { color.r, color.g, color.b };
@@ -70,13 +72,13 @@ int main()
         cudaDeviceSynchronize(); // For AS.
         Optix::Module myModule{
             SHADER_PATH, Optix::ModuleConfig::GetDefaultRef(),
-            Optix::PipelineConfig::GetDefault().SetNumPayloadValues(2)
+            Optix::PipelineConfig::GetDefault().SetNumPayloadValues(3)
         };
         Optix::ProgramGroupArray arr{ 3 };
         myModule.IdentifyPrograms({ SHADER_PATH }, arr);
         Optix::Pipeline pipeline{
             arr, 1, model.GetAS().GetDepth(),
-            0,   0, Optix::PipelineConfig::GetDefault().SetNumPayloadValues(2)
+            0,   0, Optix::PipelineConfig::GetDefault().SetNumPayloadValues(3)
         };
 
         Optix::ShaderBindingTable sbt = GetSBT(model, arr);
@@ -88,7 +90,7 @@ int main()
         Example::Camera camera{ { 0, 10, 35 }, { 0, 1, 0 }, { 0, 0, -1 } };
         Optix::Launcher launcher{ Example::Phong::LaunchParam{
             .lightPos = { -3, 12, 7.5f },
-            .lightColor = { 1.0f, 1.0f, 1.0f },
+            .lightColor = { 25.0f, 25.0f, 25.0f },
             .camera = camera.ToDeviceCamera(1), // aspect is 1
             .colorBuffer = rawBuffer,
             .traversable = model.GetAS().GetHandle(),

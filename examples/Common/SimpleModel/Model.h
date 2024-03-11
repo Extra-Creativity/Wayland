@@ -94,7 +94,6 @@ public:
                 GPUTextureData::Format format = GPUTextureData::Format::UByte,
                 unsigned int postProcess = aiProcess_Triangulate |
                                            aiProcess_GenSmoothNormals |
-                                           aiProcess_FlipUVs |
                                            aiProcess_JoinIdenticalVertices)
         : model_{},
           meshCollection_{ *this, model_.ReadFile(path.string(), postProcess),

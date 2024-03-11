@@ -3,7 +3,7 @@
 
 #include "HostUtils/DebugUtils.h"
 #include "HostUtils/ErrorCheck.h"
-#include "UniUtils/MathUtils.h"
+#include "UniUtils/IntUtils.h"
 
 #include <algorithm>
 #include <cassert>

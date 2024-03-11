@@ -13,15 +13,15 @@ using namespace Wayland;
 namespace Wayland::Optix
 {
 
-// RAII to prevent pipeline leak. Its GetRaw() is supposed to be
-// transferred before it's destructed if no exception is thrown.
+// RAII to prevent pipeline leak. Its Release() is supposed to be
+// called before it's destructed.
 class PipelineWrapper
 {
-    OptixPipeline pipeline_;
-    std::size_t exceptionNum_ = std::uncaught_exceptions();
+    OptixPipeline pipeline_ = nullptr;
 
 public:
     auto GetRaw() const noexcept { return pipeline_; }
+    auto Release() noexcept { return std::exchange(pipeline_, nullptr); }
     PipelineWrapper(
         const ProgramGroupArray &arr,
         decltype(OptixPipelineLinkOptions::maxTraceDepth) maxTraceDepth,
@@ -51,7 +51,7 @@ public:
 
     ~PipelineWrapper()
     {
-        if (exceptionNum_ < std::uncaught_exceptions())
+        if (pipeline_)
         {
             SPDLOG_ERROR("Unable to calculate stack size.");
             HostUtils::CheckOptixError<HostUtils::OnlyLog>(
@@ -102,7 +102,7 @@ Pipeline::Pipeline(
         AccumulateStackSize(arr.GetHandleArr(), pipeline.GetRaw());
     SetStackSize(stackSize, pipeline, maxTraceDepth, maxTraversableDepth,
                  maxCCDepth, maxDCDepth);
-    pipeline_ = pipeline.GetRaw();
+    pipeline_ = pipeline.Release();
 }
 
 Pipeline::Pipeline(
@@ -116,7 +116,7 @@ Pipeline::Pipeline(
     PipelineWrapper pipeline{ arr, maxTraceDepth, pipelineConfig };
     SetStackSize(stackSize, pipeline, maxTraceDepth, maxTraversableDepth,
                  maxCCDepth, maxDCDepth);
-    pipeline_ = pipeline.GetRaw();
+    pipeline_ = pipeline.Release();
 }
 
 Pipeline::Pipeline(
@@ -133,7 +133,7 @@ Pipeline::Pipeline(
         pipeline.GetRaw(), directCallableStackSizeFromTraversal,
         directCallableStackSizeFromState, continuationStackSize,
         maxTraversableDepth));
-    pipeline_ = pipeline.GetRaw();
+    pipeline_ = pipeline.Release();
 }
 
 } // namespace Wayland::Optix
