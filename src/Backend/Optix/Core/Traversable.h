@@ -65,6 +65,15 @@ public:
                                       "SBT cannot be filled by type " } +
                                   typeid(*this).name() };
     }
+    Traversable() = default;
+
+    Traversable(const Traversable &) = delete;
+    Traversable &operator=(const Traversable &) = delete;
+
+    // TODO: temporarily disable it; we may add relocation in the future.
+    Traversable(Traversable &&) = delete;
+    Traversable &operator=(Traversable &&) = delete;
+
     virtual ~Traversable() = default;
 
     auto GetHandle() const noexcept { return handle_; }
@@ -80,7 +89,7 @@ protected:
         return ptr ? ptr->GetDepth() + 1 : 0;
     }
 
-    OptixTraversableHandle handle_;
+    OptixTraversableHandle handle_ = 0;
 };
 
 template<typename T>

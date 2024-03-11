@@ -176,9 +176,16 @@ Module::Module(const char *command, const char *targetPath,
     CreateModule_(fileContents.view(), moduleConfig, pipelineConfig);
 }
 
+void Module::CleanModule_() noexcept
+{
+    if (module_)
+        HostUtils::CheckOptixError<HostUtils::OnlyLog>(
+            optixModuleDestroy(module_));
+}
+
 Module::~Module()
 {
-    HostUtils::CheckOptixError<HostUtils::OnlyLog>(optixModuleDestroy(module_));
+    CleanModule_();
 }
 
 } // namespace Wayland::Optix

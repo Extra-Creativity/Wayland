@@ -136,4 +136,18 @@ Pipeline::Pipeline(
     pipeline_ = pipeline.Release();
 }
 
+void Pipeline::CleanPipeline_() noexcept
+{
+    if (pipeline_)
+    {
+        HostUtils::CheckOptixError<HostUtils::OnlyLog>(
+            optixPipelineDestroy(pipeline_));
+    }
+}
+
+Pipeline::~Pipeline()
+{
+    CleanPipeline_();
+}
+
 } // namespace Wayland::Optix

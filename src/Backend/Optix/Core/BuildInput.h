@@ -40,6 +40,7 @@ public:
     auto GetBuildInputNum() const noexcept { return buildInputs_.size(); }
 
     virtual unsigned int GetDepth() const noexcept = 0;
+    virtual ~BuildInputArray() = default;
 
 protected:
     std::vector<OptixBuildInput> buildInputs_;
