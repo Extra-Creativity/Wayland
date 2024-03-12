@@ -35,7 +35,7 @@ __device__ __forceinline__ void GetOrthoNormalBasis(glm::vec3 vec, glm::vec3 &u,
 }
 
 __device__ __forceinline__ glm::vec3 RandomSampleDir(glm::vec3 normal,
-                                                     unsigned int& seed)
+                                                     unsigned int &seed)
 {
     glm::vec3 x, y;
     GetOrthoNormalBasis(normal, x, y);
@@ -65,6 +65,7 @@ extern "C" __global__ void __raygen__RenderFrame()
 
     auto idx = (std::size_t)optixGetLaunchDimensions().x * rowNum + colNum;
 
+    // Pass payload to the closest hit.
     auto buffer = DeviceUtils::PackPayloads(
         Payload{ glm::vec3{}, param.maxDepth, tea<4>(idx, 10086) });
     glm::vec3 result{ 0 };
@@ -72,7 +73,7 @@ extern "C" __global__ void __raygen__RenderFrame()
     for (unsigned int i = 0; i < param.sampleNum; i++)
     {
         auto &payload = DeviceUtils::UnpackPayloads<Payload>(buffer);
-        glm::vec3 randomRayDir =
+        glm::vec3 randomRayDir = // random position in a pixel
             rayDir + rnd(payload.seed) * 2 * cellSize.y * horizontalVec +
             rnd(payload.seed) * 2 * cellSize.x * verticalVec;
         DeviceUtils::optixTraceUnpack(buffer, param.traversable,
@@ -88,6 +89,7 @@ extern "C" __global__ void __raygen__RenderFrame()
 
 extern "C" __global__ void __miss__Empty()
 {
+    // If miss, make is ambient i.e. zero.
     DeviceUtils::SetToPayload<0>(glm::vec3{ 0 });
 }
 
@@ -99,12 +101,13 @@ extern "C" __global__ void __closesthit__PT()
 
     if (currDepth == 0 || data.emission != glm::vec3{ 0, 0, 0 })
     {
+        // Return emission back.
         DeviceUtils::SetToPayload<0>(data.emission);
         return;
     }
     else if (currDepth <= minDepth)
     {
-        if(rnd(seed) > stopPossiblity)
+        if (rnd(seed) > stopPossiblity)
         {
             DeviceUtils::SetToPayload<0>(data.emission);
             DeviceUtils::SetToPayload<4>(seed);
@@ -125,6 +128,7 @@ extern "C" __global__ void __closesthit__PT()
     auto cosWeight = max(0.f, glm::dot(rayDir, normal));
     float coeff = 2; // pdf = 1 / 2pi, albedo = kd / pi
 
+    // continue to trace with new payload.
     auto buffer =
         DeviceUtils::PackPayloads(Payload{ glm::vec3{}, currDepth - 1, seed });
     DeviceUtils::optixTraceUnpack(buffer, param.traversable,
@@ -132,7 +136,7 @@ extern "C" __global__ void __closesthit__PT()
                                   UniUtils::ToFloat3(rayDir), 0, 30, 0, 20,
                                   OPTIX_RAY_FLAG_DISABLE_ANYHIT, 0, 1, 0);
     auto &result = DeviceUtils::UnpackPayloads<Payload>(buffer);
-    DeviceUtils::SetToPayload<0>(result.color * data.color * cosWeight *
-                                 coeff / stopPossiblity);
+    DeviceUtils::SetToPayload<0>(result.color * data.color * cosWeight * coeff /
+                                 stopPossiblity);
     DeviceUtils::SetToPayload<4>(result.seed);
 }
