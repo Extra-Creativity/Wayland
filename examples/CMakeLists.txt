@@ -27,3 +27,4 @@ target_include_directories(Example_Common PUBLIC ../src/Backend PRIVATE Common)
 target_link_libraries(Example_Common PUBLIC Optix-Core assimp::assimp Example_Common_Base)
 
 add_subdirectory(Phong)
+add_subdirectory(PathTracer)
