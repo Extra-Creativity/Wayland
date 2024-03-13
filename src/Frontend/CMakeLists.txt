@@ -25,6 +25,7 @@ target_include_directories(
 
 target_link_libraries(${TARGET_NAME} PRIVATE 
     Optix-Core
-    glfw
+    minipbrt
+    glfw 
     ${OPENGL_gl_LIBRARY}
 )

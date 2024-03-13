@@ -8,14 +8,12 @@ namespace Wayland
 class Renderer
 {
 public:
-    Renderer(){};
-
-    void Init(WinSize wSize);
+    Renderer(WinSize s);
+    ~Renderer() {}
     void Run();
-    void Destroy();
 
 public:
-    MainWindowPtr window;
+    MainWindow window;
 };
 
 } // namespace Wayland

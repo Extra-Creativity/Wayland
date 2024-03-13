@@ -4,13 +4,11 @@
 using namespace Wayland;
 
 int main(int argc, char** argv) {
-     Wayland::Renderer app;
      
      try
      {
-         app.Init({1920, 1080});
+         Wayland::Renderer app({ 1920, 1080 });
          app.Run();
-         app.Destroy();
      }
      catch (const std::exception& e)
      {

@@ -5,24 +5,26 @@
 
 namespace Wayland
 {
-    struct WinSize
-    {
-	    int w;
-	    int h;
-    };
+struct WinSize
+{
+    int w;
+    int h;
+};
 
 class MainWindow
 {
 public:
-    MainWindow() : glfWindow(nullptr) {}
+    MainWindow(WinSize s);
+    ~MainWindow() { glfwTerminate(); }
 
-    void Init();
     void Update();
-    void Destroy();
     void putInCenter();
     bool ShouldClose();
 
     void setSize(WinSize s) { size = s; }
+
+private:
+    void Init();
 
 private:
     GLFWwindow *glfWindow;

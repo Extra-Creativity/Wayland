@@ -1,0 +1,1 @@
+add_library(minipbrt STATIC minipbrt.cpp minipbrt.h)

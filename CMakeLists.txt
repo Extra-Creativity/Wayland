@@ -51,6 +51,13 @@ else()
 endif()
 
 
+# build minipbrt
+set(minipbrt_dir ${PROJECT_SOURCE_DIR}/3rdParty/minipbrt/)
+include_directories(${minipbrt_dir})
+add_subdirectory(${minipbrt_dir})
+
+
+
 # Enable UTF-8 and warnings.
 if(MSVC)
     add_compile_options(/utf-8 /W3) # 4996 is warning from spdlog.
