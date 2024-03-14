@@ -19,6 +19,7 @@ struct Payload
 extern "C" __constant__ LaunchParam param;
 __constant__ int minDepth = 5;
 __constant__ float continuePossiblity = 0.99;
+__constant__ float epsilon = 1e-5;
 
 __device__ __forceinline__ void GetOrthoNormalBasis(glm::vec3 vec, glm::vec3 &u,
                                                     glm::vec3 &v)
@@ -79,8 +80,8 @@ extern "C" __global__ void __raygen__RenderFrame()
         DeviceUtils::optixTraceUnpack(buffer, param.traversable,
                                       UniUtils::ToFloat3(param.camera.position),
                                       UniUtils::ToFloat3(randomRayDir), 0, 30,
-                                      0, 255, OPTIX_RAY_FLAG_DISABLE_ANYHIT, 0,
-                                      1, 0);
+                                      0, OptixVisibilityMask(1),
+                                      OPTIX_RAY_FLAG_DISABLE_ANYHIT, 0, 1, 0);
         result += payload.color * sampleWeight;
     }
     result = glm::clamp(result, 0.f, 1.f) * 255.0f;
@@ -133,10 +134,10 @@ extern "C" __global__ void __closesthit__PT()
     // continue to trace with new payload.
     auto buffer =
         DeviceUtils::PackPayloads(Payload{ glm::vec3{}, currDepth - 1, seed });
-    DeviceUtils::optixTraceUnpack(buffer, param.traversable,
-                                  UniUtils::ToFloat3(hitPosition),
-                                  UniUtils::ToFloat3(rayDir), 0, 30, 0, 20,
-                                  OPTIX_RAY_FLAG_DISABLE_ANYHIT, 0, 1, 0);
+    DeviceUtils::optixTraceUnpack(
+        buffer, param.traversable, UniUtils::ToFloat3(hitPosition),
+        UniUtils::ToFloat3(rayDir), epsilon, 30, 0, OptixVisibilityMask(1),
+        OPTIX_RAY_FLAG_DISABLE_ANYHIT, 0, 1, 0);
     auto &result = DeviceUtils::UnpackPayloads<Payload>(buffer);
     DeviceUtils::SetToPayload<0>(result.color * data.color * cosWeight * coeff *
                                  RR_factor);
