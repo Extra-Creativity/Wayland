@@ -41,9 +41,9 @@ __device__ __forceinline__ glm::vec3 RandomSampleDir(glm::vec3 normal,
     glm::vec3 x, y;
     GetOrthoNormalBasis(normal, x, y);
 
-    auto angle = rnd(seed) * 2 * 3.141592653589793f, radius = rnd(seed);
-    return (sinf(angle) * x + cosf(angle) * y) * radius +
-           sqrtf(1 - radius * radius) * normal;
+    auto angle = rnd(seed) * 2 * 3.141592653589793f, h = rnd(seed);
+    return (sinf(angle) * x + cosf(angle) * y) * sqrtf(1 - h * h) +
+            h* normal;
 }
 
 extern "C" __global__ void __raygen__RenderFrame()
