@@ -18,7 +18,7 @@ struct Payload
 
 extern "C" __constant__ LaunchParam param;
 __constant__ int minDepth = 5;
-__constant__ float stopPossiblity = 0.99;
+__constant__ float continuePossiblity = 0.99;
 
 __device__ __forceinline__ void GetOrthoNormalBasis(glm::vec3 vec, glm::vec3 &u,
                                                     glm::vec3 &v)
@@ -99,22 +99,24 @@ extern "C" __global__ void __closesthit__PT()
     auto currDepth = DeviceUtils::GetFromPayload<unsigned int, 3>();
     auto seed = DeviceUtils::GetFromPayload<unsigned int, 4>();
 
+    float RR_factor = 1.0f;
+
     if (currDepth == 0 || data.emission != glm::vec3{ 0, 0, 0 })
     {
-        // Return emission back.
+        // Hit light source directly, return emission back.
         DeviceUtils::SetToPayload<0>(data.emission);
         return;
     }
     else if (currDepth <= minDepth)
     {
-        if (rnd(seed) > stopPossiblity)
+        if (rnd(seed) > continuePossiblity)
         {
             DeviceUtils::SetToPayload<0>(data.emission);
             DeviceUtils::SetToPayload<4>(seed);
             return;
         }
+        RR_factor /= continuePossiblity;
     }
-
     auto indices = data.indices[optixGetPrimitiveIndex()];
     auto weights = optixGetTriangleBarycentrics();
     auto normal = glm::normalize(
@@ -136,7 +138,7 @@ extern "C" __global__ void __closesthit__PT()
                                   UniUtils::ToFloat3(rayDir), 0, 30, 0, 20,
                                   OPTIX_RAY_FLAG_DISABLE_ANYHIT, 0, 1, 0);
     auto &result = DeviceUtils::UnpackPayloads<Payload>(buffer);
-    DeviceUtils::SetToPayload<0>(result.color * data.color * cosWeight * coeff /
-                                 stopPossiblity);
+    DeviceUtils::SetToPayload<0>(result.color * data.color * cosWeight * coeff *
+                                 RR_factor);
     DeviceUtils::SetToPayload<4>(result.seed);
 }
