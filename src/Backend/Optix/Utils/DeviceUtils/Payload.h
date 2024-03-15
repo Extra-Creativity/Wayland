@@ -46,7 +46,7 @@ __device__ __forceinline__ auto PackPayloads(const T &arg)
     -> cuda::std::array<unsigned char, sizeof(T)>
 {
     static_assert(sizeof(T) / 4 <= 32 && sizeof(T) % 4 == 0);
-    cuda::std::array<unsigned char, sizeof(T)> arr;
+    alignas(T) cuda::std::array<unsigned char, sizeof(T)> arr;
     ::memcpy(arr.data(), thrust::addressof(arg), sizeof(T));
     return arr;
 }
@@ -58,7 +58,7 @@ __device__ __forceinline__ auto PackPayloads()
     -> cuda::std::array<unsigned char, sizeof(T)>
 {
     static_assert(sizeof(T) / 4 <= 32 && sizeof(T) % 4 == 0);
-    cuda::std::array<unsigned char, sizeof(T)> arr;
+    alignas(T) cuda::std::array<unsigned char, sizeof(T)> arr;
     return arr;
 }
 #pragma nv_diag_default 549

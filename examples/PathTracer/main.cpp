@@ -53,20 +53,16 @@ int main()
         auto model = Example::StaticModel{ MODEL_PATH, &GenerateHitData,
                                            Optix::GeometryFlags::DiableAnyHit };
         cudaDeviceSynchronize(); // For AS.
-        Optix::Module myModule{
-            SHADER_PATH, Optix::ModuleConfig::GetDefaultRef(),
-            Optix::PipelineConfig::GetDefault().SetNumPayloadValues(5)
-        };
+
+        auto pipelineConfig =
+            Optix::PipelineConfig::GetDefault().SetNumPayloadValues(5);
+        Optix::Module myModule{ SHADER_PATH,
+                                Optix::ModuleConfig::GetDefaultRef(),
+                                pipelineConfig };
         Optix::ProgramGroupArray arr{ 3 };
         myModule.IdentifyPrograms({ SHADER_PATH }, arr);
-        Optix::Pipeline pipeline{
-            arr,
-            maxDepth,
-            model.GetAS().GetDepth(),
-            2,
-            2,
-            Optix::PipelineConfig::GetDefault().SetNumPayloadValues(5)
-        };
+        Optix::Pipeline pipeline{ arr, maxDepth, model.GetAS().GetDepth(),
+                                  2,   2,        pipelineConfig };
 
         Optix::ShaderBindingTable sbt = GetSBT(model, arr);
 
@@ -76,7 +72,7 @@ int main()
         auto rawBuffer = buffer.get().get();
         Example::Camera camera{ { -0.23, 2.58, 5 }, { 0, 1, 0 }, { 0, 0, -1 } };
         Optix::Launcher launcher{ Example::PathTracing::LaunchParam{
-            .sampleNum = 1024,
+            .sampleNum = 1024 * 16,
             .maxDepth = maxDepth - 1,
             .camera = camera.ToDeviceCamera(1), // aspect is 1
             .colorBuffer = rawBuffer,
