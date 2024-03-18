@@ -7,11 +7,17 @@ set(
     Wayland.cpp
     MainWindow.cpp
     Renderer.cpp
+    SceneManager.cpp
+    Camera.cpp
 )
 set(
   HEADERS
     MainWindow.h
     Renderer.h
+    SceneManager.h
+    PBRTv3_SceneCommon.h
+    Camera.h
+    printUtils.h
 )
   
 add_executable(${TARGET_NAME} ${SOURCE} ${HEADERS})
@@ -27,5 +33,7 @@ target_link_libraries(${TARGET_NAME} PRIVATE
     Optix-Core
     minipbrt
     glfw 
+    spdlog
+    glm
     ${OPENGL_gl_LIBRARY}
 )
