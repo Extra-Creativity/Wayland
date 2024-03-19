@@ -6,3 +6,5 @@ build
 out
 CMakeSettings.json
 private
+mprivate
+scene
