@@ -28,11 +28,11 @@ PinholeCamera::PinholeCamera(float fov_, vec3 pos_, vec3 lookAt_, vec3 up_)
 string PinholeCamera::toString() const
 {
     ostringstream oss;
-    oss << "  Type: Pinhole\n";
+    oss << "  Type:     Pinhole\n";
     oss << "  Position: " << printUtils::toString(position) << "\n";
-    oss << "  Lookat: " << printUtils::toString(lookAt) << "\n";
-    oss << "  Up: " << printUtils::toString(up) << "\n";
-    oss << "  Fov: " << fov << "\n";
+    oss << "  Lookat:   " << printUtils::toString(lookAt) << "\n";
+    oss << "  Up:       " << printUtils::toString(up) << "\n";
+    oss << "  Fov:      " << fov << "\n";
     return oss.str();
 }
 } // namespace Wayland

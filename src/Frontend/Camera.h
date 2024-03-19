@@ -21,8 +21,8 @@ const string CameraTypeStr[] = { "pinhole" };
 class Camera
 {
 public:
-    Camera() {};
-	virtual ~Camera() {}
+    Camera() = default;
+    virtual ~Camera() = default;
     virtual CameraType type() const = 0;
     virtual string toString() const = 0;
 };

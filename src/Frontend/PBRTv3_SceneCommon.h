@@ -16,4 +16,24 @@ enum class CameraType
 const string CameraTypeStr[] = { "Perspective", "Orthographic", "Environment",
                                  "Realistic", "Unknown" };
 
+enum class ShapeType
+{
+    Cone,
+    Curve,
+    Cylinder,
+    Disk,
+    Hyperboloid,
+    Paraboloid,
+    Sphere,
+    TriangleMesh,
+    HeightField,
+    LoopSubdiv,
+    Nurbs,
+    PLYMesh,
+    ShapeTypeMax
+};
+const string ShapeTypeStr[] = { "Cone", "Curve", "Cylinder", "Disk", "Hyperboloid",
+								"Paraboloid", "Sphere", "TriangleMesh", "HeightField",
+								"LoopSubdiv", "Nurbs", "PLYMesh", "Unknown" };
+
 } // namespace Wayland::PBRTv3

@@ -4,16 +4,16 @@
 #include <sstream>
 #include <string>
 
+#include "minipbrt.h"
+#include "PBRTv3_SceneCommon.h"
+
 using namespace std;
 
 namespace Wayland::printUtils
 {
 
-string toString(glm::vec3 v)
-{
-    ostringstream oss;
-    oss << "(" << v.x << ", " << v.y << ", " << v.z << ")";
-    return oss.str();
-}
+string toString(glm::vec3 v);
+string toString(minipbrt::Scene *scene);
+string toString(minipbrt::Shape *shape);
 
 } // namespace Wayland

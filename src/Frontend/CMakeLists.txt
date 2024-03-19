@@ -9,15 +9,18 @@ set(
     Renderer.cpp
     SceneManager.cpp
     Camera.cpp
+    Shape.cpp
+    PrintUtils.cpp
 )
 set(
   HEADERS
     MainWindow.h
     Renderer.h
     SceneManager.h
-    PBRTv3_SceneCommon.h
     Camera.h
-    printUtils.h
+    Shape.h
+    PrintUtils.h
+    PBRTv3_SceneCommon.h
 )
   
 add_executable(${TARGET_NAME} ${SOURCE} ${HEADERS})

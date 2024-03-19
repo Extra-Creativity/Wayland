@@ -2,7 +2,7 @@
 
 using namespace Wayland;
 
-Renderer::Renderer(WinSize s) : window(s) {}
+Renderer::Renderer(WinSize s, std::string sceneSrc) : window(s), scene(sceneSrc) {}
 
 void Renderer::Run()
 {
