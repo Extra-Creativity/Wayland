@@ -8,7 +8,7 @@
 #include <string_view>
 #include <vector>
 
-namespace Wayland::Optix
+namespace Wayland::OptiX
 {
 
 class PipelineConfig;
@@ -125,4 +125,4 @@ public:
 #endif
 };
 
-} // namespace Wayland::Optix
+} // namespace Wayland::OptiX

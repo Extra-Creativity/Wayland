@@ -7,7 +7,7 @@
 #include <memory>
 #include <span>
 
-namespace Wayland::Optix
+namespace Wayland::OptiX
 {
 
 class StaticTransform : public Traversable
@@ -84,4 +84,4 @@ public:
                        float tEnd, bool beginVanish, bool endVanish);
 };
 
-} // namespace Wayland::Optix
+} // namespace Wayland::OptiX

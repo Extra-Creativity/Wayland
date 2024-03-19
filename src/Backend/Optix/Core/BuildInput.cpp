@@ -15,7 +15,7 @@
 
 using namespace Wayland;
 
-namespace Wayland::Optix
+namespace Wayland::OptiX
 {
 
 FlagVariant::FlagVariant(std::span<const GeometryFlags> flags)
@@ -342,4 +342,4 @@ unsigned int InstanceBuildInputArray::GetDepth() const noexcept
                }));
 }
 
-} // namespace Wayland::Optix
+} // namespace Wayland::OptiX

@@ -2,7 +2,7 @@
 
 #include "HostUtils/DeviceAllocators.h"
 
-namespace Wayland::Optix
+namespace Wayland::OptiX
 {
 
 class Pipeline;
@@ -54,4 +54,4 @@ private:
     std::size_t size_;
 };
 
-} // namespace Wayland::Optix
+} // namespace Wayland::OptiX

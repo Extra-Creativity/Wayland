@@ -4,7 +4,7 @@
 #include "HostUtils/EnumUtils.h"
 #include <span>
 
-namespace Wayland::Optix
+namespace Wayland::OptiX
 {
 
 /// @brief Base class of all build input arrays, like
@@ -224,7 +224,7 @@ enum class InstanceFlags : unsigned int
     DisableOMM = OPTIX_INSTANCE_FLAG_DISABLE_OPACITY_MICROMAPS
 #endif
 };
-} // namespace Wayland::Optix
+} // namespace Wayland::OptiX
 
-ENABLE_BINARY_OP_FOR_SCOPED_ENUM(Wayland::Optix::GeometryFlags);
-ENABLE_BINARY_OP_FOR_SCOPED_ENUM(Wayland::Optix::InstanceFlags);
+ENABLE_BINARY_OP_FOR_SCOPED_ENUM(Wayland::OptiX::GeometryFlags);
+ENABLE_BINARY_OP_FOR_SCOPED_ENUM(Wayland::OptiX::InstanceFlags);

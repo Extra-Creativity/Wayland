@@ -10,7 +10,7 @@ static char s_pipelineLog[s_pipelineLogSize];
 
 using namespace Wayland;
 
-namespace Wayland::Optix
+namespace Wayland::OptiX
 {
 
 // RAII to prevent pipeline leak. Its GetRaw() is supposed to be
@@ -136,4 +136,4 @@ Pipeline::Pipeline(
     pipeline_ = pipeline.GetRaw();
 }
 
-} // namespace Wayland::Optix
+} // namespace Wayland::OptiX

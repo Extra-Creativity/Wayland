@@ -4,7 +4,7 @@
 #include "HostUtils/EnumUtils.h"
 #include "Traversable.h"
 
-namespace Wayland::Optix
+namespace Wayland::OptiX
 {
 
 /// @brief Build flags is just scoped enumeration for OptixBuildFlags, used by
@@ -25,10 +25,10 @@ enum class BuildFlags : unsigned int
 #endif
 };
 
-} // namespace Wayland::Optix
-ENABLE_BINARY_OP_FOR_SCOPED_ENUM(Wayland::Optix::BuildFlags);
+} // namespace Wayland::OptiX
+ENABLE_BINARY_OP_FOR_SCOPED_ENUM(Wayland::OptiX::BuildFlags);
 
-namespace Wayland::Optix
+namespace Wayland::OptiX
 {
 
 /// @brief Abstract class for AS.
@@ -111,4 +111,4 @@ private:
     std::size_t updateBufferSize_ = 0;
 };
 
-} // namespace Wayland::Optix
+} // namespace Wayland::OptiX

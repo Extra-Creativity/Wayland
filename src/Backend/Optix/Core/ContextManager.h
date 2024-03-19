@@ -10,7 +10,7 @@
 #include <utility>
 #include <vector>
 
-namespace Wayland::Optix
+namespace Wayland::OptiX
 {
 
 /// @brief Where the optix context is created.
@@ -122,4 +122,4 @@ private:
     static thread_local ContextManager::ContextInfo *currentContext_;
 };
 
-} // namespace Wayland::Optix
+} // namespace Wayland::OptiX

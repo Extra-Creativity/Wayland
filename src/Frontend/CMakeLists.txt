@@ -28,12 +28,12 @@ target_compile_definitions(${TARGET_NAME} PRIVATE NEED_AUTO_PROGRAM_CONFIG)
 
 target_include_directories(
     ${TARGET_NAME} 
-    PRIVATE ${PROJECT_SOURCE_DIR}/src/Backend/Optix 
-    PRIVATE ${PROJECT_SOURCE_DIR}/src/Backend/Optix/Utils
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/Backend/OptiX 
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/Backend/OptiX/Utils
 )
 
 target_link_libraries(${TARGET_NAME} PRIVATE 
-    Optix-Core
+    OptiX-Core
     minipbrt
     glfw 
     spdlog

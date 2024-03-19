@@ -4,12 +4,12 @@
 #include "HostUtils/ErrorCheck.h"
 #include "HostUtils/SpecialMacros.h"
 
-#include "spdlog/spdlog.h"
+#include <spdlog/spdlog.h>
 
 #include <span>
 #include <string_view>
 
-namespace Wayland::Optix
+namespace Wayland::OptiX
 {
 
 /// @brief Wrapper of OptixModuleCompileOptions, providing chained setter.
@@ -139,4 +139,4 @@ inline void LogProcedureInfo(std::size_t logStringSize,
         SPDLOG_INFO("{}", std::string_view{ logPtr, logStringSize });
 }
 
-} // namespace Wayland::Optix
+} // namespace Wayland::OptiX

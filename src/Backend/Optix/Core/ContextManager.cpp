@@ -11,7 +11,7 @@
 
 using namespace Wayland;
 
-namespace Wayland::Optix
+namespace Wayland::OptiX
 {
 thread_local ContextManager::ContextInfo *LocalContextSetter::currentContext_ =
     nullptr;
@@ -203,4 +203,4 @@ void ContextManager::SetCachePath(const std::string &path)
     }
 }
 
-} // namespace Wayland::Optix
+} // namespace Wayland::OptiX

@@ -6,7 +6,7 @@
 
 using namespace Wayland;
 
-namespace Wayland::Optix
+namespace Wayland::OptiX
 {
 
 void Launcher::Launch(const Pipeline &pipeline, CUstream stream,
@@ -19,4 +19,4 @@ void Launcher::Launch(const Pipeline &pipeline, CUstream stream,
     return;
 }
 
-} // namespace Wayland::Optix
+} // namespace Wayland::OptiX
