@@ -2,7 +2,7 @@
 #include "HostUtils/CommonHeaders.h"
 #include "HostUtils/DeviceAllocators.h"
 
-namespace Wayland::OptiX
+namespace Wayland::Optix
 {
 
 /// @brief template class for data passed to SBT.
@@ -122,4 +122,4 @@ private:
     OptixShaderBindingTable sbt_{};
 };
 
-} // namespace Wayland::OptiX
+} // namespace Wayland::Optix

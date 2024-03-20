@@ -14,14 +14,14 @@ int main(int argc, char** argv) {
      {
          Wayland::Renderer app({ 1920, 1080 }, sceneSrc);
 
-         app.scene.printScene();
+         //app.scene.printScene();
 
          //app.Run();
      }
-     catch (const std::exception& e)
+     catch (const std::exception &e)
      {
-         std::cerr << "Caught Exception: " <<  e.what() << std::endl;
+         SPDLOG_ERROR("{}", e.what());
          return 1;
-	 }
+     }
     return 0;
 }

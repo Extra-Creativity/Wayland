@@ -94,7 +94,7 @@ static std::string JoinArgs(const std::vector<std::string> &args)
     return args | stdv::join_with(' ') | stdr::to<std::string>();
 }
 
-namespace Wayland::OptiX
+namespace Wayland::Optix
 {
 
 std::string Module::s_optixSDKPath{};
@@ -181,4 +181,4 @@ Module::~Module()
     HostUtils::CheckOptixError<HostUtils::OnlyLog>(optixModuleDestroy(module_));
 }
 
-} // namespace Wayland::OptiX
+} // namespace Wayland::Optix

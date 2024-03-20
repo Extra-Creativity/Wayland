@@ -24,7 +24,13 @@ set(
 )
   
 add_executable(${TARGET_NAME} ${SOURCE} ${HEADERS})
-target_compile_definitions(${TARGET_NAME} PRIVATE NEED_AUTO_PROGRAM_CONFIG)
+target_compile_definitions(
+    ${TARGET_NAME} 
+    PRIVATE NEED_AUTO_PROGRAM_CONFIG
+    PRIVATE GLM_DIR=R\"\(${PROJECT_SOURCE_DIR}/build/build/_deps/glm-src\)\"
+    PRIVATE OPTIX_DIR=R\"\($ENV{OptiX_ROOT}/include\)\"
+    PRIVATE UTILS_INC_PATH=R\"\(${PROJECT_SOURCE_DIR}/src/Backend/Optix/Utils\)\"
+)
 
 target_include_directories(
     ${TARGET_NAME} 

@@ -4,7 +4,7 @@
 
 #include "ProgramConfig.h"
 
-namespace Wayland::OptiX
+namespace Wayland::Optix
 {
 
 class ProgramGroupArray;
@@ -71,4 +71,4 @@ private:
     unsigned int maxTraversableDepth_;
 };
 
-} // namespace Wayland::OptiX
+} // namespace Wayland::Optix

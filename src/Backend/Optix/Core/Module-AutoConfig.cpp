@@ -70,7 +70,7 @@ struct HitgroupInfo
     }
 };
 
-namespace Wayland::OptiX
+namespace Wayland::Optix
 {
 
 static void ClassifyProgram(std::string_view funcName,
@@ -178,5 +178,5 @@ void Module::IdentifyPrograms(const std::vector<std::string> &identifyFiles,
     return;
 }
 
-} // namespace Wayland::OptiX
+} // namespace Wayland::Optix
 #endif

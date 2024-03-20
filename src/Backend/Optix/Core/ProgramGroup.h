@@ -6,7 +6,7 @@
 
 #include <vector>
 
-namespace Wayland::OptiX
+namespace Wayland::Optix
 {
 
 /// @brief Array of program group to be linked as pipeline and used SBT.
@@ -83,4 +83,4 @@ private:
     std::vector<OptixProgramGroup> programGroups_;
 };
 
-} // namespace Wayland::OptiX
+} // namespace Wayland::Optix

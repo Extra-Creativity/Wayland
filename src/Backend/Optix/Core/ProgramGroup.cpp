@@ -8,7 +8,7 @@ static char s_programLog[s_programLogSize];
 
 using namespace Wayland;
 
-namespace Wayland::OptiX
+namespace Wayland::Optix
 {
 
 /// @brief Safely add program group, so that when the insertion fails,
@@ -194,4 +194,4 @@ ProgramGroupArray &ProgramGroupArray::AddMissProgramGroup(const Module &module,
     return AddRawMissProgramGroup(module, "__miss__" + std::string{ name });
 }
 
-} // namespace Wayland::OptiX
+} // namespace Wayland::Optix

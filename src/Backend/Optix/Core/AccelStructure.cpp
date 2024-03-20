@@ -11,7 +11,7 @@ using namespace Wayland;
 
 static auto CheckBuildInputArrLimit(const auto &buildInputs)
 {
-    using LimitInt = OptiX::AccelStructure::BuildInputNumLimitInt;
+    using LimitInt = Optix::AccelStructure::BuildInputNumLimitInt;
 
     auto buildInputNum = buildInputs.size();
     HostUtils::CheckError(buildInputNum >= 1, "No build inputs.",
@@ -24,7 +24,7 @@ static auto CheckBuildInputArrLimit(const auto &buildInputs)
     return static_cast<LimitInt>(buildInputNum);
 }
 
-namespace Wayland::OptiX
+namespace Wayland::Optix
 {
 
 AccelStructure::AccelStructure(const BuildInputArray &arr, BuildFlags flags)
@@ -274,4 +274,4 @@ void DynamicAccelStructure::EnlargeBuffers_(
     }
 }
 
-} // namespace Wayland::OptiX
+} // namespace Wayland::Optix

@@ -9,7 +9,7 @@
 
 using namespace Wayland;
 
-namespace Wayland::OptiX
+namespace Wayland::Optix
 {
 
 void ShaderBindingTable::SetSBTHeader_(void *ptr,
@@ -52,4 +52,4 @@ void ShaderBindingTable::CopyToBuffer_(
     return;
 }
 
-} // namespace Wayland::OptiX
+} // namespace Wayland::Optix
