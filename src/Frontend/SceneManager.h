@@ -15,18 +15,18 @@ public:
     SceneManager() = default;
     ~SceneManager() = default;
 
-    void printScene() const;
-    void printCamera() const;
-    void printMeshes() const;
+    void PrintScene() const;
+    void PrintCamera() const;
+    void PrintMeshes() const;
 
 public:
     CameraPtr camera;
     vector<TriangleMeshPtr> meshes;
 
 private:
-    void transformScene(minipbrt::Scene *miniScene);
-    void transformCamera(minipbrt::Scene *miniScene);
-    void transformMeshes(minipbrt::Scene *miniScene);
+    void TransformScene(minipbrt::Scene *miniScene);
+    void TransformCamera(minipbrt::Scene *miniScene);
+    void TransformMeshes(minipbrt::Scene *miniScene);
 
 
 private:

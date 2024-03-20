@@ -24,7 +24,7 @@ public:
     Camera() = default;
     virtual ~Camera() = default;
     virtual CameraType type() const = 0;
-    virtual string toString() const = 0;
+    virtual string ToString() const = 0;
 };
 
 using CameraPtr = unique_ptr<Camera>;
@@ -36,7 +36,7 @@ public:
     PinholeCamera(float fov_, vec3 pos_, vec3 lookAt_,
         vec3 up_);
     CameraType type() const { return CameraType::Pinhole; }
-    string toString() const;
+    string ToString() const;
 
 private:
     float fov;

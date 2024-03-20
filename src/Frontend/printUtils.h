@@ -9,11 +9,11 @@
 
 using namespace std;
 
-namespace Wayland::printUtils
+namespace Wayland::PrintUtils
 {
 
-string toString(glm::vec3 v);
-string toString(minipbrt::Scene *scene);
-string toString(minipbrt::Shape *shape);
+string ToString(glm::vec3 v);
+string ToString(minipbrt::Scene *scene);
+string ToString(minipbrt::Shape *shape);
 
 } // namespace Wayland

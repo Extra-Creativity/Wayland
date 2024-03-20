@@ -25,13 +25,13 @@ PinholeCamera::PinholeCamera(float fov_, vec3 pos_, vec3 lookAt_, vec3 up_)
 {
 }
 
-string PinholeCamera::toString() const
+string PinholeCamera::ToString() const
 {
     ostringstream oss;
     oss << "  Type:     Pinhole\n";
-    oss << "  Position: " << printUtils::toString(position) << "\n";
-    oss << "  Lookat:   " << printUtils::toString(lookAt) << "\n";
-    oss << "  Up:       " << printUtils::toString(up) << "\n";
+    oss << "  Position: " << PrintUtils::ToString(position) << "\n";
+    oss << "  Lookat:   " << PrintUtils::ToString(lookAt) << "\n";
+    oss << "  Up:       " << PrintUtils::ToString(up) << "\n";
     oss << "  Fov:      " << fov << "\n";
     return oss.str();
 }

@@ -8,6 +8,7 @@ set(
     MainWindow.cpp
     Renderer.cpp
     SceneManager.cpp
+    OptixManager.cpp
     Camera.cpp
     Shape.cpp
     PrintUtils.cpp
@@ -17,6 +18,7 @@ set(
     MainWindow.h
     Renderer.h
     SceneManager.h
+    OptixManager.h
     Camera.h
     Shape.h
     PrintUtils.h
@@ -24,6 +26,7 @@ set(
 )
   
 add_executable(${TARGET_NAME} ${SOURCE} ${HEADERS})
+
 target_compile_definitions(
     ${TARGET_NAME} 
     PRIVATE NEED_AUTO_PROGRAM_CONFIG
