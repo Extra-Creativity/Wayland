@@ -1,9 +1,10 @@
 #pragma once
 #include <minipbrt.h>
 #include <string>
-#include "Camera.h"
-#include "Shape.h"
+#include <memory>
 
+#include "Core/Camera.h"
+#include "Core/Shape.h"
 
 namespace Wayland
 {
@@ -11,9 +12,11 @@ namespace Wayland
 class SceneManager
 {
 public:
-    SceneManager(string sceneSrc);
+    SceneManager(string_view sceneSrc_);
     SceneManager() = default;
     ~SceneManager() = default;
+
+    void LoadScene(){ /* TBD */ };
 
     void PrintScene() const;
     void PrintCamera() const;
@@ -27,7 +30,6 @@ private:
     void TransformScene(minipbrt::Scene *miniScene);
     void TransformCamera(minipbrt::Scene *miniScene);
     void TransformMeshes(minipbrt::Scene *miniScene);
-
 
 private:
 };

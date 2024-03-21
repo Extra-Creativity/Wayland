@@ -1,8 +1,7 @@
-#include "SceneManager.h"
-#include "HostUtils/ErrorCheck.h"
-#include "PBRTv3_SceneCommon.h"
 #include "spdlog/spdlog.h"
-#include "printUtils.h"
+#include "HostUtils/ErrorCheck.h"
+#include "Core/SceneManager.h"
+#include "Utils/PrintUtils.h"
 
 #include <iostream>
 
@@ -11,9 +10,10 @@ using namespace std;
 namespace Wayland
 {
 
-SceneManager::SceneManager(string sceneSrc)
+SceneManager::SceneManager(string_view sceneSrc_)
 {
     minipbrt::Loader loader;
+    string sceneSrc (sceneSrc_);
     bool loadResult = loader.load(sceneSrc.c_str());
 
     if (loadResult == false)
@@ -34,7 +34,7 @@ SceneManager::SceneManager(string sceneSrc)
         spdlog::info("Successfully load {}", sceneSrc);
         miniScene = loader.take_scene();
         /* Transform minipbrt scene to ours */
-        transformScene(miniScene);
+        TransformScene(miniScene);
         // cout << "\nminiScene:\n" << printUtils::toString(miniScene) << endl;
         delete miniScene;
     }
@@ -48,16 +48,16 @@ SceneManager::SceneManager(string sceneSrc)
 }
 
 // Transform minipbrt::Scene to Wayland::SceneManager
-void SceneManager::transformScene(minipbrt::Scene *miniScene)
+void SceneManager::TransformScene(minipbrt::Scene *miniScene)
 {
     assert(miniScene);
     /* A legal scene should have a camera */
-    transformCamera(miniScene);
-    transformMeshes(miniScene);
+    TransformCamera(miniScene);
+    TransformMeshes(miniScene);
     return;
 }
 
-void SceneManager::transformCamera(minipbrt::Scene *miniScene)
+void SceneManager::TransformCamera(minipbrt::Scene *miniScene)
 {
     /* Check the scene do have a camera */
     HostUtils::CheckError(miniScene->camera,
@@ -92,7 +92,7 @@ void SceneManager::transformCamera(minipbrt::Scene *miniScene)
 }
 
 
-void SceneManager::transformMeshes(minipbrt::Scene* miniScene) {
+void SceneManager::TransformMeshes(minipbrt::Scene* miniScene) {
 
     /* Only handle triangle mesh currently */
     for (int i = 0; i < miniScene->shapes.size(); ++i)
@@ -110,24 +110,24 @@ void SceneManager::transformMeshes(minipbrt::Scene* miniScene) {
 
 
 
-void SceneManager::printScene() const
+void SceneManager::PrintScene() const
 {
     cout << "\n----- Scene -----\n";
-    printCamera();
-    printMeshes();
+    PrintCamera();
+    PrintMeshes();
     cout << "\n----- End of Scene -----\n";
     return;
 }
 
-void SceneManager::printCamera() const
+void SceneManager::PrintCamera() const
 {
     assert(camera);
     cout << "\nCamera:\n";
-    cout << camera->toString();
+    cout << camera->ToString();
     return;
 }
 
-void SceneManager::printMeshes() const
+void SceneManager::PrintMeshes() const
 {
     cout << "\nMeshes:\n";
     cout << "  size: " << meshes.size() << "\n";

@@ -2,6 +2,8 @@
 #include <GLFW/glfw3.h>
 #include <memory>
 #include <utility>
+#include <vector>
+#include <glm/glm.hpp>
 
 namespace Wayland
 {
@@ -18,17 +20,26 @@ public:
     ~MainWindow() { glfwTerminate(); }
 
     void Update();
-    void putInCenter();
+    void PutInCenter();
     bool ShouldClose();
 
-    void setSize(WinSize s) { size = s; }
+    void SetSize(WinSize s)
+    {
+        size = s;
+        frameBuffer.resize(size.w * size.h);
+    }
 
 private:
     void Init();
+    void DisplayFrameBuffer();
+
+public:
+    WinSize size;
+    std::vector<glm::u8vec4> frameBuffer;
 
 private:
     GLFWwindow *glfWindow;
-    WinSize size;
+    GLuint fbTexture{ 0 };
 };
 
 using MainWindowPtr = std::unique_ptr<MainWindow>;

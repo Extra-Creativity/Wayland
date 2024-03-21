@@ -1,5 +1,5 @@
-#include "Camera.h"
-#include "printUtils.h"
+#include "Core/Camera.h"
+#include "Utils/PrintUtils.h"
 #include <glm/gtc/type_ptr.hpp>
 #include <sstream>
 

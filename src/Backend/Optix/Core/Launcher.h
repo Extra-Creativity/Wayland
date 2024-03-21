@@ -24,6 +24,14 @@ public:
     {
     }
 
+    /// @brief Construct a launcher with ptr and size of data.
+    Launcher(void* ptr, std::size_t size)
+		: buffer_{ Wayland::HostUtils::DeviceMakeUnique<std::byte[]>(
+			  { reinterpret_cast<std::byte *>(ptr), size }) },
+		  size_{ size }
+	{
+	}
+
     /// @brief Launch a ray by optix, with data designated by either ctor or
     /// SetData. \ref{void SetData(T&&)}
     void Launch(const Pipeline &pipeline, CUstream stream,

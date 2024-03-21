@@ -4,13 +4,13 @@
 #include <sstream>
 #include <string>
 
-#include "PrintUtils.h"
 #include "minipbrt.h"
-#include "PBRTv3_SceneCommon.h"
+#include "Utils/PrintUtils.h"
+#include "Utils/PBRTv3_SceneCommon.h"
 
 using namespace std;
 
-namespace Wayland::printUtils
+namespace Wayland::PrintUtils
 {
 
     inline string checkIndex(uint32_t idx)
@@ -18,14 +18,14 @@ namespace Wayland::printUtils
     return idx == minipbrt::kInvalidIndex ? "null" : to_string(idx);
 }
 
-string toString(glm::vec3 v)
+string ToString(glm::vec3 v)
 {
     ostringstream oss;
     oss << "(" << v.x << ", " << v.y << ", " << v.z << ")";
     return oss.str();
 }
 
-string toString(minipbrt::Scene* scene)
+string ToString(minipbrt::Scene* scene)
 {
     ostringstream oss;
     oss << "  Shape: " << scene->shapes.size() << "\n";
@@ -37,12 +37,12 @@ string toString(minipbrt::Scene* scene)
     oss << "  Medium: " << scene->mediums.size() << "\n";
     oss << "\n----- shapes -----\n";
     for (int i = 0; i < scene->shapes.size(); ++i)
-        oss << "  shape " << i << "\n" << toString(scene->shapes[i]) << "\n";
+        oss << "  shape " << i << "\n" << ToString(scene->shapes[i]) << "\n";
 
     return oss.str();
 }
 
-string toString(minipbrt::Shape *shape)
+string ToString(minipbrt::Shape *shape)
 {
     ostringstream oss;
     oss << "  type: " << PBRTv3::ShapeTypeStr[int(shape->type())] << "\n";

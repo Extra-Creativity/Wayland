@@ -5,7 +5,7 @@
 #include <string>
 
 #include "minipbrt.h"
-#include "PBRTv3_SceneCommon.h"
+#include "Utils/PBRTv3_SceneCommon.h"
 
 using namespace std;
 

@@ -1,8 +1,10 @@
 #pragma once
 #include <vector>
 #include <memory>
-#include <glm/mat4x4.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include <iterator>
+
+#include "glm/mat4x4.hpp"
+#include "glm/gtc/type_ptr.hpp"
 #include "minipbrt.h"
 
 using std::vector, std::unique_ptr, glm::vec2, glm::vec3, glm::ivec3;
@@ -17,6 +19,7 @@ public:
     TriangleMesh() = default;
     TriangleMesh(minipbrt::TriangleMesh* miniMesh);
     ~TriangleMesh() = default;
+
 
 public:
     vector<vec3> vertex;

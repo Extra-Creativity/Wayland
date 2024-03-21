@@ -1,31 +1,30 @@
 find_package(OpenGL REQUIRED)
 
+# https://cloud.tencent.com/developer/article/2300671
+macro(source_group_by_dir source_files)
+  if(MSVC)
+      set(sgbd_cur_dir ${CMAKE_CURRENT_SOURCE_DIR})
+      foreach(sgbd_file ${${source_files}})
+          string(REGEX REPLACE ${sgbd_cur_dir}/\(.*\) \\1 sgbd_fpath ${sgbd_file})
+          string(REGEX REPLACE "\(.*\)/.*" \\1 sgbd_group_name ${sgbd_fpath})
+          string(COMPARE EQUAL ${sgbd_fpath} ${sgbd_group_name} sgbd_nogroup)
+          string(REPLACE "/" "\\" sgbd_group_name ${sgbd_group_name})
+          if(sgbd_nogroup)
+              set(sgbd_group_name "\\")
+          endif(sgbd_nogroup)
+          source_group(${sgbd_group_name} FILES ${sgbd_file})
+      endforeach(sgbd_file)
+  endif(MSVC)
+endmacro(source_group_by_dir)
+
 set(TARGET_NAME wayland)
 
-set(
-  SOURCE
-    Wayland.cpp
-    MainWindow.cpp
-    Renderer.cpp
-    SceneManager.cpp
-    OptixManager.cpp
-    Camera.cpp
-    Shape.cpp
-    PrintUtils.cpp
-)
-set(
-  HEADERS
-    MainWindow.h
-    Renderer.h
-    SceneManager.h
-    OptixManager.h
-    Camera.h
-    Shape.h
-    PrintUtils.h
-    PBRTv3_SceneCommon.h
-)
-  
-add_executable(${TARGET_NAME} ${SOURCE} ${HEADERS})
+file(GLOB_RECURSE HEADERS *.h)
+file(GLOB_RECURSE SOURCE *.cpp *.cu)
+set(all_files ${HEADERS} ${SOURCE})
+source_group_by_dir(all_files)
+
+add_executable(${TARGET_NAME} ${all_files})
 
 target_compile_definitions(
     ${TARGET_NAME} 
@@ -39,6 +38,7 @@ target_include_directories(
     ${TARGET_NAME} 
     PRIVATE ${PROJECT_SOURCE_DIR}/src/Backend/OptiX 
     PRIVATE ${PROJECT_SOURCE_DIR}/src/Backend/OptiX/Utils
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/Frontend   
 )
 
 target_link_libraries(${TARGET_NAME} PRIVATE 

@@ -1,6 +1,7 @@
 #include <iostream>
-#include "Renderer.h"
-#include "SceneManager.h"
+
+#include "Core/Renderer.h"
+#include "Core/SceneManager.h"
 
 using namespace Wayland;
 
@@ -10,13 +11,14 @@ int main(int argc, char** argv) {
         // R"(C:\Users\60995\Desktop\Grad_Design\pbrt-v3-scenes\barcelona-pavilion\pavilion-day.pbrt)";
         R"(C:\Users\60995\Desktop\Grad_Design\Wayland\scene\cornell-box\cbox.pbrt)";
 
+    string programSrc =
+        R"(C:\Users\60995\Desktop\Grad_Design\Wayland\src\Frontend\Programs\TestExamples\Simple\Simple.cu)";
+
      try
      {
-         Wayland::Renderer app({ 1920, 1080 }, sceneSrc);
-
+         Wayland::Renderer app({ 1920, 1080 }, sceneSrc, programSrc);
          //app.scene.printScene();
-
-         //app.Run();
+         app.Run();
      }
      catch (const std::exception &e)
      {
