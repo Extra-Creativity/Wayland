@@ -4,7 +4,6 @@
 vsxmake*
 build
 out
-scene
 CMakeSettings.json
 private
 mprivate
