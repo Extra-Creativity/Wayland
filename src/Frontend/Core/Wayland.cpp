@@ -9,10 +9,10 @@ int main(int argc, char** argv) {
      
     string sceneSrc =
         // R"(C:\Users\60995\Desktop\Grad_Design\pbrt-v3-scenes\barcelona-pavilion\pavilion-day.pbrt)";
-        R"(C:\Users\60995\Desktop\Grad_Design\Wayland\scene\cornell-box\cbox.pbrt)";
+        R"(..\..\..\scene\cornell-box\cbox.pbrt)";
 
     string programSrc =
-        R"(C:\Users\60995\Desktop\Grad_Design\Wayland\src\Frontend\Programs\TestExamples\Simple\Simple.cu)";
+        R"(..\..\..\src\Frontend\Programs\TestExamples\Simple\Simple.cu)";
 
      try
      {

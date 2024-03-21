@@ -66,11 +66,11 @@ extern "C" __global__ void __raygen__renderFrame()
         // the launch size, but accessing the optixLaunchParams here
         // makes sure they're not getting optimized away (because
         // otherwise they'd not get used)
-        printf("############################################\n");
+        printf("\n############################################\n");
         printf("Hello world from OptiX 7 raygen program!\n(within a "
                "%ix%i-sized launch)\n",
                param.fbSize.x, param.fbSize.y);
-        printf("############################################\n");
+        printf("############################################\n\n");
     }
 
     // ------------------------------------------------------------------
