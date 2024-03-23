@@ -24,36 +24,6 @@
 extern "C" __constant__ Wayland::SimpleLaunchParams param;
 
 //------------------------------------------------------------------------------
-// closest hit and anyhit programs for radiance-type rays.
-//
-// Note eventually we will have to create one pair of those for each
-// ray type and each geometry type we want to render; but this
-// simple example doesn't use any actual geometries yet, so we only
-// create a single, dummy, set of them (we do have to have at least
-// one group of them to set up the SBT)
-//------------------------------------------------------------------------------
-
-extern "C" __global__ void __closesthit__radiance()
-{ /*! for this simple example, this will remain empty */
-}
-
-extern "C" __global__ void __anyhit__radiance()
-{ /*! for this simple example, this will remain empty */
-}
-
-//------------------------------------------------------------------------------
-// miss program that gets called for any ray that did not have a
-// valid intersection
-//
-// as with the anyhit/closest hit programs, in this example we only
-// need to have _some_ dummy function to set up a valid SBT
-// ------------------------------------------------------------------------------
-
-extern "C" __global__ void __miss__radiance()
-{ /*! for this simple example, this will remain empty */
-}
-
-//------------------------------------------------------------------------------
 // ray gen program - the actual rendering happens in here
 //------------------------------------------------------------------------------
 extern "C" __global__ void __raygen__renderFrame()
@@ -95,3 +65,33 @@ extern "C" __global__ void __raygen__renderFrame()
     const uint32_t fbIndex = ix + iy * param.fbSize.x;
     param.colorBuffer[fbIndex] = rgba;
 }
+
+extern "C" __global__ void __miss__radiance()
+{ /*! for this simple example, this will remain empty */
+}
+
+//------------------------------------------------------------------------------
+// closest hit and anyhit programs for radiance-type rays.
+//
+// Note eventually we will have to create one pair of those for each
+// ray type and each geometry type we want to render; but this
+// simple example doesn't use any actual geometries yet, so we only
+// create a single, dummy, set of them (we do have to have at least
+// one group of them to set up the SBT)
+//------------------------------------------------------------------------------
+
+extern "C" __global__ void __closesthit__radiance()
+{ /*! for this simple example, this will remain empty */
+}
+
+extern "C" __global__ void __anyhit__radiance()
+{ /*! for this simple example, this will remain empty */
+}
+
+//------------------------------------------------------------------------------
+// miss program that gets called for any ray that did not have a
+// valid intersection
+//
+// as with the anyhit/closest hit programs, in this example we only
+// need to have _some_ dummy function to set up a valid SBT
+// ------------------------------------------------------------------------------

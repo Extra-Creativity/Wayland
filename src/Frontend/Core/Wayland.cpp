@@ -12,11 +12,13 @@ int main(int argc, char** argv) {
         R"(..\..\..\scene\cornell-box\cbox.pbrt)";
 
     string programSrc =
-        R"(..\..\..\src\Frontend\Programs\TestExamples\Simple\Simple.cu)";
+        //R"(..\..\..\src\Frontend\Programs\TestExamples\Simple\Simple.cu)";
+        R"(..\..\..\src\Frontend\Programs\TestExamples\Depth\Depth.cu)";
+        //R"(..\..\..\src\Frontend\Programs\TestExamples\Mesh\Mesh.cu)";
 
      try
      {
-         Wayland::Renderer app({ 1920, 1080 }, sceneSrc, programSrc);
+         Wayland::Renderer app({ 500, 500 }, sceneSrc, programSrc);
          //app.scene.printScene();
          app.Run();
      }

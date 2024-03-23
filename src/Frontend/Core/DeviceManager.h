@@ -26,6 +26,7 @@ public:
                     std::string_view programSrc, ProgramManager *program);
     void Launch(ProgramManager *program, WinSize s);
     void DownloadFrameBuffer(MainWindow &window) const;
+    OptixTraversableHandle GetTraversableHandle();
 
 private:
     void SetEnvironment();
@@ -34,7 +35,7 @@ private:
     void BuildSBT(ProgramManager *program);
 
 public:
-    void *deviceBuffer;
+    void *deviceFrameBuffer;
 
 private:
     Optix::ContextManager contextManager;

@@ -38,11 +38,12 @@ public:
     CameraType type() const { return CameraType::Pinhole; }
     string ToString() const;
 
-private:
+public:
     float fov;
     vec3 position;
     vec3 lookAt;
     vec3 up;
+    vec3 right;
 };
 
 

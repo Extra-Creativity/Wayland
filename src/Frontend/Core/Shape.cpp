@@ -1,5 +1,5 @@
-#pragma once
 #include "Core/Shape.h"
+#include "Utils/Common.h"
 
 namespace Wayland
 {
@@ -13,10 +13,18 @@ TriangleMesh::TriangleMesh(minipbrt::TriangleMesh *miniMesh)
     assert(miniMesh->N);
     assert(miniMesh->indices);
 
+    using namespace glm;
+    glm::mat4 t = transpose(make_mat4(&miniMesh->shapeToWorld.start[0][0]));
+
     int nVertices = miniMesh->num_vertices;
     int nIndices = miniMesh->num_indices/3;
+
+
     for (int i = 0; i < nVertices; ++i)
     {
+        /* Simple and slow shape transform, should optimize */
+        //vertex.push_back(Common::TransformVec3(t, &miniMesh->P[3 * i], 1));
+        //normal.push_back(Common::TransformVec3(t, &miniMesh->N[3 * i], 1));
         vertex.push_back(glm::make_vec3(&miniMesh->P[3 * i]));
         normal.push_back(glm::make_vec3(&miniMesh->N[3 * i]));
     }

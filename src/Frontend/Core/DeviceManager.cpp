@@ -33,7 +33,7 @@ void DeviceManager::SetupOptix(SceneManager &scene, MainWindow &window,
 
     /* Temporary */
     int wSize = window.size.w * window.size.h * 4;
-    cudaMalloc((void**) & deviceBuffer, wSize);
+    cudaMalloc((void**) & deviceFrameBuffer, wSize);
     return;
 }
 
@@ -86,8 +86,13 @@ void DeviceManager::Launch(ProgramManager *program, WinSize wSize)
 void DeviceManager::DownloadFrameBuffer(MainWindow &window) const
 {
     auto size = window.size.h * window.size.w * 4;
-    cudaMemcpy( window.frameBuffer.data(), deviceBuffer, size,
+    cudaMemcpy( window.frameBuffer.data(), deviceFrameBuffer, size,
                cudaMemcpyDeviceToHost);
+}
+
+OptixTraversableHandle DeviceManager::GetTraversableHandle() {
+    assert(as);
+    return as->GetHandle();
 }
 
 } // namespace Wayland

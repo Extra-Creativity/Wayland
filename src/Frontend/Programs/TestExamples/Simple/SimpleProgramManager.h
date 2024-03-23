@@ -18,7 +18,7 @@ public:
         param.frameID = 0;
         param.fbSize.x = renderer->window.size.w;
         param.fbSize.y = renderer->window.size.h;
-        param.colorBuffer = (uint32_t *)renderer->device.deviceBuffer;
+        param.colorBuffer = (uint32_t *)renderer->device.deviceFrameBuffer;
     }
 
     void Update()
@@ -26,7 +26,7 @@ public:
         param.frameID += 1;
         param.fbSize.x = renderer->window.size.w;
         param.fbSize.y = renderer->window.size.h;
-        param.colorBuffer = (uint32_t *)renderer->device.deviceBuffer;
+        param.colorBuffer = (uint32_t *)renderer->device.deviceFrameBuffer;
     }
 
     void *GetParamPtr() { return &param; }
@@ -39,7 +39,7 @@ public:
         SBTData<int> missData{};
         vector<SBTData<int>> hitData(1);
         std::size_t index = 2;
-        return ShaderBindingTable{ raygenData,           1,     missData, 0,
+        return ShaderBindingTable{ raygenData,           0,     missData, 1,
                                    std::span(hitData),  &index, pg
         };
     }
