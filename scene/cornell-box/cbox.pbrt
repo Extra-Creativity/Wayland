@@ -1,11 +1,11 @@
 Integrator "path"
     "integer maxdepth" [ 65 ]
 Transform [ 1 -0 -0 -0 -0 1 -0 -0 -0 -0 -1 -0 -0 -1 6.8 1  ]
-Sampler "sobol"
-    "integer pixelsamples" [ 64 ]
-PixelFilter "triangle"
-    "float xradius" [ 1 ]
-    "float yradius" [ 1 ]
+Sampler "random"
+    "integer pixelsamples" [ 100 ]
+# PixelFilter "triangle"
+#     "float xradius" [ 1 ]
+#     "float yradius" [ 1 ]
 Film "image"
     "string filename" [ "cornell-box.png" ]
     "integer yresolution" [ 1024 ]
@@ -18,28 +18,28 @@ WorldBegin
 
 MakeNamedMaterial "LeftWall"
     "string type" [ "matte" ]
-    "rgb reflectance" [ 0.63 0.065 0.05 ]
+    "rgb Kd" [ 0.63 0.065 0.05 ]
 MakeNamedMaterial "RightWall"
     "string type" [ "matte" ]
-    "rgb reflectance" [ 0.14 0.45 0.091 ]
+    "rgb Kd" [ 0.14 0.45 0.091 ]
 MakeNamedMaterial "Floor"
     "string type" [ "matte" ]
-    "rgb reflectance" [ 0.725 0.71 0.68 ]
+    "rgb Kd" [ 0.725 0.71 0.68 ]
 MakeNamedMaterial "Ceiling"
     "string type" [ "matte" ]
-    "rgb reflectance" [ 0.725 0.71 0.68 ]
+    "rgb Kd" [ 0.725 0.71 0.68 ]
 MakeNamedMaterial "BackWall"
     "string type" [ "matte" ]
-    "rgb reflectance" [ 0.725 0.71 0.68 ]
+    "rgb Kd" [ 0.725 0.71 0.68 ]
 MakeNamedMaterial "ShortBox"
     "string type" [ "matte" ]
-    "rgb reflectance" [ 0.725 0.71 0.68 ]
+    "rgb Kd" [ 0.725 0.71 0.68 ]
 MakeNamedMaterial "TallBox"
     "string type" [ "matte" ]
-    "rgb reflectance" [ 0.725 0.71 0.68 ]
+    "rgb Kd" [ 0.725 0.71 0.68 ]
 MakeNamedMaterial "Light"
     "string type" [ "matte" ]
-    "rgb reflectance" [ 0 0 0 ]
+    "rgb Kd" [ 0 0 0 ]
 NamedMaterial "Floor"
 Shape "trianglemesh"
     "point2 uv" [ 0 0 1 0 1 1 0 1 
