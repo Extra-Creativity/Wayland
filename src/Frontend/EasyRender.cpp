@@ -12,10 +12,11 @@ int main(int argc, char** argv) {
         R"(..\..\..\scene\cornell-box\cbox.pbrt)";
 
     std::string programSrc =
-        R"(..\..\..\src\Frontend\Programs\TestExamples\Color\Color.cu)";
+        //R"(..\..\..\src\Frontend\Programs\TestExamples\Color\Color.cu)";
         //R"(..\..\..\src\Frontend\Programs\TestExamples\Depth\Depth.cu)";
         //R"(..\..\..\src\Frontend\Programs\TestExamples\Mesh\Mesh.cu)";
         //R"(..\..\..\src\Frontend\Programs\TestExamples\Simple\Simple.cu)";
+        R"(..\..\..\src\Frontend\Programs\TestExamples\WireFrame\WireFrame.cu)";
 
      try
      {

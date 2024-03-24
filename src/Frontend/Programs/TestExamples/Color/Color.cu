@@ -31,20 +31,13 @@ __device__ T &UnpackPointer(std::uint32_t u0, std::uint32_t u1)
 extern "C" __global__ void __raygen__RenderFrame()
 {
     auto idx_x = optixGetLaunchIndex().x, idx_y = optixGetLaunchIndex().y;
-    //  scale to [-1, 1], row goes vertically.
-    float xPos = 2.f * idx_x / optixGetLaunchDimensions().x - 1;
-    float yPos = 2.f * idx_y / optixGetLaunchDimensions().y - 1;
 
     float3 result{ 0.8, 0.8, 0.8 };
     std::uint32_t u0, u1;
     PackPointer(result, u0, u1);
 
     // Normally we need a scale to shift the ray direction, here just omit it.
-    glm::vec3 rayDir =
-        glm::normalize(param.camera.lookAt + xPos * param.camera.right +
-                       yPos * param.camera.up);
-
-    rayDir = PinholeGenerateRay({ idx_x, idx_y }, param.fbSize, param.camera);
+    glm::vec3 rayDir = PinholeGenerateRay({ idx_x, idx_y }, param.fbSize, param.camera);
 
     optixTrace(param.traversable, UniUtils::ToFloat3(param.camera.pos),
                UniUtils::ToFloat3(rayDir), 1e-5, 1e30, 0, 255,

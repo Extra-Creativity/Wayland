@@ -1,6 +1,7 @@
 #pragma once
 #include "cuda_runtime.h"
 #include "glm/glm.hpp"
+#include "Random.h"
 
 using glm::ivec2, glm::vec3;
 
@@ -23,5 +24,15 @@ vec3 __host__ __device__ __forceinline__ PinholeGenerateRay(
 	vec3 rayDir = cam.lookAt + cam.right * u + cam.up * v;
 	return glm::normalize(rayDir);
 }
+
+vec3 __host__ __device__ __forceinline__
+PinholeGenerateRay(ivec2 index, ivec2 size, PinholeCamFrame &cam, unsigned int& seed)
+{
+    float u = 2.f * (index.x + rnd(seed)) / size.x - 1.f;
+    float v = 2.f * (index.y + rnd(seed) ) / size.y - 1.f;
+    vec3 rayDir = cam.lookAt + cam.right * u + cam.up * v;
+    return glm::normalize(rayDir);
+}
+
 
 } // namespace EasyRender
