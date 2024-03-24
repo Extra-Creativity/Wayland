@@ -14,8 +14,7 @@ public:
     void Setup()
     {
         param.frameID = 0;
-        param.fbSize.x = renderer->window.size.w;
-        param.fbSize.y = renderer->window.size.h;
+        param.fbSize = renderer->window.size;
         param.colorBuffer = (glm::u8vec4 *)renderer->device.deviceFrameBuffer;
         param.traversable = renderer->device.GetTraversableHandle();
 
@@ -34,8 +33,7 @@ public:
     void Update()
     {
         param.frameID += 1;
-        param.fbSize.x = renderer->window.size.w;
-        param.fbSize.y = renderer->window.size.h;
+        param.fbSize = renderer->window.size;
         param.colorBuffer = (glm::u8vec4 *)renderer->device.deviceFrameBuffer;
         param.traversable = renderer->device.GetTraversableHandle();
     }
@@ -48,9 +46,9 @@ public:
         using namespace Optix;
         SBTData<void> raygenData{};
         SBTData<int> missData{};
-        vector<SBTData<int>> hitData;
+        std::vector<SBTData<int>> hitData;
         hitData.resize(renderer->scene.meshes.size());
-        vector<std::size_t> hitIdx(renderer->scene.meshes.size(),2);
+        std::vector<std::size_t> hitIdx(renderer->scene.meshes.size(), 2);
         return ShaderBindingTable{
             raygenData, 0, missData, 1, std::span(hitData), hitIdx.data(), pg
         };
@@ -58,7 +56,7 @@ public:
 
 private:
     Renderer *renderer;
-    MeshLaunchParams param;
+    Programs::Mesh::LaunchParams param;
 };
 
 } // namespace EasyRender

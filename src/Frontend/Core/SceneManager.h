@@ -5,14 +5,17 @@
 
 #include "Core/Camera.h"
 #include "Core/Shape.h"
+#include "Core/Material.h"
 
 namespace EasyRender
 {
 
+constexpr uint32_t INVALID_INDEX = 0xFFFFFFFFu;
+
 class SceneManager
 {
 public:
-    SceneManager(string_view sceneSrc_);
+    SceneManager(std::string_view sceneSrc_);
     SceneManager() = default;
     ~SceneManager() = default;
 
@@ -24,14 +27,15 @@ public:
 
 public:
     CameraPtr camera;
-    vector<TriangleMeshPtr> meshes;
+    std::vector<TriangleMeshPtr> meshes;
+    std::vector<MaterialPtr> materials;
 
 private:
     void TransformScene(minipbrt::Scene *miniScene);
     void TransformCamera(minipbrt::Scene *miniScene);
+    void TransformMaterial(minipbrt::Scene *miniScene);
     void TransformMeshes(minipbrt::Scene *miniScene);
 
-private:
 };
 
 } // namespace EasyRender

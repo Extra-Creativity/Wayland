@@ -2,18 +2,13 @@
 #include "glm/glm.hpp"
 #include "optix.h"
 
-namespace EasyRender
+namespace EasyRender::Programs::Simple
 {
 
-struct SimpleLaunchParams
+struct LaunchParams
 {
     int frameID;
-    struct
-    {
-        int x;
-        int y;
-    } fbSize;
-
+    glm::ivec2 fbSize;
     uint32_t *colorBuffer;
 };
 

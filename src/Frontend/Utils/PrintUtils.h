@@ -7,13 +7,12 @@
 #include "minipbrt.h"
 #include "Utils/PBRTv3_SceneCommon.h"
 
-using namespace std;
-
 namespace EasyRender::PrintUtils
 {
 
-string ToString(glm::vec3 v);
-string ToString(minipbrt::Scene *scene);
-string ToString(minipbrt::Shape *shape);
+std::string ToString(glm::vec3 v);
+std::string ToString(minipbrt::Scene *scene);
+std::string ToString(minipbrt::Material *material);
+std::string ToString(minipbrt::Shape *shape);
 
 } // namespace EasyRender

@@ -3,16 +3,26 @@
 #include "glm/glm.hpp"
 #include "optix.h"
 
-namespace EasyRender
+namespace EasyRender::Programs::Color
 {
 
-struct ColorLaunchParams
+struct LaunchParams
 {
     int frameID;
     glm::ivec2 fbSize;
     PinholeCamFrame camera;
     glm::u8vec4 *colorBuffer;
     OptixTraversableHandle traversable;
+};
+
+struct MissData
+{
+    glm::vec4 bg_color;
+};
+
+struct HitData
+{
+    glm::vec3 Kd;
 };
 
 } // namespace EasyRender

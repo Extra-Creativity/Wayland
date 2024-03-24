@@ -1,5 +1,5 @@
 #pragma once
-#include "DeviceManager.h"
+#include "Core/Optix-ALL.h"
 
 namespace EasyRender
 {

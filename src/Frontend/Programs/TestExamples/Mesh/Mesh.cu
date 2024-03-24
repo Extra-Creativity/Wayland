@@ -6,7 +6,7 @@
 
 using namespace EasyRender;
 
-extern "C" __constant__ MeshLaunchParams param;
+extern "C" __constant__ Programs::Mesh::LaunchParams param;
 
 enum
 {

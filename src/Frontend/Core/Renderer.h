@@ -15,8 +15,8 @@ namespace EasyRender
 class Renderer
 {
 public:
-    Renderer(WinSize s, std::string_view sceneSrc, std::string_view programSrc);
-    //Renderer(WinSize s);
+    Renderer(glm::ivec2 s, std::string_view sceneSrc, std::string_view programSrc);
+    //Renderer(glm::ivec2 s);
     ~Renderer() = default;
     void Run();
 

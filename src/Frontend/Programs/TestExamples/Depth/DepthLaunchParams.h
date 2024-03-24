@@ -3,10 +3,10 @@
 #include "optix.h"
 #include "Device/Camera.h"
 
-namespace EasyRender
+namespace EasyRender::Programs::Depth
 {
 
-struct DepthLaunchParams
+struct LaunchParams
 {
     int frameID;
     PinholeCamFrame camera;

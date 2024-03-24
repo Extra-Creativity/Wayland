@@ -1,12 +1,13 @@
 #include <optix_device.h>
 
-#include "Device/Camera.h"
 #include "ColorLaunchParams.h"
+#include "Device/Camera.h"
 #include "UniUtils/ConversionUtils.h"
 
 using namespace EasyRender;
+using namespace EasyRender::Programs::Color;
 
-extern "C" __constant__ ColorLaunchParams param;
+extern "C" __constant__ Programs::Color::LaunchParams param;
 
 enum
 {
@@ -25,15 +26,6 @@ template<typename T>
 __device__ T &UnpackPointer(std::uint32_t u0, std::uint32_t u1)
 {
     return *reinterpret_cast<T *>(std::uintptr_t{ u0 } << 32 | u1);
-}
-
-/*! helper function that creates a semi-random color from an ID */
-inline __device__ float3 randomColor(int i)
-{
-    int r = unsigned(i) * 13 * 17 + 0x234235;
-    int g = unsigned(i) * 7 * 3 * 5 + 0x773477;
-    int b = unsigned(i) * 11 * 19 + 0x223766;
-    return { (r & 255) / 255.f, (g & 255) / 255.f, (b & 255) / 255.f };
 }
 
 extern "C" __global__ void __raygen__RenderFrame()
@@ -70,15 +62,17 @@ extern "C" __global__ void __miss__radiance()
 {
     auto &result =
         UnpackPointer<float3>(optixGetPayload_0(), optixGetPayload_1());
-    result = { 0.0, 0.0, 0.0 };
+    result = UniUtils::ToFloat3(
+        reinterpret_cast<MissData *>(optixGetSbtDataPointer())->bg_color);
 }
 
 extern "C" __global__ void __closesthit__radiance()
 {
     auto &result =
         UnpackPointer<float3>(optixGetPayload_0(), optixGetPayload_1());
-    int primID = optixGetPrimitiveIndex();
-    result = randomColor(primID);
+    result = UniUtils::ToFloat3(
+        reinterpret_cast<HitData *>(optixGetSbtDataPointer())->Kd);
+
 }
 
 extern "C" __global__ void __anyhit__radiance()

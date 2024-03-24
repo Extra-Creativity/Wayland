@@ -16,16 +16,14 @@ public:
     void Setup()
     {
         param.frameID = 0;
-        param.fbSize.x = renderer->window.size.w;
-        param.fbSize.y = renderer->window.size.h;
+        param.fbSize = renderer->window.size;
         param.colorBuffer = (uint32_t *)renderer->device.deviceFrameBuffer;
     }
 
     void Update()
     {
         param.frameID += 1;
-        param.fbSize.x = renderer->window.size.w;
-        param.fbSize.y = renderer->window.size.h;
+        param.fbSize = renderer->window.size;
         param.colorBuffer = (uint32_t *)renderer->device.deviceFrameBuffer;
     }
 
@@ -37,7 +35,7 @@ public:
         using namespace Optix;
         SBTData<void> raygenData{};
         SBTData<int> missData{};
-        vector<SBTData<int>> hitData(1);
+        std::vector<SBTData<int>> hitData(1);
         std::size_t index = 2;
         return ShaderBindingTable{ raygenData,           0,     missData, 1,
                                    std::span(hitData),  &index, pg
@@ -46,7 +44,7 @@ public:
 
 private:
     Renderer *renderer;
-    SimpleLaunchParams param;
+    Programs::Simple::LaunchParams param;
 };
 
 } // namespace EasyRender

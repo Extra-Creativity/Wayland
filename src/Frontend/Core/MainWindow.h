@@ -7,26 +7,21 @@
 
 namespace EasyRender
 {
-struct WinSize
-{
-    int w;
-    int h;
-};
 
 class MainWindow
 {
 public:
-    MainWindow(WinSize s);
+    MainWindow(glm::ivec2 s);
     ~MainWindow() { glfwTerminate(); }
 
     void Update();
     void PutInCenter();
     bool ShouldClose();
 
-    void SetSize(WinSize s)
+    void SetSize(glm::ivec2 s)
     {
         size = s;
-        frameBuffer.resize(size.w * size.h);
+        frameBuffer.resize(size.x * size.y);
     }
 
 private:
@@ -34,7 +29,7 @@ private:
     void DisplayFrameBuffer();
 
 public:
-    WinSize size;
+    glm::ivec2 size;
     std::vector<glm::u8vec4> frameBuffer;
 
 private:

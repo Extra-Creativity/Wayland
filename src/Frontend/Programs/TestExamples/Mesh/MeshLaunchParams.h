@@ -3,10 +3,10 @@
 #include "optix.h"
 #include "Device/Camera.h"
 
-namespace EasyRender
+namespace EasyRender::Programs::Mesh
 {
 
-struct MeshLaunchParams
+struct LaunchParams
 {
     int frameID;
     glm::ivec2 fbSize;

@@ -4,6 +4,7 @@
 #include "HostUtils/DeviceAllocators.h"
 
 using namespace EasyRender::Optix;
+using namespace std;
 
 namespace EasyRender
 {
@@ -33,14 +34,14 @@ void DeviceManager::SetupOptix(SceneManager &scene, MainWindow &window,
     BuildSBT(program);
 
     /* Temporary */
-    int wSize = window.size.w * window.size.h * 4;
+    int wSize = window.size.x * window.size.y * 4;
     cudaMalloc((void**) & deviceFrameBuffer, wSize);
     return;
 }
 
 void DeviceManager::BuildAccelStructure(SceneManager &scene)
 {
-    asBuildInput = make_unique<TriangleBuildInputArray>(scene.meshes.size());
+    asBuildInput = std::make_unique<TriangleBuildInputArray>(scene.meshes.size());
     for (int i = 0; i < scene.meshes.size(); ++i)
     {
         asBuildInput->AddBuildInput(
@@ -48,30 +49,30 @@ void DeviceManager::BuildAccelStructure(SceneManager &scene)
             VecToSpan<int, 3>(scene.meshes[i]->index),
             GeometryFlags::DiableAnyHit);
     }
-    as = make_unique<StaticAccelStructure>(*asBuildInput);
+    as = std::make_unique<StaticAccelStructure>(*asBuildInput);
     cudaDeviceSynchronize();
     return;
 }
 
-void DeviceManager::BuildPipeline(string_view programSrc)
+void DeviceManager::BuildPipeline(std::string_view programSrc)
 {
     assert(as);
     auto pipelineOption = PipelineConfig::GetDefault().SetNumPayloadValues(2);
-    module = make_unique<Module>(programSrc, ModuleConfig::GetDefaultRef(),
+    module = std::make_unique<Module>(programSrc, ModuleConfig::GetDefaultRef(),
                                  pipelineOption);
-    pg = make_unique<ProgramGroupArray>();
+    pg = std::make_unique<ProgramGroupArray>();
     module->IdentifyPrograms({ string(programSrc) }, *pg);
     pipeline =
-        make_unique<Pipeline>(*pg, 1, as->GetDepth(), 0, 0, pipelineOption);
+        std::make_unique<Pipeline>(*pg, 1, as->GetDepth(), 0, 0, pipelineOption);
 }
 
 void DeviceManager::BuildSBT(ProgramManager *program)
 {
     assert(pg);
-    sbt = make_unique<Optix::ShaderBindingTable>(program->GenerateSBT(*pg));
+    sbt = std::make_unique<Optix::ShaderBindingTable>(program->GenerateSBT(*pg));
 }
 
-void DeviceManager::Launch(ProgramManager *program, WinSize wSize)
+void DeviceManager::Launch(ProgramManager *program, glm::ivec2 wSize)
 {
     assert(as);
     assert(pipeline);
@@ -79,14 +80,14 @@ void DeviceManager::Launch(ProgramManager *program, WinSize wSize)
 
     Launcher launcher{ program->GetParamPtr(), program->GetParamSize() };
     launcher.Launch(*pipeline, LocalContextSetter::GetCurrentCUDAStream(), *sbt,
-                    wSize.w, wSize.h);
+                    wSize.x, wSize.y);
     cudaDeviceSynchronize();
     return;
 }
 
 void DeviceManager::DownloadFrameBuffer(MainWindow &window) const
 {
-    auto size = window.size.h * window.size.w * 4;
+    auto size = window.size.x * window.size.y * 4;
     cudaMemcpy( window.frameBuffer.data(), deviceFrameBuffer, size,
                cudaMemcpyDeviceToHost);
 }

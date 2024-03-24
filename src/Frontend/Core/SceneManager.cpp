@@ -1,7 +1,8 @@
-#include "spdlog/spdlog.h"
-#include "HostUtils/ErrorCheck.h"
 #include "Core/SceneManager.h"
+#include "HostUtils/ErrorCheck.h"
+#include "Utils/PBRTv3_SceneCommon.h"
 #include "Utils/PrintUtils.h"
+#include "spdlog/spdlog.h"
 
 #include <iostream>
 
@@ -13,7 +14,7 @@ namespace EasyRender
 SceneManager::SceneManager(string_view sceneSrc_)
 {
     minipbrt::Loader loader;
-    string sceneSrc (sceneSrc_);
+    string sceneSrc(sceneSrc_);
     bool loadResult = loader.load(sceneSrc.c_str());
 
     if (loadResult == false)
@@ -35,7 +36,6 @@ SceneManager::SceneManager(string_view sceneSrc_)
         miniScene = loader.take_scene();
         /* Transform minipbrt scene to ours */
         TransformScene(miniScene);
-        // cout << "\nminiScene:\n" << printUtils::toString(miniScene) << endl;
         delete miniScene;
     }
     catch (...)
@@ -53,8 +53,8 @@ void SceneManager::TransformScene(minipbrt::Scene *miniScene)
     assert(miniScene);
     /* A legal scene should have a camera */
     TransformCamera(miniScene);
+    TransformMaterial(miniScene);
     TransformMeshes(miniScene);
-    //TransformMaterial(miniScene);
     return;
 }
 
@@ -92,24 +92,54 @@ void SceneManager::TransformCamera(minipbrt::Scene *miniScene)
     return;
 }
 
-
-void SceneManager::TransformMeshes(minipbrt::Scene* miniScene) {
-
-    /* Only handle triangle mesh currently */
-    for (int i = 0; i < miniScene->shapes.size(); ++i)
+void SceneManager::TransformMaterial(minipbrt::Scene *miniScene)
+{
+    for (int i = 0; i < miniScene->materials.size(); ++i)
     {
-		auto miniShape = miniScene->shapes[i];
-        if (miniShape->type() == minipbrt::ShapeType::TriangleMesh)
+        auto miniMat = miniScene->materials[i];
+        if (miniMat->type() == minipbrt::MaterialType::Matte)
         {
-			auto miniMesh = dynamic_cast<minipbrt::TriangleMesh*>(miniShape);
-            meshes.push_back(TriangleMeshPtr(new TriangleMesh(miniMesh)));
-		}   
+            auto miniMatte = dynamic_cast<minipbrt::MatteMaterial *>(miniMat);
+            materials.push_back(make_unique<Diffuse>(miniMatte));
+        }
+        else
+        {
+            assert(int(miniMat->type()) <
+                   int(PBRTv3::MaterialType::MaterialTypeMax));
+            spdlog::warn("Unsupported shape type: {}",
+                         PBRTv3::MaterialTypeStr[(int)miniMat->type()]);
+            /* Break currently, for safety */
+            throw std::exception("");
+        }
     }
     spdlog::info("Successfully transform meshes");
     return;
 }
 
-
+void SceneManager::TransformMeshes(minipbrt::Scene *miniScene)
+{
+    /* Only handle triangle mesh currently */
+    for (int i = 0; i < miniScene->shapes.size(); ++i)
+    {
+        auto miniShape = miniScene->shapes[i];
+        if (miniShape->type() == minipbrt::ShapeType::TriangleMesh)
+        {
+            auto miniMesh = dynamic_cast<minipbrt::TriangleMesh *>(miniShape);
+            meshes.push_back(make_unique<TriangleMesh>(miniMesh));
+        }
+        else
+        {
+            assert(int(miniShape->type()) <
+                   int(PBRTv3::ShapeType::ShapeTypeMax));
+            spdlog::warn("Unsupported shape type: {}",
+                         PBRTv3::ShapeTypeStr[(int)miniShape->type()]);
+            /* Break currently, for safety */
+            throw std::exception("");
+        }
+    }
+    spdlog::info("Successfully transform meshes");
+    return;
+}
 
 void SceneManager::PrintScene() const
 {
@@ -136,12 +166,12 @@ void SceneManager::PrintMeshes() const
     for (int i = 0; i < meshes.size(); ++i)
     {
         cout << "  <- mesh " << i << " ->\n";
-        cout << "    " << meshes[i]->vertex.size()*3 << " vertices, ";
-        cout << meshes[i]->index.size()<< " triangles\n";
+        cout << "    " << meshes[i]->vertex.size() * 3 << " vertices, ";
+        cout << meshes[i]->index.size() << " triangles\n";
         nV += meshes[i]->vertex.size();
         nT += meshes[i]->index.size();
     }
-    cout << "  " << nV*3 << " vertices, " << nT << " triangles in total\n";
+    cout << "  " << nV * 3 << " vertices, " << nT << " triangles in total\n";
 }
 
 } // namespace EasyRender

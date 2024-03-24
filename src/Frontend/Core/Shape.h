@@ -7,8 +7,6 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "minipbrt.h"
 
-using std::vector, std::unique_ptr, glm::vec2, glm::vec3, glm::ivec3;
-
 namespace EasyRender
 {
 /*! a simple indexed triangle mesh that our sample renderer will
@@ -20,15 +18,13 @@ public:
     TriangleMesh(minipbrt::TriangleMesh* miniMesh);
     ~TriangleMesh() = default;
 
-
-public:
-    vector<vec3> vertex;
-    vector<vec3> normal;
-    vector<vec2> uv;
-    vector<ivec3> index;
-
+    std::vector<glm::vec3> vertex;
+    std::vector<glm::vec3> normal;
+    std::vector<glm::vec2> uv;
+    std::vector<glm::ivec3> index;
+    uint32_t material;
 };
 
-using TriangleMeshPtr = unique_ptr<TriangleMesh>;
+using TriangleMeshPtr = std::unique_ptr<TriangleMesh>;
 
 } // namespace EasyRender

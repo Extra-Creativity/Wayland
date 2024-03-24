@@ -6,7 +6,7 @@
 
 using namespace EasyRender;
 
-extern "C" __constant__ DepthLaunchParams param;
+extern "C" __constant__ Programs::Depth::LaunchParams param;
 
 enum
 {

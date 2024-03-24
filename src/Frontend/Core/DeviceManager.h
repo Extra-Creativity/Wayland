@@ -11,12 +11,12 @@
 namespace EasyRender
 {
 
-using TriangleBuildInputArrayPtr = unique_ptr<Optix::TriangleBuildInputArray>;
-using StaticAccelStructurePtr = unique_ptr<Optix::StaticAccelStructure>;
-using ProgramGroupArrayPtr = unique_ptr<Optix::ProgramGroupArray>;
-using ShaderBindingTablePtr = unique_ptr<Optix::ShaderBindingTable>;
-using ModulePtr = unique_ptr<Optix::Module>;
-using PipelinePtr = unique_ptr<Optix::Pipeline>;
+using TriangleBuildInputArrayPtr = std::unique_ptr<Optix::TriangleBuildInputArray>;
+using StaticAccelStructurePtr = std::unique_ptr<Optix::StaticAccelStructure>;
+using ProgramGroupArrayPtr = std::unique_ptr<Optix::ProgramGroupArray>;
+using ShaderBindingTablePtr = std::unique_ptr<Optix::ShaderBindingTable>;
+using ModulePtr = std::unique_ptr<Optix::Module>;
+using PipelinePtr = std::unique_ptr<Optix::Pipeline>;
 
 class DeviceManager
 {
@@ -24,7 +24,7 @@ public:
     DeviceManager();
     void SetupOptix(SceneManager &scene, MainWindow &window,
                     std::string_view programSrc, ProgramManager *program);
-    void Launch(ProgramManager *program, WinSize s);
+    void Launch(ProgramManager *program, glm::ivec2 wSize);
     void DownloadFrameBuffer(MainWindow &window) const;
     OptixTraversableHandle GetTraversableHandle();
 

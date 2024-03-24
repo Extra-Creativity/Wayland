@@ -21,7 +21,7 @@
 /*! launch parameters in constant memory, filled in by optix upon
     optixLaunch (this gets filled in from the buffer we pass to
     optixLaunch) */
-extern "C" __constant__ EasyRender::SimpleLaunchParams param;
+extern "C" __constant__ EasyRender::Programs::Simple::LaunchParams param;
 
 //------------------------------------------------------------------------------
 // ray gen program - the actual rendering happens in here

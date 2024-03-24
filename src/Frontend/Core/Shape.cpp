@@ -19,14 +19,11 @@ TriangleMesh::TriangleMesh(minipbrt::TriangleMesh *miniMesh)
     int nVertices = miniMesh->num_vertices;
     int nIndices = miniMesh->num_indices/3;
 
-
     for (int i = 0; i < nVertices; ++i)
     {
         /* Simple and slow shape transform, should optimize */
-        //vertex.push_back(Common::TransformVec3(t, &miniMesh->P[3 * i], 1));
-        //normal.push_back(Common::TransformVec3(t, &miniMesh->N[3 * i], 1));
-        vertex.push_back(glm::make_vec3(&miniMesh->P[3 * i]));
-        normal.push_back(glm::make_vec3(&miniMesh->N[3 * i]));
+        vertex.push_back(TransformVec3(t, &miniMesh->P[3 * i], 1));
+        normal.push_back(TransformVec3(t, &miniMesh->N[3 * i], 1));
     }
     for (int i = 0; i < nIndices; ++i)
     {
@@ -37,6 +34,8 @@ TriangleMesh::TriangleMesh(minipbrt::TriangleMesh *miniMesh)
     if (miniMesh->uv)
         for (int i = 0; i < nVertices; ++i)
             uv.push_back(glm::make_vec2(&miniMesh->uv[2 * i]));
+
+    material = miniMesh->material;
 }
 
 } // namespace EasyRender

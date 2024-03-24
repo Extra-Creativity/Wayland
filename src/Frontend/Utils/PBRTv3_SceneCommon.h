@@ -1,6 +1,5 @@
 #pragma once
 #include <string>
-using namespace std;
 
 namespace EasyRender::PBRTv3
 {
@@ -13,7 +12,8 @@ enum class CameraType
     Realistic,
     CameraTypeMax
 };
-const string CameraTypeStr[] = { "Perspective", "Orthographic", "Environment",
+
+const std::string CameraTypeStr[] = { "Perspective", "Orthographic", "Environment",
                                  "Realistic", "Unknown" };
 
 enum class ShapeType
@@ -32,8 +32,32 @@ enum class ShapeType
     PLYMesh,
     ShapeTypeMax
 };
-const string ShapeTypeStr[] = { "Cone", "Curve", "Cylinder", "Disk", "Hyperboloid",
+const std::string ShapeTypeStr[] = { "Cone", "Curve", "Cylinder", "Disk", "Hyperboloid",
 								"Paraboloid", "Sphere", "TriangleMesh", "HeightField",
 								"LoopSubdiv", "Nurbs", "PLYMesh", "Unknown" };
+
+  enum class MaterialType
+{
+    Disney,
+    Fourier,
+    Glass,
+    Hair,
+    KdSubsurface,
+    Matte,
+    Metal,
+    Mirror,
+    Mix,
+    None,
+    Plastic,
+    Substrate,
+    Subsurface,
+    Translucent,
+    Uber,
+    MaterialTypeMax
+};
+
+const std::string MaterialTypeStr[] = { "Disney", "Fourier", "Glass", "Hair", "KdSubsurface",
+								   "Matte", "Metal", "Mirror", "Mix", "None", "Plastic",
+								   "Substrate", "Subsurface", "Translucent", "Uber", "Unknown" };
 
 } // namespace EasyRender::PBRTv3

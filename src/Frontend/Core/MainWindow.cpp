@@ -2,9 +2,12 @@
 #include "HostUtils/ErrorCheck.h"
 #include <assert.h>
 
-using namespace EasyRender;
+using namespace std;
 
-MainWindow::MainWindow(WinSize s)
+namespace EasyRender
+{
+
+MainWindow::MainWindow(glm::ivec2 s)
 {
     SetSize(s);
     Init();
@@ -22,7 +25,7 @@ void MainWindow::Init()
         return;
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(size.w, size.h, "EasyRender", NULL, NULL);
+    window = glfwCreateWindow(size.x, size.y, "EasyRender", NULL, NULL);
     HostUtils::CheckError(window != nullptr, "Fail to create glfw window.");
     if (!window)
     {
@@ -54,7 +57,7 @@ void MainWindow::DisplayFrameBuffer()
     glBindTexture(GL_TEXTURE_2D, fbTexture);
     GLenum texFormat = GL_RGBA;
     GLenum texelType = GL_UNSIGNED_BYTE;
-    glTexImage2D(GL_TEXTURE_2D, 0, texFormat, size.w, size.h, 0, GL_RGBA,
+    glTexImage2D(GL_TEXTURE_2D, 0, texFormat, size.x, size.y, 0, GL_RGBA,
                  texelType, frameBuffer.data());
 
     glDisable(GL_LIGHTING);
@@ -69,22 +72,22 @@ void MainWindow::DisplayFrameBuffer()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     glDisable(GL_DEPTH_TEST);
-    glViewport(0, 0, size.w, size.h);
+    glViewport(0, 0, size.x, size.y);
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0.f, (float)size.w, 0.f, (float)size.h, -1.f, 1.f);
+    glOrtho(0.f, (float)size.x, 0.f, (float)size.y, -1.f, 1.f);
 
     glBegin(GL_QUADS);
     {
         glTexCoord2f(0.f, 0.f);
         glVertex3f(0.f, 0.f, 0.f);
         glTexCoord2f(0.f, 1.f);
-        glVertex3f(0.f, (float)size.h, 0.f);
+        glVertex3f(0.f, (float)size.y, 0.f);
         glTexCoord2f(1.f, 1.f);
-        glVertex3f((float)size.w, (float)size.h, 0.f);
+        glVertex3f((float)size.x, (float)size.y, 0.f);
         glTexCoord2f(1.f, 0.f);
-        glVertex3f((float)size.w, 0.f, 0.f);
+        glVertex3f((float)size.x, 0.f, 0.f);
     }
     glEnd();
 }
@@ -99,8 +102,8 @@ void MainWindow::PutInCenter()
     const GLFWvidmode *mode = glfwGetVideoMode(monitor);
 
     // Putting it in the centre
-    int xpos = max(0, (mode->width - size.w) / 2);
-    int ypos = max(0, (mode->height - size.h) / 2);
+    int xpos = max(0, (mode->width - size.x) / 2);
+    int ypos = max(0, (mode->height - size.y) / 2);
     glfwSetWindowPos(glfWindow, xpos, ypos);
 }
 
@@ -108,3 +111,5 @@ bool MainWindow::ShouldClose()
 {
     return glfwWindowShouldClose(glfWindow);
 }
+
+} // namespace EasyRender
