@@ -13,9 +13,9 @@
 #undef max
 #undef min
 
-using namespace Wayland;
+using namespace EasyRender;
 
-namespace Wayland::Optix
+namespace EasyRender::Optix
 {
 
 FlagVariant::FlagVariant(std::span<const GeometryFlags> flags)
@@ -342,4 +342,4 @@ unsigned int InstanceBuildInputArray::GetDepth() const noexcept
                }));
 }
 
-} // namespace Wayland::Optix
+} // namespace EasyRender::Optix

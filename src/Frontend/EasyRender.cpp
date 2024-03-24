@@ -3,7 +3,7 @@
 #include "Core/Renderer.h"
 #include "Core/SceneManager.h"
 
-using namespace Wayland;
+using namespace EasyRender;
 
 int main(int argc, char** argv) {
      
@@ -13,12 +13,13 @@ int main(int argc, char** argv) {
 
     string programSrc =
         //R"(..\..\..\src\Frontend\Programs\TestExamples\Simple\Simple.cu)";
-        R"(..\..\..\src\Frontend\Programs\TestExamples\Depth\Depth.cu)";
+        //R"(..\..\..\src\Frontend\Programs\TestExamples\Depth\Depth.cu)";
         //R"(..\..\..\src\Frontend\Programs\TestExamples\Mesh\Mesh.cu)";
+        R"(..\..\..\src\Frontend\Programs\TestExamples\Color\Color.cu)";
 
      try
      {
-         Wayland::Renderer app({ 1000, 1000 }, sceneSrc, programSrc);
+         EasyRender::Renderer app({ 1000, 1000 }, sceneSrc, programSrc);
          //app.scene.printScene();
          app.Run();
      }

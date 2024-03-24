@@ -3,7 +3,7 @@
 #include "optix.h"
 #include "Device/Camera.h"
 
-namespace Wayland
+namespace EasyRender
 {
 
 struct DepthLaunchParams
@@ -19,4 +19,4 @@ struct DepthLaunchParams
     OptixTraversableHandle traversable;
 };
 
-} // namespace Wayland
+} // namespace EasyRender

@@ -4,7 +4,7 @@
 #include "HostUtils/EnumUtils.h"
 #include "Traversable.h"
 
-namespace Wayland::Optix
+namespace EasyRender::Optix
 {
 
 /// @brief Build flags is just scoped enumeration for OptixBuildFlags, used by
@@ -25,10 +25,10 @@ enum class BuildFlags : unsigned int
 #endif
 };
 
-} // namespace Wayland::Optix
-ENABLE_BINARY_OP_FOR_SCOPED_ENUM(Wayland::Optix::BuildFlags);
+} // namespace EasyRender::Optix
+ENABLE_BINARY_OP_FOR_SCOPED_ENUM(EasyRender::Optix::BuildFlags);
 
-namespace Wayland::Optix
+namespace EasyRender::Optix
 {
 
 /// @brief Abstract class for AS.
@@ -53,7 +53,7 @@ protected:
     {
         const OptixBuildInput *buildInputsPtr;
         BuildInputNumLimitInt buildInputNum;
-        Wayland::HostUtils::DeviceUniquePtr<std::byte[]> tempBuffer;
+        EasyRender::HostUtils::DeviceUniquePtr<std::byte[]> tempBuffer;
     };
 
     AccelStructure(const BuildInputArray &arr, BuildFlags flag);
@@ -64,7 +64,7 @@ protected:
 
     const BuildInputArray *arrPtr_;
     OptixAccelBuildOptions accelOptions_;
-    Wayland::HostUtils::DeviceUniquePtr<std::byte[]> outputBuffer_;
+    EasyRender::HostUtils::DeviceUniquePtr<std::byte[]> outputBuffer_;
 };
 
 /// @brief Non-updatable Optix AS that isn't updatable; this is slightly faster
@@ -107,8 +107,8 @@ private:
 
     std::size_t outputBufferSize_ = 0;
 
-    Wayland::HostUtils::DeviceUniquePtr<std::byte[]> updateBuffer_;
+    EasyRender::HostUtils::DeviceUniquePtr<std::byte[]> updateBuffer_;
     std::size_t updateBufferSize_ = 0;
 };
 
-} // namespace Wayland::Optix
+} // namespace EasyRender::Optix

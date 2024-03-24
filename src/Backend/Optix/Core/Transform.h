@@ -7,7 +7,7 @@
 #include <memory>
 #include <span>
 
-namespace Wayland::Optix
+namespace EasyRender::Optix
 {
 
 class StaticTransform : public Traversable
@@ -25,7 +25,7 @@ public:
 
 private:
     const Traversable *childTraversablePtr_;
-    Wayland::HostUtils::DeviceUniquePtr<OptixStaticTransform> buffer_;
+    EasyRender::HostUtils::DeviceUniquePtr<OptixStaticTransform> buffer_;
     void SetUpTraversableHandle_(const OptixStaticTransform &transform);
 };
 
@@ -46,7 +46,7 @@ public:
 protected:
     // Not OptixMotionTransform: because it assumes that transform has varying
     // length, so its size cannot be represented by the sizeof().
-    Wayland::HostUtils::DeviceUniquePtr<std::byte[]> buffer_;
+    EasyRender::HostUtils::DeviceUniquePtr<std::byte[]> buffer_;
     template<OptixTraversableType TypeEnum>
     void SetUpTraversableHandle_(std::span<const std::byte>);
 
@@ -84,4 +84,4 @@ public:
                        float tEnd, bool beginVanish, bool endVanish);
 };
 
-} // namespace Wayland::Optix
+} // namespace EasyRender::Optix

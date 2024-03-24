@@ -6,7 +6,7 @@
 
 #include <vector>
 
-namespace Wayland::Optix
+namespace EasyRender::Optix
 {
 
 /// @brief Array of program group to be linked as pipeline and used SBT.
@@ -27,7 +27,7 @@ public:
     {
         for (auto programGroup : programGroups_)
         {
-            Wayland::HostUtils::CheckOptixError<Wayland::HostUtils::OnlyLog>(
+            EasyRender::HostUtils::CheckOptixError<EasyRender::HostUtils::OnlyLog>(
                 optixProgramGroupDestroy(programGroup));
         }
     }
@@ -83,4 +83,4 @@ private:
     std::vector<OptixProgramGroup> programGroups_;
 };
 
-} // namespace Wayland::Optix
+} // namespace EasyRender::Optix

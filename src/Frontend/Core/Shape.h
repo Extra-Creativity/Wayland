@@ -9,7 +9,7 @@
 
 using std::vector, std::unique_ptr, glm::vec2, glm::vec3, glm::ivec3;
 
-namespace Wayland
+namespace EasyRender
 {
 /*! a simple indexed triangle mesh that our sample renderer will
     render */
@@ -31,4 +31,4 @@ public:
 
 using TriangleMeshPtr = unique_ptr<TriangleMesh>;
 
-} // namespace Wayland
+} // namespace EasyRender

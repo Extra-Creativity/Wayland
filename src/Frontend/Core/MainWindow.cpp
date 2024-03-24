@@ -2,7 +2,7 @@
 #include "HostUtils/ErrorCheck.h"
 #include <assert.h>
 
-using namespace Wayland;
+using namespace EasyRender;
 
 MainWindow::MainWindow(WinSize s)
 {
@@ -22,7 +22,7 @@ void MainWindow::Init()
         return;
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(size.w, size.h, "Wayland", NULL, NULL);
+    window = glfwCreateWindow(size.w, size.h, "EasyRender", NULL, NULL);
     HostUtils::CheckError(window != nullptr, "Fail to create glfw window.");
     if (!window)
     {

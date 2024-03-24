@@ -2,7 +2,7 @@
 
 #include "HostUtils/DeviceAllocators.h"
 
-namespace Wayland::Optix
+namespace EasyRender::Optix
 {
 
 class Pipeline;
@@ -17,7 +17,7 @@ public:
     template<typename T>
         requires std::is_trivially_copyable_v<std::remove_reference_t<T>>
     Launcher(T &&data)
-        : buffer_{ Wayland::HostUtils::DeviceMakeUnique<std::byte[]>(
+        : buffer_{ EasyRender::HostUtils::DeviceMakeUnique<std::byte[]>(
               { reinterpret_cast<std::byte *>(std::addressof(data)),
                 sizeof(T) }) },
           size_{ sizeof(T) }
@@ -26,7 +26,7 @@ public:
 
     /// @brief Construct a launcher with ptr and size of data.
     Launcher(void* ptr, std::size_t size)
-		: buffer_{ Wayland::HostUtils::DeviceMakeUnique<std::byte[]>(
+		: buffer_{ EasyRender::HostUtils::DeviceMakeUnique<std::byte[]>(
 			  { reinterpret_cast<std::byte *>(ptr), size }) },
 		  size_{ size }
 	{
@@ -49,7 +49,7 @@ public:
         auto newSize = sizeof(T);
         if (newSize != size_)
         {
-            buffer_ = Wayland::HostUtils::DeviceMakeUnique<std::byte[]>(
+            buffer_ = EasyRender::HostUtils::DeviceMakeUnique<std::byte[]>(
                 { ptr, newSize });
             size_ = newSize;
         }
@@ -58,8 +58,8 @@ public:
     }
 
 private:
-    Wayland::HostUtils::DeviceUniquePtr<std::byte[]> buffer_;
+    EasyRender::HostUtils::DeviceUniquePtr<std::byte[]> buffer_;
     std::size_t size_;
 };
 
-} // namespace Wayland::Optix
+} // namespace EasyRender::Optix

@@ -8,13 +8,13 @@
 #include <algorithm>
 #include <limits>
 
-using namespace Wayland;
+using namespace EasyRender;
 
 static constexpr auto cs_singleMatrixTransformSize = 12;
 static constexpr auto cs_singleMatrixTransformBytesNum =
     cs_singleMatrixTransformSize * sizeof(float);
 
-namespace Wayland::Optix
+namespace EasyRender::Optix
 {
 
 static void SetTransformOfStaticTransform(OptixStaticTransform &result,
@@ -220,4 +220,4 @@ SRTMotionTransform::SRTMotionTransform(std::span<const OptixSRTData> transforms,
         { buffer.GetBufferPtr(), buffer.GetSize() });
 }
 
-} // namespace Wayland::Optix
+} // namespace EasyRender::Optix

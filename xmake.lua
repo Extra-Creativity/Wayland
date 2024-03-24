@@ -1,5 +1,5 @@
 set_xmakever("2.8.2")
-set_project("Wayland")
+set_project("EasyRender")
 
 add_rules("mode.debug", "mode.release", "mode.releasedbg")
 add_rules("mode.debug-dev", "mode.releasedbg-dev", "mode.release-dev")

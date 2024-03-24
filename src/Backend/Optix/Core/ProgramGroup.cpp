@@ -6,9 +6,9 @@
 constexpr std::size_t s_programLogSize = 1024;
 static char s_programLog[s_programLogSize];
 
-using namespace Wayland;
+using namespace EasyRender;
 
-namespace Wayland::Optix
+namespace EasyRender::Optix
 {
 
 /// @brief Safely add program group, so that when the insertion fails,
@@ -194,4 +194,4 @@ ProgramGroupArray &ProgramGroupArray::AddMissProgramGroup(const Module &module,
     return AddRawMissProgramGroup(module, "__miss__" + std::string{ name });
 }
 
-} // namespace Wayland::Optix
+} // namespace EasyRender::Optix

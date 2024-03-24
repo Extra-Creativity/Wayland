@@ -9,7 +9,7 @@
 using namespace std;
 using glm::mat4, glm::vec3, glm::vec4, glm::normalize;
 
-namespace Wayland
+namespace EasyRender
 {
 
 PinholeCamera::PinholeCamera(float fov_, minipbrt::Transform cameraToWorld)
@@ -42,4 +42,4 @@ string PinholeCamera::ToString() const
     oss << "  Fov:      " << fov << "\n";
     return oss.str();
 }
-} // namespace Wayland
+} // namespace EasyRender

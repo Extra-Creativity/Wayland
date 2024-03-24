@@ -3,7 +3,7 @@
 #include "Core/Renderer.h"
 #include "MeshLaunchParams.h"
 
-namespace Wayland
+namespace EasyRender
 {
 
 class MeshProgramManager : public ProgramManager
@@ -61,4 +61,4 @@ private:
     MeshLaunchParams param;
 };
 
-} // namespace Wayland
+} // namespace EasyRender

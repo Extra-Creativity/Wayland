@@ -1,7 +1,7 @@
 #include "Core/Renderer.h"
 #include "Programs/Programs-All.h"
 
-namespace Wayland
+namespace EasyRender
 {
 
 Renderer::Renderer(WinSize s, std::string_view sceneSrc,
@@ -9,7 +9,8 @@ Renderer::Renderer(WinSize s, std::string_view sceneSrc,
     : window(s), scene(sceneSrc), device()
 {
     //program = make_unique<SimpleProgramManager>(this);
-    program = make_unique<DepthProgramManager>(this);
+     program = make_unique<ColorProgramManager>(this);
+    //program = make_unique<DepthProgramManager>(this);
     //program = make_unique<MeshProgramManager>(this);
 
     device.SetupOptix(scene, window, programSrc, program.get());
@@ -28,4 +29,4 @@ void Renderer::Run()
     }
 }
 
-} // namespace Wayland
+} // namespace EasyRender

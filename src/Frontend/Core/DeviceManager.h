@@ -8,7 +8,7 @@
 #include "Core/SceneManager.h"
 #include "glm/glm.hpp"
 
-namespace Wayland
+namespace EasyRender
 {
 
 using TriangleBuildInputArrayPtr = unique_ptr<Optix::TriangleBuildInputArray>;
@@ -48,4 +48,4 @@ private:
     ShaderBindingTablePtr sbt;
 };
 
-} // namespace Wayland
+} // namespace EasyRender

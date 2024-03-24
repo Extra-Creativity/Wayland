@@ -3,7 +3,7 @@
 #include "Core/ProgramManager.h"
 #include "Core/Renderer.h"
 
-namespace Wayland
+namespace EasyRender
 {
 
 class SimpleProgramManager : public ProgramManager
@@ -49,4 +49,4 @@ private:
     SimpleLaunchParams param;
 };
 
-} // namespace Wayland
+} // namespace EasyRender

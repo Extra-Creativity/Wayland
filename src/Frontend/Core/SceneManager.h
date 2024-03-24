@@ -6,7 +6,7 @@
 #include "Core/Camera.h"
 #include "Core/Shape.h"
 
-namespace Wayland
+namespace EasyRender
 {
 
 class SceneManager
@@ -34,4 +34,4 @@ private:
 private:
 };
 
-} // namespace Wayland
+} // namespace EasyRender

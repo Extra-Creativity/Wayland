@@ -9,11 +9,11 @@
 
 using namespace std;
 
-namespace Wayland::PrintUtils
+namespace EasyRender::PrintUtils
 {
 
 string ToString(glm::vec3 v);
 string ToString(minipbrt::Scene *scene);
 string ToString(minipbrt::Shape *shape);
 
-} // namespace Wayland
+} // namespace EasyRender

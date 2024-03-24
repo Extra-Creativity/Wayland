@@ -9,7 +9,7 @@
 #include "Core/ProgramManager.h"
 
 
-namespace Wayland
+namespace EasyRender
 {
 
 class Renderer
@@ -29,4 +29,4 @@ public:
     ProgramManagerPtr program;
 };
 
-} // namespace Wayland
+} // namespace EasyRender

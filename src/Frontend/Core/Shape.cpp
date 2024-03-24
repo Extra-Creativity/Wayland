@@ -1,7 +1,7 @@
 #include "Core/Shape.h"
 #include "Utils/Common.h"
 
-namespace Wayland
+namespace EasyRender
 {
 
 TriangleMesh::TriangleMesh(minipbrt::TriangleMesh *miniMesh)
@@ -39,4 +39,4 @@ TriangleMesh::TriangleMesh(minipbrt::TriangleMesh *miniMesh)
             uv.push_back(glm::make_vec2(&miniMesh->uv[2 * i]));
 }
 
-} // namespace Wayland
+} // namespace EasyRender

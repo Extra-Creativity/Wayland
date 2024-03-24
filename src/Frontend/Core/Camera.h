@@ -8,7 +8,7 @@
 using namespace std;
 using glm::mat4, glm::vec3;
 
-namespace Wayland
+namespace EasyRender
 {
 
 enum class CameraType
@@ -46,4 +46,4 @@ public:
     vec3 right;
 };
 
-} // namespace Wayland
+} // namespace EasyRender

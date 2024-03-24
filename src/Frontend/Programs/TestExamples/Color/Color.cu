@@ -1,12 +1,12 @@
 #include <optix_device.h>
 
-#include "MeshLaunchParams.h"
-#include "UniUtils/ConversionUtils.h"
 #include "Device/Camera.h"
+#include "ColorLaunchParams.h"
+#include "UniUtils/ConversionUtils.h"
 
 using namespace EasyRender;
 
-extern "C" __constant__ MeshLaunchParams param;
+extern "C" __constant__ ColorLaunchParams param;
 
 enum
 {
@@ -33,7 +33,7 @@ inline __device__ float3 randomColor(int i)
     int r = unsigned(i) * 13 * 17 + 0x234235;
     int g = unsigned(i) * 7 * 3 * 5 + 0x773477;
     int b = unsigned(i) * 11 * 19 + 0x223766;
-    return { (r & 255) / 255.f, (g & 255) / 255.f, (b & 255) / 255.f};
+    return { (r & 255) / 255.f, (g & 255) / 255.f, (b & 255) / 255.f };
 }
 
 extern "C" __global__ void __raygen__RenderFrame()
@@ -47,13 +47,12 @@ extern "C" __global__ void __raygen__RenderFrame()
     std::uint32_t u0, u1;
     PackPointer(result, u0, u1);
 
-
     // Normally we need a scale to shift the ray direction, here just omit it.
     glm::vec3 rayDir =
         glm::normalize(param.camera.lookAt + xPos * param.camera.right +
                        yPos * param.camera.up);
-    
-    rayDir = PinholeGenerateRay({idx_x,idx_y},  param.fbSize, param.camera);
+
+    rayDir = PinholeGenerateRay({ idx_x, idx_y }, param.fbSize, param.camera);
 
     optixTrace(param.traversable, UniUtils::ToFloat3(param.camera.pos),
                UniUtils::ToFloat3(rayDir), 1e-5, 1e30, 0, 255,

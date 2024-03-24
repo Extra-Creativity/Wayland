@@ -4,7 +4,7 @@
 
 using glm::ivec2, glm::vec3;
 
-namespace Wayland
+namespace EasyRender
 {
 
 struct PinholeCamFrame
@@ -24,4 +24,4 @@ vec3 __host__ __device__ __forceinline__ PinholeGenerateRay(
 	return glm::normalize(rayDir);
 }
 
-} // namespace Wayland
+} // namespace EasyRender

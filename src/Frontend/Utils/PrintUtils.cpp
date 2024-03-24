@@ -10,7 +10,7 @@
 
 using namespace std;
 
-namespace Wayland::PrintUtils
+namespace EasyRender::PrintUtils
 {
 
     inline string checkIndex(uint32_t idx)
@@ -58,4 +58,4 @@ string ToString(minipbrt::Shape *shape)
 }
 
 
-} // namespace Wayland
+} // namespace EasyRender

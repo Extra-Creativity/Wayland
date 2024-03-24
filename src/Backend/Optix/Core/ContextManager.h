@@ -10,7 +10,7 @@
 #include <utility>
 #include <vector>
 
-namespace Wayland::Optix
+namespace EasyRender::Optix
 {
 
 /// @brief Where the optix context is created.
@@ -64,7 +64,7 @@ public:
     }
     int GetDeviceID(int idx) const
     {
-        return Wayland::HostUtils::Access(contexts_, idx).deviceID;
+        return EasyRender::HostUtils::Access(contexts_, idx).deviceID;
     }
 
     /// @param path set cache paths of all devices to path.
@@ -90,7 +90,7 @@ public:
     LocalContextSetter(ContextManager &manager, int idx)
     {
         auto deviceID = manager.GetDeviceID(idx);
-        Wayland::HostUtils::CheckCUDAError(cudaSetDevice(deviceID));
+        EasyRender::HostUtils::CheckCUDAError(cudaSetDevice(deviceID));
         currentContext_ = &(manager.contexts_[idx]);
     }
 
@@ -122,4 +122,4 @@ private:
     static thread_local ContextManager::ContextInfo *currentContext_;
 };
 
-} // namespace Wayland::Optix
+} // namespace EasyRender::Optix

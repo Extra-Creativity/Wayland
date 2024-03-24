@@ -2,7 +2,7 @@
 #include "HostUtils/CommonHeaders.h"
 #include "HostUtils/DeviceAllocators.h"
 
-namespace Wayland::Optix
+namespace EasyRender::Optix
 {
 
 /// @brief template class for data passed to SBT.
@@ -118,8 +118,8 @@ public:
     const auto &GetHandle() const noexcept { return sbt_; }
 
 private:
-    Wayland::HostUtils::DeviceUniquePtr<std::byte[]> buffer_;
+    EasyRender::HostUtils::DeviceUniquePtr<std::byte[]> buffer_;
     OptixShaderBindingTable sbt_{};
 };
 
-} // namespace Wayland::Optix
+} // namespace EasyRender::Optix

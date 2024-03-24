@@ -9,7 +9,7 @@
 #include <span>
 #include <string_view>
 
-namespace Wayland::Optix
+namespace EasyRender::Optix
 {
 
 /// @brief Wrapper of OptixModuleCompileOptions, providing chained setter.
@@ -45,8 +45,8 @@ public:
     const auto &GetRawOptions() const noexcept { return option_; }
     auto &SetPayload(std::span<OptixPayloadType> payloads)
     {
-        Wayland::HostUtils::CheckError(
-            Wayland::HostUtils::CheckInRangeAndSet(payloads.size(),
+        EasyRender::HostUtils::CheckError(
+            EasyRender::HostUtils::CheckInRangeAndSet(payloads.size(),
                                                    option_.numPayloadTypes),
             "Too many payloads");
         option_.payloadTypes = payloads.data();
@@ -56,8 +56,8 @@ public:
     auto &SetBoundValue(
         std::span<OptixModuleCompileBoundValueEntry> boundValues)
     {
-        Wayland::HostUtils::CheckError(
-            Wayland::HostUtils::CheckInRangeAndSet(boundValues.size(),
+        EasyRender::HostUtils::CheckError(
+            EasyRender::HostUtils::CheckInRangeAndSet(boundValues.size(),
                                                    option_.numBoundValues),
             "Too many bound values");
         option_.boundValues = boundValues.data();
@@ -139,4 +139,4 @@ inline void LogProcedureInfo(std::size_t logStringSize,
         SPDLOG_INFO("{}", std::string_view{ logPtr, logStringSize });
 }
 
-} // namespace Wayland::Optix
+} // namespace EasyRender::Optix

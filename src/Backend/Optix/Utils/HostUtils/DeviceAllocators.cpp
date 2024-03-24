@@ -10,7 +10,7 @@
 
 #include "DeviceAllocators.h"
 
-using namespace Wayland;
+using namespace EasyRender;
 
 template<unsigned int... Macros>
 auto ForceClangInstantiation(

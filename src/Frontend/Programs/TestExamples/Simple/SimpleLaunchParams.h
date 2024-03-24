@@ -2,7 +2,7 @@
 #include "glm/glm.hpp"
 #include "optix.h"
 
-namespace Wayland
+namespace EasyRender
 {
 
 struct SimpleLaunchParams
@@ -17,4 +17,4 @@ struct SimpleLaunchParams
     uint32_t *colorBuffer;
 };
 
-} // namespace Wayland
+} // namespace EasyRender

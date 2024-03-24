@@ -17,7 +17,7 @@ macro(source_group_by_dir source_files)
   endif(MSVC)
 endmacro(source_group_by_dir)
 
-set(TARGET_NAME wayland)
+set(TARGET_NAME EasyRender)
 
 file(GLOB_RECURSE HEADERS *.h)
 file(GLOB_RECURSE SOURCE *.cpp *.cu)

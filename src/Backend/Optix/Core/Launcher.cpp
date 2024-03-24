@@ -4,9 +4,9 @@
 #include "Pipeline.h"
 #include "ShaderBindingTable.h"
 
-using namespace Wayland;
+using namespace EasyRender;
 
-namespace Wayland::Optix
+namespace EasyRender::Optix
 {
 
 void Launcher::Launch(const Pipeline &pipeline, CUstream stream,
@@ -19,4 +19,4 @@ void Launcher::Launch(const Pipeline &pipeline, CUstream stream,
     return;
 }
 
-} // namespace Wayland::Optix
+} // namespace EasyRender::Optix

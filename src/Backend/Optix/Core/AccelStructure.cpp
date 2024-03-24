@@ -7,7 +7,7 @@
 #undef max
 #undef min
 
-using namespace Wayland;
+using namespace EasyRender;
 
 static auto CheckBuildInputArrLimit(const auto &buildInputs)
 {
@@ -24,7 +24,7 @@ static auto CheckBuildInputArrLimit(const auto &buildInputs)
     return static_cast<LimitInt>(buildInputNum);
 }
 
-namespace Wayland::Optix
+namespace EasyRender::Optix
 {
 
 AccelStructure::AccelStructure(const BuildInputArray &arr, BuildFlags flags)
@@ -274,4 +274,4 @@ void DynamicAccelStructure::EnlargeBuffers_(
     }
 }
 
-} // namespace Wayland::Optix
+} // namespace EasyRender::Optix

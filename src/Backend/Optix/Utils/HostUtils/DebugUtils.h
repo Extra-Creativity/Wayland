@@ -4,7 +4,7 @@
 #include <limits>
 #include <utility>
 
-namespace Wayland::HostUtils
+namespace EasyRender::HostUtils
 {
 
 template<std::integral DstType, std::integral SrcType>
@@ -44,4 +44,4 @@ decltype(auto) Access(auto &&rng, auto &&key)
 #endif
 }
 
-} // namespace Wayland::HostUtils
+} // namespace EasyRender::HostUtils

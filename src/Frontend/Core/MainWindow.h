@@ -5,7 +5,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 
-namespace Wayland
+namespace EasyRender
 {
 struct WinSize
 {
@@ -44,4 +44,4 @@ private:
 
 using MainWindowPtr = std::unique_ptr<MainWindow>;
 
-} // namespace Wayland
+} // namespace EasyRender

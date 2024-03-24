@@ -7,7 +7,7 @@
 
 using namespace std;
 
-namespace Wayland
+namespace EasyRender
 {
 
 SceneManager::SceneManager(string_view sceneSrc_)
@@ -47,13 +47,14 @@ SceneManager::SceneManager(string_view sceneSrc_)
     return;
 }
 
-// Transform minipbrt::Scene to Wayland::SceneManager
+// Transform minipbrt::Scene to EasyRender::SceneManager
 void SceneManager::TransformScene(minipbrt::Scene *miniScene)
 {
     assert(miniScene);
     /* A legal scene should have a camera */
     TransformCamera(miniScene);
     TransformMeshes(miniScene);
+    //TransformMaterial(miniScene);
     return;
 }
 
@@ -143,4 +144,4 @@ void SceneManager::PrintMeshes() const
     cout << "  " << nV*3 << " vertices, " << nT << " triangles in total\n";
 }
 
-} // namespace Wayland
+} // namespace EasyRender

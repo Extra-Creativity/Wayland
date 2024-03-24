@@ -9,7 +9,7 @@
 #include "glm/glm.hpp"
 #include "MathConstants.h"
 
-namespace Wayland
+namespace EasyRender
 {
 
 template<typename T, unsigned int N, typename Y>
@@ -35,4 +35,4 @@ inline float AngleToRadian(float a)
 	return a * PI / 180.0;
 }
 
-} // namespace Wayland
+} // namespace EasyRender

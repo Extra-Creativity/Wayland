@@ -3,9 +3,9 @@
 #include "Utils/PrintUtils.h"
 #include "HostUtils/DeviceAllocators.h"
 
-using namespace Wayland::Optix;
+using namespace EasyRender::Optix;
 
-namespace Wayland
+namespace EasyRender
 {
 
 DeviceManager::DeviceManager()
@@ -96,4 +96,4 @@ OptixTraversableHandle DeviceManager::GetTraversableHandle() {
     return as->GetHandle();
 }
 
-} // namespace Wayland
+} // namespace EasyRender

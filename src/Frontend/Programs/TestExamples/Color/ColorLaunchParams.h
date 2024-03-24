@@ -1,12 +1,12 @@
 #pragma once
+#include "Device/Camera.h"
 #include "glm/glm.hpp"
 #include "optix.h"
-#include "Device/Camera.h"
 
 namespace EasyRender
 {
 
-struct MeshLaunchParams
+struct ColorLaunchParams
 {
     int frameID;
     glm::ivec2 fbSize;

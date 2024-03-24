@@ -9,9 +9,9 @@
 #include <string_view>
 #include <version>
 
-using namespace Wayland;
+using namespace EasyRender;
 
-namespace Wayland::Optix
+namespace EasyRender::Optix
 {
 thread_local ContextManager::ContextInfo *LocalContextSetter::currentContext_ =
     nullptr;
@@ -203,4 +203,4 @@ void ContextManager::SetCachePath(const std::string &path)
     }
 }
 
-} // namespace Wayland::Optix
+} // namespace EasyRender::Optix

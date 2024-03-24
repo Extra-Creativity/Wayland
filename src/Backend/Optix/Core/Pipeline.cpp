@@ -8,9 +8,9 @@
 static constexpr std::size_t s_pipelineLogSize = 1024;
 static char s_pipelineLog[s_pipelineLogSize];
 
-using namespace Wayland;
+using namespace EasyRender;
 
-namespace Wayland::Optix
+namespace EasyRender::Optix
 {
 
 // RAII to prevent pipeline leak. Its GetRaw() is supposed to be
@@ -136,4 +136,4 @@ Pipeline::Pipeline(
     pipeline_ = pipeline.GetRaw();
 }
 
-} // namespace Wayland::Optix
+} // namespace EasyRender::Optix

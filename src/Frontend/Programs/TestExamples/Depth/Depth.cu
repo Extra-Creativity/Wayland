@@ -4,7 +4,7 @@
 #include "Device/Camera.h"
 #include "UniUtils/ConversionUtils.h"
 
-using namespace Wayland;
+using namespace EasyRender;
 
 extern "C" __constant__ DepthLaunchParams param;
 

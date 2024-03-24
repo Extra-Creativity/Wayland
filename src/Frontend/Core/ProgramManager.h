@@ -1,7 +1,7 @@
 #pragma once
 #include "DeviceManager.h"
 
-namespace Wayland
+namespace EasyRender
 {
 class ProgramManager
 {
@@ -19,4 +19,4 @@ public:
 
 using ProgramManagerPtr = std::unique_ptr<ProgramManager>;
 
-} // namespace Wayland
+} // namespace EasyRender

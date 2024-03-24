@@ -7,9 +7,9 @@
 #include <algorithm>
 #include <ranges>
 
-using namespace Wayland;
+using namespace EasyRender;
 
-namespace Wayland::Optix
+namespace EasyRender::Optix
 {
 
 void ShaderBindingTable::SetSBTHeader_(void *ptr,
@@ -52,4 +52,4 @@ void ShaderBindingTable::CopyToBuffer_(
     return;
 }
 
-} // namespace Wayland::Optix
+} // namespace EasyRender::Optix

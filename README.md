@@ -1,4 +1,4 @@
-# Wayland
+# EasyRender
 A renderer in development.
 
 ## Dependencies

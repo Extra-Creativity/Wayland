@@ -4,7 +4,7 @@
 #include "HostUtils/EnumUtils.h"
 #include <span>
 
-namespace Wayland::Optix
+namespace EasyRender::Optix
 {
 
 /// @brief Base class of all build input arrays, like
@@ -96,21 +96,21 @@ public:
     auto GetVertexPtrsPtr() const noexcept { return vertexPtrArr_.get(); }
     auto GetTrianglesPtr() const noexcept
     {
-        return Wayland::HostUtils::ToDriverPointer(trianglesBuffer_.get());
+        return EasyRender::HostUtils::ToDriverPointer(trianglesBuffer_.get());
     }
     auto GetMotionKeyNum() const noexcept { return motionKeyNum_; }
     auto GetFlagNum() const noexcept { return flagBuffer_.GetFlagNum(); }
     auto GetFlagPtr() const noexcept { return flagBuffer_.GetFlagPtr(); }
     auto GetSBTIndexOffsetBuffer() const noexcept
     {
-        return Wayland::HostUtils::ToDriverPointer(sbtIndexOffsetBuffer_.get());
+        return EasyRender::HostUtils::ToDriverPointer(sbtIndexOffsetBuffer_.get());
     }
 
 private:
     FlagVariant flagBuffer_;
-    Wayland::HostUtils::DeviceUniquePtr<std::byte[]> sbtIndexOffsetBuffer_;
-    Wayland::HostUtils::DeviceUniquePtr<std::byte[]> verticesBuffer_;
-    Wayland::HostUtils::DeviceUniquePtr<std::byte[]> trianglesBuffer_;
+    EasyRender::HostUtils::DeviceUniquePtr<std::byte[]> sbtIndexOffsetBuffer_;
+    EasyRender::HostUtils::DeviceUniquePtr<std::byte[]> verticesBuffer_;
+    EasyRender::HostUtils::DeviceUniquePtr<std::byte[]> trianglesBuffer_;
     // Those with motion may need more than one vertex pointer. This may
     // also be optimized like FlagVariant to reduce one heap allocation.
     std::unique_ptr<CUdeviceptr[]> vertexPtrArr_;
@@ -170,11 +170,11 @@ public:
     InstanceDataBuffer(auto instances);
     auto GetInstanceBufferPtr() const noexcept
     {
-        return Wayland::HostUtils::ToDriverPointer(instancesBuffer_.get());
+        return EasyRender::HostUtils::ToDriverPointer(instancesBuffer_.get());
     }
 
 private:
-    Wayland::HostUtils::DeviceUniquePtr<OptixInstance[]> instancesBuffer_;
+    EasyRender::HostUtils::DeviceUniquePtr<OptixInstance[]> instancesBuffer_;
 };
 
 class Traversable;
@@ -224,7 +224,7 @@ enum class InstanceFlags : unsigned int
     DisableOMM = OPTIX_INSTANCE_FLAG_DISABLE_OPACITY_MICROMAPS
 #endif
 };
-} // namespace Wayland::Optix
+} // namespace EasyRender::Optix
 
-ENABLE_BINARY_OP_FOR_SCOPED_ENUM(Wayland::Optix::GeometryFlags);
-ENABLE_BINARY_OP_FOR_SCOPED_ENUM(Wayland::Optix::InstanceFlags);
+ENABLE_BINARY_OP_FOR_SCOPED_ENUM(EasyRender::Optix::GeometryFlags);
+ENABLE_BINARY_OP_FOR_SCOPED_ENUM(EasyRender::Optix::InstanceFlags);

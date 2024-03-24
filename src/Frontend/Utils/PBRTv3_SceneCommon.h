@@ -2,7 +2,7 @@
 #include <string>
 using namespace std;
 
-namespace Wayland::PBRTv3
+namespace EasyRender::PBRTv3
 {
 
 enum class CameraType
@@ -36,4 +36,4 @@ const string ShapeTypeStr[] = { "Cone", "Curve", "Cylinder", "Disk", "Hyperboloi
 								"Paraboloid", "Sphere", "TriangleMesh", "HeightField",
 								"LoopSubdiv", "Nurbs", "PLYMesh", "Unknown" };
 
-} // namespace Wayland::PBRTv3
+} // namespace EasyRender::PBRTv3
