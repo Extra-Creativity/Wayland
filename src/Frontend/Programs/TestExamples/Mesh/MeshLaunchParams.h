@@ -1,6 +1,7 @@
 #pragma once
 #include "glm/glm.hpp"
 #include "optix.h"
+#include "Device/Camera.h"
 
 namespace Wayland
 {
@@ -8,21 +9,8 @@ namespace Wayland
 struct MeshLaunchParams
 {
     int frameID;
-    
-    struct
-    {
-        glm::vec3 pos;
-        glm::vec3 lookAt;
-        glm::vec3 up;
-        glm::vec3 right;
-    } camera;
-
-    struct
-    {
-        int x;
-        int y;
-    } fbSize;
-    
+    glm::ivec2 fbSize;
+    PinholeCamFrame camera;
     glm::u8vec4 *colorBuffer;
     OptixTraversableHandle traversable;
 };

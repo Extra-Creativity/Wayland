@@ -19,6 +19,7 @@ void DeviceManager::SetEnvironment()
     Module::SetOptixSDKPath(OPTIX_DIR);
     Module::AddArgs("-I\"" GLM_DIR "\"");
     Module::AddArgs("-I\"" UTILS_INC_PATH "\"");
+    Module::AddArgs("-I\"" FRONT_PATH "\"");
     Module::AddArgs("-diag-suppress 20012 -diag-suppress 3012");
     return;
 }

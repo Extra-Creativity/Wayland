@@ -32,6 +32,7 @@ target_compile_definitions(
     PRIVATE GLM_DIR=R\"\(${PROJECT_SOURCE_DIR}/build/build/_deps/glm-src\)\"
     PRIVATE OPTIX_DIR=R\"\($ENV{OptiX_ROOT}/include\)\"
     PRIVATE UTILS_INC_PATH=R\"\(${PROJECT_SOURCE_DIR}/src/Backend/Optix/Utils\)\"
+    PRIVATE FRONT_PATH=R\"\(${PROJECT_SOURCE_DIR}/src/Frontend\)\"
 )
 
 target_include_directories(

@@ -2,6 +2,7 @@
 
 #include "MeshLaunchParams.h"
 #include "UniUtils/ConversionUtils.h"
+#include "Device/Camera.h"
 
 using namespace Wayland;
 
@@ -46,13 +47,13 @@ extern "C" __global__ void __raygen__RenderFrame()
     std::uint32_t u0, u1;
     PackPointer(result, u0, u1);
 
-    
-    //xPos = yPos = 0;
 
     // Normally we need a scale to shift the ray direction, here just omit it.
     glm::vec3 rayDir =
         glm::normalize(param.camera.lookAt + xPos * param.camera.right +
                        yPos * param.camera.up);
+    
+    rayDir = PinholeGenerateRay({idx_x,idx_y},  param.fbSize, param.camera);
 
     optixTrace(param.traversable, UniUtils::ToFloat3(param.camera.pos),
                UniUtils::ToFloat3(rayDir), 1e-5, 1e30, 0, 255,

@@ -1,6 +1,7 @@
 #include <optix_device.h>
 
 #include "DepthLaunchParams.h"
+#include "Device/Camera.h"
 #include "UniUtils/ConversionUtils.h"
 
 using namespace Wayland;
@@ -29,18 +30,13 @@ __device__ T &UnpackPointer(std::uint32_t u0, std::uint32_t u1)
 extern "C" __global__ void __raygen__RenderFrame()
 {
     auto idx_x = optixGetLaunchIndex().x, idx_y = optixGetLaunchIndex().y;
-    //  scale to [-1, 1], row goes vertically.
-    float xPos = 2.f * idx_x / optixGetLaunchDimensions().x - 1;
-    float yPos = 2.f * idx_y / optixGetLaunchDimensions().y - 1;
 
     float result;
     std::uint32_t u0, u1;
     PackPointer(result, u0, u1);
 
-    // Normally we need a scale to shift the ray direction, here just omit it.
-    glm::vec3 rayDir =
-        glm::normalize(param.camera.lookAt + xPos * param.camera.right +
-                       yPos * param.camera.up);
+    glm::vec3 rayDir = PinholeGenerateRay(
+        { idx_x, idx_y }, param.fbSize, param.camera);
 
     optixTrace(param.traversable, UniUtils::ToFloat3(param.camera.pos),
                UniUtils::ToFloat3(rayDir), 1e-5, 1e30, 0, 255,
@@ -49,19 +45,19 @@ extern "C" __global__ void __raygen__RenderFrame()
 
     auto idx = (std::size_t)optixGetLaunchDimensions().x * idx_y + idx_x;
 
-    //if (result>0) printf("%f\n", result);    
+    // if (result>0) printf("%f\n", result);
     param.depthBuffer[idx] = result;
     if (param.frameID > 1)
     {
-        float t = (result - param.minDepth) / (param.maxDepth - param.minDepth);  
+        float t = (result - param.minDepth) / (param.maxDepth - param.minDepth);
         unsigned int color;
         if (t < 0)
             color = 0;
-		else 
-            color = 50+(1-t) * 200;
+        else
+            color = 50 + (1 - t) * 200;
         param.colorBuffer[idx].r = color;
-        param.colorBuffer[idx].g =color;
-        param.colorBuffer[idx].b =color;
+        param.colorBuffer[idx].g = color;
+        param.colorBuffer[idx].b = color;
         param.colorBuffer[idx].a = 0xFF;
     }
 }
