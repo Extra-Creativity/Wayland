@@ -23,6 +23,7 @@ public:
     std::vector<glm::vec2> uv;
     std::vector<glm::ivec3> index;
     uint32_t material;
+    uint32_t areaLight;
 };
 
 using TriangleMeshPtr = std::unique_ptr<TriangleMesh>;

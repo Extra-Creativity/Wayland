@@ -54,6 +54,7 @@ void SceneManager::TransformScene(minipbrt::Scene *miniScene)
     /* A legal scene should have a camera */
     TransformCamera(miniScene);
     TransformMaterial(miniScene);
+    TransformLight(miniScene);
     TransformMeshes(miniScene);
     return;
 }
@@ -94,6 +95,7 @@ void SceneManager::TransformCamera(minipbrt::Scene *miniScene)
 
 void SceneManager::TransformMaterial(minipbrt::Scene *miniScene)
 {
+    /* Only handle diffuse material currently */
     for (int i = 0; i < miniScene->materials.size(); ++i)
     {
         auto miniMat = miniScene->materials[i];
@@ -112,7 +114,21 @@ void SceneManager::TransformMaterial(minipbrt::Scene *miniScene)
             throw std::exception("");
         }
     }
-    spdlog::info("Successfully transform meshes");
+    spdlog::info("Successfully transform materials");
+    return;
+}
+
+void SceneManager::TransformLight(minipbrt::Scene *miniScene)
+{
+    /* Only handle diffuse areaLight currently */
+    for (int i = 0; i < miniScene->areaLights.size(); ++i)
+    {
+        auto miniLight = miniScene->areaLights[i];
+        assert(miniLight->type() == minipbrt::AreaLightType::Diffuse);
+        auto l = dynamic_cast<minipbrt::DiffuseAreaLight *>(miniLight);
+        lights.push_back(make_unique<AreaLight>(l));
+    }
+    spdlog::info("Successfully transform lights");
     return;
 }
 

@@ -4,3 +4,5 @@
 #include "TestExamples/Mesh/MeshProgramManager.h"
 #include "TestExamples/Simple/SimpleProgramManager.h"
 #include "TestExamples/WireFrame/WireFrameProgramManager.h"
+
+#include "PathTracing/PathTracingProgramManager.h"

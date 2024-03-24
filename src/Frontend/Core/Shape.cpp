@@ -35,7 +35,11 @@ TriangleMesh::TriangleMesh(minipbrt::TriangleMesh *miniMesh)
         for (int i = 0; i < nVertices; ++i)
             uv.push_back(glm::make_vec2(&miniMesh->uv[2 * i]));
 
+    /* Bind material*/
     material = miniMesh->material;
+    /* Bind areaLight */
+    areaLight = miniMesh->areaLight;
+
 }
 
 } // namespace EasyRender

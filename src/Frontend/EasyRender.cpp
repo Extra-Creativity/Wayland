@@ -16,7 +16,9 @@ int main(int argc, char** argv) {
         //R"(..\..\..\src\Frontend\Programs\TestExamples\Depth\Depth.cu)";
         //R"(..\..\..\src\Frontend\Programs\TestExamples\Mesh\Mesh.cu)";
         //R"(..\..\..\src\Frontend\Programs\TestExamples\Simple\Simple.cu)";
-        R"(..\..\..\src\Frontend\Programs\TestExamples\WireFrame\WireFrame.cu)";
+        //R"(..\..\..\src\Frontend\Programs\TestExamples\WireFrame\WireFrame.cu)";
+
+         R"(..\..\..\src\Frontend\Programs\PathTracing\PathTracing.cu)";
 
      try
      {

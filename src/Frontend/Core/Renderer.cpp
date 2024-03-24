@@ -14,7 +14,8 @@ Renderer::Renderer(glm::ivec2 s, std::string_view sceneSrc,
     //program = make_unique<DepthProgramManager>(this);
     //program = make_unique<MeshProgramManager>(this);
      //program = make_unique<SimpleProgramManager>(this);
-    program = make_unique<WireFrameProgramManager>(this);
+    //program = make_unique<WireFrameProgramManager>(this);
+     program = make_unique<PathTracingProgramManager>(this);
 
     device.SetupOptix(scene, window, programSrc, program.get());
 }

@@ -6,6 +6,7 @@
 #include "Core/Camera.h"
 #include "Core/Shape.h"
 #include "Core/Material.h"
+#include "Core/Light.h"
 
 namespace EasyRender
 {
@@ -27,13 +28,15 @@ public:
 
 public:
     CameraPtr camera;
-    std::vector<TriangleMeshPtr> meshes;
     std::vector<MaterialPtr> materials;
+    std::vector<LightPtr> lights;
+    std::vector<TriangleMeshPtr> meshes;
 
 private:
     void TransformScene(minipbrt::Scene *miniScene);
     void TransformCamera(minipbrt::Scene *miniScene);
     void TransformMaterial(minipbrt::Scene *miniScene);
+    void TransformLight(minipbrt::Scene *miniScene);
     void TransformMeshes(minipbrt::Scene *miniScene);
 
 };
