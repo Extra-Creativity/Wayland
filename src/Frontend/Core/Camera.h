@@ -46,5 +46,4 @@ public:
     vec3 right;
 };
 
-
 } // namespace Wayland

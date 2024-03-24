@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
 
      try
      {
-         Wayland::Renderer app({ 500, 500 }, sceneSrc, programSrc);
+         Wayland::Renderer app({ 1000, 1000 }, sceneSrc, programSrc);
          //app.scene.printScene();
          app.Run();
      }

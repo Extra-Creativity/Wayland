@@ -7,6 +7,7 @@
 
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/glm.hpp"
+#include "MathConstants.h"
 
 namespace Wayland
 {
@@ -27,6 +28,11 @@ inline glm::vec3 TransformVec3(glm::mat4 &m, glm::vec3 &v, float dim4)
 inline glm::vec3 TransformVec3(glm::mat4 &m, float *v3, float dim4)
 {
     return m * glm::vec4(v3[0], v3[1], v3[3], dim4);
+}
+
+inline float AngleToRadian(float a)
+{
+	return a * PI / 180.0;
 }
 
 } // namespace Wayland

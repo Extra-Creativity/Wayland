@@ -46,6 +46,9 @@ extern "C" __global__ void __raygen__RenderFrame()
     std::uint32_t u0, u1;
     PackPointer(result, u0, u1);
 
+    
+    //xPos = yPos = 0;
+
     // Normally we need a scale to shift the ray direction, here just omit it.
     glm::vec3 rayDir =
         glm::normalize(param.camera.lookAt + xPos * param.camera.right +
