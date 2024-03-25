@@ -87,7 +87,7 @@ void DeviceManager::Launch(ProgramManager *program, glm::ivec2 wSize)
 
 void DeviceManager::DownloadFrameBuffer(MainWindow &window) const
 {
-    auto size = window.size.x * window.size.y * 4;
+    int size = window.size.x * window.size.y * 4;
     cudaMemcpy( window.frameBuffer.data(), deviceFrameBuffer, size,
                cudaMemcpyDeviceToHost);
 }

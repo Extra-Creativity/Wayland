@@ -11,6 +11,7 @@ struct LaunchParams
     int frameID;
     glm::ivec2 fbSize;
     PinholeCamFrame camera;
+    glm::vec4 *radianceBuffer;
     glm::u8vec4 *colorBuffer;
     OptixTraversableHandle traversable;
 };

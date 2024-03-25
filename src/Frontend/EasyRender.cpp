@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
 
      try
      {
-         EasyRender::Renderer app({ 1200, 1000 }, sceneSrc, programSrc);
+         EasyRender::Renderer app({ 1000, 1000 }, sceneSrc, programSrc);
          //app.scene.printScene();
          app.Run();
      }

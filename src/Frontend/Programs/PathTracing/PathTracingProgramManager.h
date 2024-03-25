@@ -13,6 +13,7 @@ public:
 
     void Setup();
     void Update();
+    void End();
     void *GetParamPtr() { return &param; }
     size_t GetParamSize() { return sizeof(param); };
     Optix::ShaderBindingTable GenerateSBT(const Optix::ProgramGroupArray &pg);
@@ -20,6 +21,8 @@ public:
 private:
     Renderer *renderer;
     Programs::PathTracing::LaunchParams param;
+    glm::vec3 *normalBuffer;
+    glm::ivec3 *indexBuffer;
 };
 
 } // namespace EasyRender

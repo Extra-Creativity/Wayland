@@ -1,5 +1,5 @@
-#include "Device/Common.h"
 #include "Device/Camera.h"
+#include "Device/Common.h"
 #include "Device/Sample.h"
 #include "DeviceUtils/Payload.h"
 #include "UniUtils/ConversionUtils.h"
@@ -18,6 +18,7 @@ struct Payload
     glm::vec3 rayDir;
     unsigned int depth;
     unsigned int seed;
+    bool done;
 };
 
 __constant__ int minDepth = 5;
@@ -31,20 +32,26 @@ enum
     RADIANCE_TYPE = 0,
     RAY_TYPE_COUNT
 };
-
 extern "C" __global__ void __raygen__RenderFrame()
 {
+    
     auto idx_x = optixGetLaunchIndex().x, idx_y = optixGetLaunchIndex().y;
     auto idx = (std::size_t)optixGetLaunchDimensions().x * idx_y + idx_x;
-
+    if (idx == 500*1000+500)
+    {
+        printf("%f\n", param.radianceBuffer[idx].x+
+               param.radianceBuffer[idx].y+ param.radianceBuffer[idx].z);
+    }
     Payload prd;
 
     /* Generate random seed */
     prd.seed = tea<4>(idx, param.frameID);
+    prd.depth = 0;
+    prd.done = false;
     prd.radiance = { 1, 1, 1 };
     prd.rayPos = param.camera.pos;
-    prd.rayDir =
-        PinholeGenerateRay({ idx_x, idx_y }, param.fbSize, param.camera, prd.seed);
+    prd.rayDir = PinholeGenerateRay({ idx_x, idx_y }, param.fbSize,
+                                    param.camera, prd.seed);
 
     std::uint32_t u0, u1;
     PackPointer(&prd, u0, u1);
@@ -52,18 +59,32 @@ extern "C" __global__ void __raygen__RenderFrame()
     float RR_rate = 0.9;
     do
     {
+         if (prd.depth >= 5 && rnd(prd.seed) > RR_rate)
+        {
+             prd.radiance = { 0, 0, 0 };
+             break;
+         }
+         prd.radiance /= RR_rate;
+
         optixTrace(param.traversable, UniUtils::ToFloat3(prd.rayPos),
                    UniUtils::ToFloat3(prd.rayDir), 1e-5, 1e30, 0, 255,
                    OPTIX_RAY_FLAG_DISABLE_ANYHIT, RADIANCE_TYPE, RAY_TYPE_COUNT,
                    RADIANCE_TYPE, u0, u1);
-        if (rnd(prd.seed) > RR_rate)
-            break;
-        prd.radiance /= RR_rate;
-    } while (prd.depth < 25);
+    } while (!prd.done);
 
-    glm::vec3 result;
-    result = glm::clamp(prd.radiance, 0.f, 1.f) * 255.0f;
-    param.colorBuffer[idx] = glm::u8vec4{ result.x, result.y, result.z, 0xFF };
+    glm::dvec4 thisFrame = { prd.radiance.x, prd.radiance.y, prd.radiance.z,
+                            0xFF };
+    int frameID = param.frameID;
+    if (frameID == 0)
+        param.radianceBuffer[idx] = thisFrame;
+    else
+    {
+        glm::dvec4 lastFrame = param.radianceBuffer[idx];
+        param.radianceBuffer[idx] = lastFrame * double(frameID / (frameID + 1.0f)) +
+                                    thisFrame * double(1.0f / (frameID + 1.0f));
+    }
+    param.colorBuffer[idx] =
+        glm::clamp(param.radianceBuffer[idx], 0.f, 1.f) * 255.0f;
 }
 
 extern "C" __global__ void __miss__radiance()
@@ -71,39 +92,44 @@ extern "C" __global__ void __miss__radiance()
     auto *prd = GetPRD<Payload>();
     prd->radiance *=
         reinterpret_cast<MissData *>(optixGetSbtDataPointer())->bg_color;
+    prd->done = true;
 }
 
 extern "C" __global__ void __closesthit__radiance()
 {
     auto *prd = GetPRD<Payload>();
     HitData *mat = reinterpret_cast<HitData *>(optixGetSbtDataPointer());
-
     prd->depth += 1;
-
     /* Hit light */
     if (mat->L.x + mat->L.y + mat->L.z > 0)
     {
-        prd->radiance *=  mat->L;
+        prd->radiance *= mat->L;
+        prd->done = true;
         return;
     }
+    if (prd->depth >= 10)
+    {
+        prd->radiance = { 0, 0, 0 };
+        prd->done = true;
+        return;
+    }
+    glm::ivec3 indices = mat->indices[optixGetPrimitiveIndex()];
+    glm::vec3 N = BarycentricByIndices(mat->normals, indices,
+                                       optixGetTriangleBarycentrics());
+    N = glm::normalize(N);
+    if (glm::dot(N, prd->rayDir) > 0)
+        N = -N;
 
-    //auto indices = data.indices[optixGetPrimitiveIndex()];
-    //auto weights = optixGetTriangleBarycentrics();
-    //auto normal = glm::normalize(
-        //UniUtils::BarycentricByIndices(data.normals, indices, weights));
+    glm::vec3 hitPos = GetHitPosition();
+    glm::vec3 rayDir = RandomSampleDir(N, prd->seed);
 
-    /*auto hitPosition =
-        UniUtils::ToVec3<glm::vec3>(optixGetWorldRayOrigin()) +
-        UniUtils::ToVec3<glm::vec3>(optixGetWorldRayDirection()) *
-            optixGetRayTmax();*/
-    //auto rayDir = RandomSampleDir(normal, seed);
-    //auto cosWeight = max(0.f, glm::dot(rayDir, normal));
-    //float coeff = 2; // pdf = 1 / 2pi, albedo = kd / pi
+     auto cosWeight = fmaxf(0.f, glm::dot(rayDir, N));
+     prd->radiance = prd->radiance* mat->Kd * cosWeight *
+                     2.f; // pdf = 1 / 2pi, albedo = kd / pi
+     prd->rayPos = hitPos;
+     prd->rayDir = rayDir;
 
-    //auto &result = DeviceUtils::UnpackPayloads<Payload>(buffer);
-    //DeviceUtils::SetToPayload<0>(result.color * data.color * cosWeight * coeff *
-    //                             RR_factor);
-
+    return;
 }
 
 extern "C" __global__ void __anyhit__radiance()
