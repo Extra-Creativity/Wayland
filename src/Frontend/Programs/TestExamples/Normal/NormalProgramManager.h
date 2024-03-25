@@ -1,26 +1,30 @@
 #pragma once
-#include "ColorLaunchParams.h"
 #include "Core/ProgramManager.h"
 #include "Core/Renderer.h"
+#include "NormalLaunchParams.h"
 
 namespace EasyRender
 {
 
-class ColorProgramManager : public ProgramManager
+class NormalProgramManager : public ProgramManager
 {
 public:
-    ColorProgramManager(Renderer *r_) : renderer(r_) {}
+    NormalProgramManager(Renderer *r_) : renderer(r_) {}
 
     void Setup();
     void Update();
-    void End(){};
+    void End();
     void *GetParamPtr() { return &param; }
     size_t GetParamSize() { return sizeof(param); };
     Optix::ShaderBindingTable GenerateSBT(const Optix::ProgramGroupArray &pg);
 
 private:
     Renderer *renderer;
-    Programs::Color::LaunchParams param;
+    Programs::Normal::LaunchParams param;
+
+    /* Device Pointers */
+    glm::vec3* normalBuffer;
+    glm::ivec3* indexBuffer;
 };
 
 } // namespace EasyRender

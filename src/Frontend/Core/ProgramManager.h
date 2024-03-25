@@ -11,6 +11,7 @@ public:
 public:
     virtual void Setup() = 0;
     virtual void Update() = 0;
+    virtual void End() = 0;
     virtual void *GetParamPtr() = 0;
     virtual size_t GetParamSize() = 0;
     virtual Optix::ShaderBindingTable GenerateSBT(

@@ -15,6 +15,7 @@ int main(int argc, char** argv) {
         //R"(..\..\..\src\Frontend\Programs\TestExamples\Color\Color.cu)";
         //R"(..\..\..\src\Frontend\Programs\TestExamples\Depth\Depth.cu)";
         //R"(..\..\..\src\Frontend\Programs\TestExamples\Mesh\Mesh.cu)";
+        //R"(..\..\..\src\Frontend\Programs\TestExamples\Normal\Normal.cu)";
         //R"(..\..\..\src\Frontend\Programs\TestExamples\Simple\Simple.cu)";
         //R"(..\..\..\src\Frontend\Programs\TestExamples\WireFrame\WireFrame.cu)";
 
@@ -22,7 +23,7 @@ int main(int argc, char** argv) {
 
      try
      {
-         EasyRender::Renderer app({ 1000, 1000 }, sceneSrc, programSrc);
+         EasyRender::Renderer app({ 1200, 1000 }, sceneSrc, programSrc);
          //app.scene.printScene();
          app.Run();
      }

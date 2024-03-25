@@ -3,7 +3,7 @@
 #include "glm/glm.hpp"
 #include "optix.h"
 
-namespace EasyRender::Programs::PathTracing
+namespace EasyRender::Programs::Normal
 {
 
 struct LaunchParams
@@ -22,9 +22,8 @@ struct MissData
 
 struct HitData
 {
-    unsigned int meshID;
+    unsigned int meshID; 
     glm::vec3 Kd;
-    glm::vec3 L;
     glm::ivec3 *indices;
     glm::vec3 *normals;
 };

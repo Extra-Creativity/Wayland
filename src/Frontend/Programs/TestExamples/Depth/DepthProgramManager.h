@@ -28,7 +28,6 @@ public:
         param.camera.right =
             pCam->right * (float(param.fbSize.x) / param.fbSize.y);
 
-        /* !!! Malloc but not free currently, don't forget` !!!*/
         cudaMalloc(&param.depthBuffer,
                    param.fbSize.x * param.fbSize.y * sizeof(float));
     }
@@ -61,6 +60,12 @@ public:
             delete []hostDepthBuffer;
         }
     }
+
+    void End()
+    {
+        assert(param.depthBuffer != nullptr);
+		cudaFree(param.depthBuffer);
+	}
 
     void *GetParamPtr() { return &param; }
     size_t GetParamSize() { return sizeof(param); };

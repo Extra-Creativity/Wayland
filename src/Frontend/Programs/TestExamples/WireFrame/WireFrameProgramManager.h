@@ -38,6 +38,8 @@ public:
         param.traversable = renderer->device.GetTraversableHandle();
     }
 
+    void End() {}
+
     void *GetParamPtr() { return &param; }
     size_t GetParamSize() { return sizeof(param); };
 

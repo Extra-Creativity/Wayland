@@ -27,7 +27,6 @@ public:
         param.camera.up = pCam->up;
         param.camera.right =
             pCam->right * (float(param.fbSize.x) / param.fbSize.y);
-
     }
 
     void Update()
@@ -37,6 +36,8 @@ public:
         param.colorBuffer = (glm::u8vec4 *)renderer->device.deviceFrameBuffer;
         param.traversable = renderer->device.GetTraversableHandle();
     }
+
+    void End() {}
 
     void *GetParamPtr() { return &param; }
     size_t GetParamSize() { return sizeof(param); };

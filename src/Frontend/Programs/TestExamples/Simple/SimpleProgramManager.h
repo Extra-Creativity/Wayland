@@ -1,7 +1,7 @@
 #pragma once
-#include "SimpleLaunchParams.h"
 #include "Core/ProgramManager.h"
 #include "Core/Renderer.h"
+#include "SimpleLaunchParams.h"
 
 namespace EasyRender
 {
@@ -9,9 +9,7 @@ namespace EasyRender
 class SimpleProgramManager : public ProgramManager
 {
 public:
-    SimpleProgramManager(Renderer *r_) : renderer(r_)
-    {
-    }
+    SimpleProgramManager(Renderer *r_) : renderer(r_) {}
 
     void Setup()
     {
@@ -27,6 +25,8 @@ public:
         param.colorBuffer = (uint32_t *)renderer->device.deviceFrameBuffer;
     }
 
+    void End() {}
+
     void *GetParamPtr() { return &param; }
     size_t GetParamSize() { return sizeof(param); };
 
@@ -37,9 +37,8 @@ public:
         SBTData<int> missData{};
         std::vector<SBTData<int>> hitData(1);
         std::size_t index = 2;
-        return ShaderBindingTable{ raygenData,           0,     missData, 1,
-                                   std::span(hitData),  &index, pg
-        };
+        return ShaderBindingTable{ raygenData,         0,      missData, 1,
+                                   std::span(hitData), &index, pg };
     }
 
 private:
