@@ -9,7 +9,7 @@ namespace EasyRender::Programs::Depth
 struct LaunchParams
 {
     int frameID;
-    PinholeCamFrame camera;
+    Device::PinholeCamFrame camera;
     glm::ivec2 fbSize;    
     float minDepth;
     float maxDepth;

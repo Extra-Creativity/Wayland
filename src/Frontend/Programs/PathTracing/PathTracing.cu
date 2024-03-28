@@ -9,6 +9,7 @@
 #include "PathTracingLaunchParams.h"
 
 using namespace EasyRender;
+using namespace EasyRender::Device;
 using namespace EasyRender::Programs::PathTracing;
 
 struct Payload
@@ -38,6 +39,10 @@ extern "C" __global__ void __raygen__RenderFrame()
     auto idx_x = optixGetLaunchIndex().x, idx_y = optixGetLaunchIndex().y;
     auto idx = (std::size_t)optixGetLaunchDimensions().x * idx_y + idx_x;
     Payload prd;
+
+    //if (idx == 0 && param.frameID==0) {
+    //    param.areaLights[0].print();
+    //}
 
     /* Generate random seed */
     prd.seed = tea<4>(idx, param.frameID);
@@ -101,10 +106,18 @@ extern "C" __global__ void __closesthit__radiance()
     auto *prd = GetPRD<Payload>();
     HitData *mat = reinterpret_cast<HitData *>(optixGetSbtDataPointer());
     prd->depth += 1;
+
+    glm::ivec3 indices = mat->indices[optixGetPrimitiveIndex()];
+    glm::vec3 N = BarycentricByIndices(mat->normals, indices,
+                                       optixGetTriangleBarycentrics());
+    N = glm::normalize(N);
+
     /* Hit light */
     if (mat->L.x + mat->L.y + mat->L.z > 0)
     {
         prd->radiance *= mat->L;
+        if (!mat->twoSided && glm::dot(N, prd->rayDir)>0)
+            prd->radiance = { 0, 0, 0 };
         prd->done = true;
         return;
     }
@@ -114,10 +127,6 @@ extern "C" __global__ void __closesthit__radiance()
         prd->done = true;
         return;
     }
-    glm::ivec3 indices = mat->indices[optixGetPrimitiveIndex()];
-    glm::vec3 N = BarycentricByIndices(mat->normals, indices,
-                                       optixGetTriangleBarycentrics());
-    N = glm::normalize(N);
     if (glm::dot(N, prd->rayDir) > 0)
         N = -N;
 

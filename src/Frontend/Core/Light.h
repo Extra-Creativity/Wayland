@@ -8,7 +8,9 @@ namespace EasyRender
 	class AreaLight {
     public:
         AreaLight(minipbrt::DiffuseAreaLight * miniLight);
-		glm::vec3 L;
+		bool twoSided;
+        glm::vec3 L;
+        uint32_t mesh;
 	};
 
 	using LightPtr = std::unique_ptr<AreaLight>;

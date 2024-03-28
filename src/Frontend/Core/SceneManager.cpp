@@ -56,6 +56,7 @@ void SceneManager::TransformScene(minipbrt::Scene *miniScene)
     TransformMaterial(miniScene);
     TransformLight(miniScene);
     TransformMeshes(miniScene);
+    BindAreaLight();
     return;
 }
 
@@ -134,6 +135,8 @@ void SceneManager::TransformLight(minipbrt::Scene *miniScene)
 
 void SceneManager::TransformMeshes(minipbrt::Scene *miniScene)
 {
+    /* Set for safety */
+    vertexNum = triangleNum = areaLightVertexNum = 0;
     /* Only handle triangle mesh currently */
     for (int i = 0; i < miniScene->shapes.size(); ++i)
     {
@@ -142,6 +145,12 @@ void SceneManager::TransformMeshes(minipbrt::Scene *miniScene)
         {
             auto miniMesh = dynamic_cast<minipbrt::TriangleMesh *>(miniShape);
             meshes.push_back(make_unique<TriangleMesh>(miniMesh));
+            vertexOffset.push_back(vertexNum);
+            triangleOffset.push_back(triangleNum);
+            triangleNum += miniMesh->num_indices / 3;
+            vertexNum += miniMesh->num_vertices;
+            if (miniMesh->areaLight < minipbrt::kInvalidIndex)
+                areaLightVertexNum += miniMesh->num_vertices;
         }
         else
         {
@@ -155,6 +164,18 @@ void SceneManager::TransformMeshes(minipbrt::Scene *miniScene)
     }
     spdlog::info("Successfully transform meshes");
     return;
+}
+
+void SceneManager::BindAreaLight()
+{
+    /* This is ONLY valid after transforming mesh and areaLight */
+    for (int i = 0; i < meshes.size(); ++i)
+    {
+        if (meshes[i]->areaLight < INVALID_INDEX)
+        {
+            lights[meshes[i]->areaLight]->mesh = i;
+        }
+    }
 }
 
 void SceneManager::PrintScene() const
@@ -177,17 +198,15 @@ void SceneManager::PrintCamera() const
 void SceneManager::PrintMeshes() const
 {
     cout << "\nMeshes:\n";
-    cout << "  size: " << meshes.size() << "\n";
+    cout << "  size: " << meshes.size() << "  vertex: " << vertexNum
+         << "  triangle: " << triangleNum << "\n";
     int nV = 0, nT = 0;
     for (int i = 0; i < meshes.size(); ++i)
     {
         cout << "  <- mesh " << i << " ->\n";
         cout << "    " << meshes[i]->vertex.size() * 3 << " vertices, ";
-        cout << meshes[i]->index.size() << " triangles\n";
-        nV += meshes[i]->vertex.size();
-        nT += meshes[i]->index.size();
+        cout << meshes[i]->triangle.size() << " triangles\n";
     }
-    cout << "  " << nV * 3 << " vertices, " << nT << " triangles in total\n";
 }
 
 } // namespace EasyRender

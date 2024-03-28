@@ -6,6 +6,7 @@
 #include "UniUtils/ConversionUtils.h"
 
 using namespace EasyRender;
+using namespace EasyRender::Device;
 using namespace EasyRender::Programs::Normal;
 
 extern "C" __constant__ Programs::Normal::LaunchParams param;

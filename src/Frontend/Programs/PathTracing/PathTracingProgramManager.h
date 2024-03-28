@@ -23,6 +23,8 @@ private:
     Programs::PathTracing::LaunchParams param;
     glm::vec3 *normalBuffer;
     glm::ivec3 *indexBuffer;
+    /* This is for areaLight, so don't upload the whole scene */
+    glm::vec3 *vertexBuffer;
 };
 
 } // namespace EasyRender

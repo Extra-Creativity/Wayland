@@ -5,6 +5,7 @@
 #include "UniUtils/ConversionUtils.h"
 
 using namespace EasyRender;
+using namespace EasyRender::Device;
 using namespace EasyRender::Programs::Color;
 
 extern "C" __constant__ Programs::Color::LaunchParams param;

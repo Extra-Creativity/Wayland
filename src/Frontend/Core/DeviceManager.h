@@ -6,6 +6,7 @@
 #include "Core/Optix-All.h"
 #include "Core/ProgramManager.h"
 #include "Core/SceneManager.h"
+#include "Device/Light.h"
 #include "glm/glm.hpp"
 
 namespace EasyRender
@@ -33,9 +34,25 @@ private:
     void BuildAccelStructure(SceneManager &scene);
     void BuildPipeline(std::string_view programSrc);
     void BuildSBT(ProgramManager *program);
+    void AllocDeviceBuffer(SceneManager &scene, glm::ivec2 wSize);
+    //void FreeDeviceBuffer();
+
 
 public:
-    void *deviceFrameBuffer;
+    /* Device frame buffer */
+    glm::u8vec4 *d_FrameBuffer;
+    uint32_t frameBufferSize;
+    /* Device mesh index buffer, pass to program via SBT */
+    glm::ivec3 *d_IndexBuffer;
+    uint32_t indexBufferSize;
+    /* Device mesh normal buffer, pass to program via SBT */
+    glm::vec3 *d_NormalBuffer;
+    uint32_t normalBufferSize;
+    /* Device areaLight buffer, pass to program via LaunchParams */
+    /* This two buffers are consecutive, and malloced together */
+    Device::DeviceAreaLight *d_AreaLightBuffer; 
+    glm::vec3 *d_AreaLightVertexBuffer;
+    uint32_t areaLightBufferSize;   
 
 private:
     Optix::ContextManager contextManager;

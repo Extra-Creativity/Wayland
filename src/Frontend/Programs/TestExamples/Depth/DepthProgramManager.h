@@ -15,7 +15,7 @@ public:
     {
         param.frameID = 0;
         param.fbSize = renderer->window.size;
-        param.colorBuffer = (glm::u8vec4 *)renderer->device.deviceFrameBuffer;
+        param.colorBuffer = (glm::u8vec4 *)renderer->device.d_FrameBuffer;
         param.traversable = renderer->device.GetTraversableHandle();
 
         Camera *cam = renderer->scene.camera.get();
@@ -36,7 +36,7 @@ public:
     {
         param.frameID += 1;
         param.fbSize = renderer->window.size;
-        param.colorBuffer = (glm::u8vec4 *)renderer->device.deviceFrameBuffer;
+        param.colorBuffer = (glm::u8vec4 *)renderer->device.d_FrameBuffer;
         param.traversable = renderer->device.GetTraversableHandle();
 
         /* Get max depth at first frame */
@@ -48,7 +48,7 @@ public:
                        size * sizeof(float),
                        cudaMemcpyDeviceToHost);
             param.maxDepth = 0;
-            param.minDepth = 1e30;
+            param.minDepth = 1e30f;
             for (int i = 0; i < size; ++i)
             {
                 param.maxDepth = std::max(param.maxDepth, hostDepthBuffer[i]);

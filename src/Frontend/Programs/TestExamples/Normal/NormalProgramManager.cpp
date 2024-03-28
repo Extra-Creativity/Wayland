@@ -1,6 +1,7 @@
 #pragma once
 #include "NormalProgramManager.h"
 
+using namespace EasyRender::Device;
 using namespace EasyRender::Programs::Normal;
 
 namespace EasyRender
@@ -10,7 +11,7 @@ void NormalProgramManager::Setup()
 {
     param.frameID = 0;
     param.fbSize = renderer->window.size;
-    param.colorBuffer = (glm::u8vec4 *)renderer->device.deviceFrameBuffer;
+    param.colorBuffer = (glm::u8vec4 *)renderer->device.d_FrameBuffer;
     param.traversable = renderer->device.GetTraversableHandle();
 
     Camera *cam = renderer->scene.camera.get();
@@ -27,18 +28,13 @@ void NormalProgramManager::Update()
 {
     param.frameID += 1;
     param.fbSize = renderer->window.size;
-    param.colorBuffer = (glm::u8vec4 *)renderer->device.deviceFrameBuffer;
+    param.colorBuffer = (glm::u8vec4 *)renderer->device.d_FrameBuffer;
     param.traversable = renderer->device.GetTraversableHandle();
 }
 
 void NormalProgramManager::End()
 {
-    /* I believe this part should be put to DeviceManager/SceneManager. This is
-     * just a temporary solution. */
-    assert(normalBuffer);
-    assert(indexBuffer);
-    cudaFree(normalBuffer);
-    cudaFree(indexBuffer);
+
 }
 
 Optix::ShaderBindingTable NormalProgramManager::GenerateSBT(
@@ -49,41 +45,31 @@ Optix::ShaderBindingTable NormalProgramManager::GenerateSBT(
     SBTData<MissData> missData{};
     missData.data.bg_color = { 0, 0, 0 };
     std::vector<SBTData<HitData>> hitData;
-    auto &scene = renderer->scene;
-    std::vector<std::size_t> hitIdx(scene.meshes.size(), 2);
-    hitData.resize(scene.meshes.size());
+    auto &s = renderer->scene;
+    std::vector<std::size_t> hitIdx(s.meshes.size(), 2);
+    hitData.resize(s.meshes.size());
 
     /* I believe this part should be put in DeviceManager/SceneManager. This is
      * just a temporary solution. */
     std::vector<glm::vec3> normalAggregate;
-    std::vector<int> normalOffset{ 0 };
     std::vector<glm::ivec3> indexAggregate;
-    std::vector<int> indexOffset{ 0 };
-    int nSize = 0, iSize = 0;
-    for (int i = 0; i < scene.meshes.size(); ++i)
-    {
-        auto *mesh = scene.meshes[i].get();
-        int n_s = mesh->normal.size();
-        int i_s = mesh->index.size();
-        nSize += n_s;
-        iSize += i_s;
-        normalOffset.push_back(nSize);
-        indexOffset.push_back(iSize);
-    }
+
+    int nSize = s.vertexNum, iSize = s.triangleNum;
+
     normalAggregate.resize(nSize);
     indexAggregate.resize(iSize);
-    for (int i = 0; i < scene.meshes.size(); ++i)
+    for (int i = 0; i < s.meshes.size(); ++i)
     {
-        auto *mesh = scene.meshes[i].get();
+        auto *mesh = s.meshes[i].get();
         int n_s = mesh->normal.size();
-        int i_s = mesh->index.size();
-        memcpy(normalAggregate.data() + normalOffset[i], mesh->normal.data(),
+        int i_s = mesh->triangle.size();
+        memcpy(normalAggregate.data() + s.vertexOffset[i], mesh->normal.data(),
                mesh->normal.size() * sizeof(glm::vec3));
-        memcpy(indexAggregate.data() + indexOffset[i], mesh->index.data(),
-               mesh->index.size() * sizeof(glm::ivec3));
+        memcpy(indexAggregate.data() + s.triangleOffset[i], mesh->triangle.data(),
+               mesh->triangle.size() * sizeof(glm::ivec3));
     }
-    cudaMalloc(&normalBuffer, nSize * sizeof(glm::vec3));
-    cudaMalloc(&indexBuffer, iSize * sizeof(glm::ivec3));
+    normalBuffer = renderer->device.d_NormalBuffer;
+    indexBuffer = renderer->device.d_IndexBuffer;
     cudaMemcpy(normalBuffer, normalAggregate.data(), nSize * sizeof(glm::vec3),
                cudaMemcpyHostToDevice);
     cudaMemcpy(indexBuffer, indexAggregate.data(), iSize * sizeof(glm::ivec3),
@@ -91,20 +77,20 @@ Optix::ShaderBindingTable NormalProgramManager::GenerateSBT(
 
     for (int i = 0; i < hitData.size(); ++i)
     {
-        uint32_t matIdx = scene.meshes[i]->material;
+        uint32_t matIdx = s.meshes[i]->material;
         if (matIdx < INVALID_INDEX &&
-            scene.materials[matIdx]->type() == MaterialType::Diffuse)
+            s.materials[matIdx]->type() == MaterialType::Diffuse)
         {
             hitData[i].data.Kd =
-                static_cast<Diffuse *>(scene.materials[matIdx].get())->Kd;
+                static_cast<Diffuse *>(s.materials[matIdx].get())->Kd;
         }
         else
         {
             hitData[i].data.Kd = { 0.8, 0.8, 0.8 };
         }
         hitData[i].data.meshID = i;
-        hitData[i].data.normals = normalBuffer + normalOffset[i];
-        hitData[i].data.indices = indexBuffer + indexOffset[i];
+        hitData[i].data.normals = normalBuffer + s.vertexOffset[i];
+        hitData[i].data.indices = indexBuffer + s.triangleOffset[i];
     }
 
     return ShaderBindingTable{

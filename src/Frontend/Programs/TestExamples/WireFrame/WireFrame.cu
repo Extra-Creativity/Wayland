@@ -6,6 +6,7 @@
 #include "WireFrameLaunchParams.h"
 
 using namespace EasyRender;
+using namespace EasyRender::Device;
 
 extern "C" __constant__ Programs::WireFrame::LaunchParams param;
 

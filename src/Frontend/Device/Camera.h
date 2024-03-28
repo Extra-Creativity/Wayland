@@ -5,7 +5,7 @@
 
 using glm::ivec2, glm::vec3;
 
-namespace EasyRender
+namespace EasyRender::Device
 {
 
 struct PinholeCamFrame

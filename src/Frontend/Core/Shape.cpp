@@ -27,7 +27,7 @@ TriangleMesh::TriangleMesh(minipbrt::TriangleMesh *miniMesh)
     }
     for (int i = 0; i < nIndices; ++i)
     {
-		index.push_back(glm::make_vec3(&miniMesh->indices[3 * i]));
+		triangle.push_back(glm::make_vec3(&miniMesh->indices[3 * i]));
 	}
 
     /* uv is optional, so we need to check first */

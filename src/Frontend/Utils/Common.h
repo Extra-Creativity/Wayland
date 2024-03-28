@@ -32,7 +32,7 @@ inline glm::vec3 TransformVec3(glm::mat4 &m, float *v3, float dim4)
 
 inline float AngleToRadian(float a)
 {
-	return a * PI / 180.0;
+	return static_cast<float>(a * PI / 180.0);
 }
 
 } // namespace EasyRender

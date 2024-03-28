@@ -15,14 +15,14 @@ public:
     {
         param.frameID = 0;
         param.fbSize = renderer->window.size;
-        param.colorBuffer = (uint32_t *)renderer->device.deviceFrameBuffer;
+        param.colorBuffer = (uint32_t *)renderer->device.d_FrameBuffer;
     }
 
     void Update()
     {
         param.frameID += 1;
         param.fbSize = renderer->window.size;
-        param.colorBuffer = (uint32_t *)renderer->device.deviceFrameBuffer;
+        param.colorBuffer = (uint32_t *)renderer->device.d_FrameBuffer;
     }
 
     void End() {}

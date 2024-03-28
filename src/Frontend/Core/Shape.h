@@ -21,7 +21,7 @@ public:
     std::vector<glm::vec3> vertex;
     std::vector<glm::vec3> normal;
     std::vector<glm::vec2> uv;
-    std::vector<glm::ivec3> index;
+    std::vector<glm::ivec3> triangle;
     uint32_t material;
     uint32_t areaLight;
 };

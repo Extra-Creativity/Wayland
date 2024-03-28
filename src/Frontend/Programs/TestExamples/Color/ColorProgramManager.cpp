@@ -1,7 +1,7 @@
 #pragma once
 #include "ColorProgramManager.h"
 
-
+using namespace EasyRender::Device;
 using namespace EasyRender::Programs::Color;
 
 namespace EasyRender
@@ -11,7 +11,7 @@ void ColorProgramManager::Setup()
 {
     param.frameID = 0;
     param.fbSize = renderer->window.size;
-    param.colorBuffer = (glm::u8vec4 *)renderer->device.deviceFrameBuffer;
+    param.colorBuffer = (glm::u8vec4 *)renderer->device.d_FrameBuffer;
     param.traversable = renderer->device.GetTraversableHandle();
 
     Camera *cam = renderer->scene.camera.get();
@@ -28,7 +28,7 @@ void ColorProgramManager::Update()
 {
     param.frameID += 1;
     param.fbSize = renderer->window.size;
-    param.colorBuffer = (glm::u8vec4 *)renderer->device.deviceFrameBuffer;
+    param.colorBuffer = (glm::u8vec4 *)renderer->device.d_FrameBuffer;
     param.traversable = renderer->device.GetTraversableHandle();
 }
 

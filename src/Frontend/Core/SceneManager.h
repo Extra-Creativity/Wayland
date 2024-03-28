@@ -30,7 +30,17 @@ public:
     CameraPtr camera;
     std::vector<MaterialPtr> materials;
     std::vector<LightPtr> lights;
+
     std::vector<TriangleMeshPtr> meshes;
+    std::vector<uint32_t> vertexOffset;
+    std::vector<uint32_t> triangleOffset;
+
+public:
+    uint32_t vertexNum;
+    uint32_t triangleNum;
+    /* For areaLight */
+    uint32_t areaLightVertexNum;
+    
 
 private:
     void TransformScene(minipbrt::Scene *miniScene);
@@ -38,6 +48,8 @@ private:
     void TransformMaterial(minipbrt::Scene *miniScene);
     void TransformLight(minipbrt::Scene *miniScene);
     void TransformMeshes(minipbrt::Scene *miniScene);
+    /* Bind AreaLight and mesh */
+    void BindAreaLight();
 
 };
 

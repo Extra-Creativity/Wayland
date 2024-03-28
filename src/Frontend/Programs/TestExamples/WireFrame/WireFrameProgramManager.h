@@ -15,7 +15,7 @@ public:
     {
         param.frameID = 0;
         param.fbSize = renderer->window.size;
-        param.colorBuffer = (glm::u8vec4 *)renderer->device.deviceFrameBuffer;
+        param.colorBuffer = (glm::u8vec4 *)renderer->device.d_FrameBuffer;
         param.traversable = renderer->device.GetTraversableHandle();
 
         Camera *cam = renderer->scene.camera.get();
@@ -34,7 +34,7 @@ public:
     {
         param.frameID += 1;
         param.fbSize = renderer->window.size;
-        param.colorBuffer = (glm::u8vec4 *)renderer->device.deviceFrameBuffer;
+        param.colorBuffer = (glm::u8vec4 *)renderer->device.d_FrameBuffer;
         param.traversable = renderer->device.GetTraversableHandle();
     }
 

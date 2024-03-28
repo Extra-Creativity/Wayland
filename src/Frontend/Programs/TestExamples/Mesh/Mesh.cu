@@ -5,6 +5,7 @@
 #include "UniUtils/ConversionUtils.h"
 
 using namespace EasyRender;
+using namespace EasyRender::Device;
 
 extern "C" __constant__ Programs::Mesh::LaunchParams param;
 

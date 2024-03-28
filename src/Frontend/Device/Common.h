@@ -3,7 +3,7 @@
 #include "glm/glm.hpp"
 #include "UniUtils/ConversionUtils.h"
 
-namespace EasyRender
+namespace EasyRender::Device
 {
 
 static __forceinline__ __device__ void *UnpackPointer(uint32_t i0, uint32_t i1)

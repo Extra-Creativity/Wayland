@@ -28,7 +28,7 @@ void Renderer::Run()
 
 void Renderer::SetProgram(ProgramType pgType)
 {
-    assert(pgType > 0 && pgType < ProgramType::ProgramTypeMax);
+    assert((int)pgType > 0 && (int)pgType < (int)ProgramType::ProgramTypeMax);
     programType = pgType;
     programSrc = PROGRAM_SRC[static_cast<int>(pgType)];
     switch (pgType) {

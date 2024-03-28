@@ -10,7 +10,7 @@ struct LaunchParams
 {
     int frameID;
     glm::ivec2 fbSize;
-    PinholeCamFrame camera;
+    Device::PinholeCamFrame camera;
     glm::u8vec4 *colorBuffer;
     OptixTraversableHandle traversable;
 };
