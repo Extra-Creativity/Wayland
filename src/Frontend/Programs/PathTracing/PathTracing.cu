@@ -37,11 +37,6 @@ extern "C" __global__ void __raygen__RenderFrame()
     
     auto idx_x = optixGetLaunchIndex().x, idx_y = optixGetLaunchIndex().y;
     auto idx = (std::size_t)optixGetLaunchDimensions().x * idx_y + idx_x;
-    if (idx == 500*1000+500)
-    {
-        printf("%f\n", param.radianceBuffer[idx].x+
-               param.radianceBuffer[idx].y+ param.radianceBuffer[idx].z);
-    }
     Payload prd;
 
     /* Generate random seed */
@@ -56,21 +51,27 @@ extern "C" __global__ void __raygen__RenderFrame()
     std::uint32_t u0, u1;
     PackPointer(&prd, u0, u1);
 
-    float RR_rate = 0.9;
-    do
+    float RR_rate = 0.8;
+    while (true)
     {
-         if (prd.depth >= 5 && rnd(prd.seed) > RR_rate)
-        {
-             prd.radiance = { 0, 0, 0 };
-             break;
-         }
-         prd.radiance /= RR_rate;
-
+         
         optixTrace(param.traversable, UniUtils::ToFloat3(prd.rayPos),
                    UniUtils::ToFloat3(prd.rayDir), 1e-5, 1e30, 0, 255,
                    OPTIX_RAY_FLAG_DISABLE_ANYHIT, RADIANCE_TYPE, RAY_TYPE_COUNT,
                    RADIANCE_TYPE, u0, u1);
-    } while (!prd.done);
+        if (prd.done) {
+            break;
+        }
+        if (prd.depth > 5)
+        {
+            if (rnd(prd.seed) > RR_rate)
+            {
+                prd.radiance = { 0, 0, 0 };
+                break;
+            }
+            prd.radiance /= RR_rate;
+        }
+    } 
 
     glm::dvec4 thisFrame = { prd.radiance.x, prd.radiance.y, prd.radiance.z,
                             0xFF };
@@ -107,7 +108,7 @@ extern "C" __global__ void __closesthit__radiance()
         prd->done = true;
         return;
     }
-    if (prd->depth >= 10)
+    if (prd->depth >= 25)
     {
         prd->radiance = { 0, 0, 0 };
         prd->done = true;

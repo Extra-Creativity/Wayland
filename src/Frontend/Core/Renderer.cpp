@@ -6,21 +6,12 @@ using namespace std;
 namespace EasyRender
 {
 
-Renderer::Renderer(glm::ivec2 s, std::string_view sceneSrc,
-                   std::string_view programSrc)
+Renderer::Renderer(glm::ivec2 s, ProgramType pgType, std::string_view sceneSrc)
     : window(s), scene(sceneSrc), device()
 {
-    //program = make_unique<ColorProgramManager>(this);
-    //program = make_unique<DepthProgramManager>(this);
-    //program = make_unique<MeshProgramManager>(this);
-     //program = make_unique<NormalProgramManager>(this);
-     //program = make_unique<SimpleProgramManager>(this);
-    //program = make_unique<WireFrameProgramManager>(this);
-     program = make_unique<PathTracingProgramManager>(this);
-
+    SetProgram(pgType);
     device.SetupOptix(scene, window, programSrc, program.get());
 }
-
 
 void Renderer::Run()
 {
@@ -33,6 +24,38 @@ void Renderer::Run()
         program->Update();
     }
     program->End();
+}
+
+void Renderer::SetProgram(ProgramType pgType)
+{
+    assert(pgType > 0 && pgType < ProgramType::ProgramTypeMax);
+    programType = pgType;
+    programSrc = PROGRAM_SRC[static_cast<int>(pgType)];
+    switch (pgType) {
+    case ProgramType::Color:
+         program = make_unique<ColorProgramManager>(this);
+        break;
+    case ProgramType::Depth:
+         program = make_unique<DepthProgramManager>(this);
+         break;
+    case ProgramType::Mesh:
+         program = make_unique<MeshProgramManager>(this);
+         break;
+    case ProgramType::Normal:
+         program = make_unique<NormalProgramManager>(this);
+         break;
+    case ProgramType::Simple:
+         program = make_unique<SimpleProgramManager>(this);
+         break;
+    case ProgramType::WireFrame:
+         program = make_unique<WireFrameProgramManager>(this);
+        break;
+    case ProgramType::PathTracing:
+        program = make_unique<PathTracingProgramManager>(this);
+        break;
+    default:
+        assert(0);
+    }
 }
 
 } // namespace EasyRender

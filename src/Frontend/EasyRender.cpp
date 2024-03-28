@@ -5,26 +5,17 @@
 
 using namespace EasyRender;
 
+
+const std::string sceneSrc =
+    // R"(C:\Users\60995\Desktop\Grad_Design\pbrt-v3-scenes\barcelona-pavilion\pavilion-day.pbrt)";
+    R"(..\..\..\scene\cornell-box\cbox.pbrt)";
+
 int main(int argc, char** argv) {
      
-    std::string sceneSrc =
-        // R"(C:\Users\60995\Desktop\Grad_Design\pbrt-v3-scenes\barcelona-pavilion\pavilion-day.pbrt)";
-        R"(..\..\..\scene\cornell-box\cbox.pbrt)";
-
-    std::string programSrc =
-        //R"(..\..\..\src\Frontend\Programs\TestExamples\Color\Color.cu)";
-        //R"(..\..\..\src\Frontend\Programs\TestExamples\Depth\Depth.cu)";
-        //R"(..\..\..\src\Frontend\Programs\TestExamples\Mesh\Mesh.cu)";
-        //R"(..\..\..\src\Frontend\Programs\TestExamples\Normal\Normal.cu)";
-        //R"(..\..\..\src\Frontend\Programs\TestExamples\Simple\Simple.cu)";
-        //R"(..\..\..\src\Frontend\Programs\TestExamples\WireFrame\WireFrame.cu)";
-
-         R"(..\..\..\src\Frontend\Programs\PathTracing\PathTracing.cu)";
-
+    ProgramType program = ProgramType::PathTracing;
      try
      {
-         EasyRender::Renderer app({ 1000, 1000 }, sceneSrc, programSrc);
-         //app.scene.printScene();
+         EasyRender::Renderer app({ 1000, 1000 }, program, sceneSrc);
          app.Run();
      }
      catch (const std::exception &e)
