@@ -13,7 +13,7 @@ struct LaunchParam
     unsigned int sampleNum;
     unsigned int maxDepth;
     Wayland::Example::DeviceUtils::Camera camera;
-    glm::u8vec4 *colorBuffer;
+    glm::vec4 *colorBuffer;
     OptixTraversableHandle traversable;
 };
 

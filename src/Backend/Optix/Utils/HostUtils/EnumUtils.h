@@ -28,6 +28,22 @@ EnumType operator&(EnumType a, EnumType b) noexcept
     return EnumType{ std::to_underlying(a) & std::to_underlying(b) };
 }
 
+template<typename EnumType>
+    requires Wayland::HostUtils::NeedBinaryOp<EnumType>::value
+EnumType &operator|=(EnumType &a, EnumType b) noexcept
+{
+    a = a | b;
+    return a;
+}
+
+template<typename EnumType>
+    requires Wayland::HostUtils::NeedBinaryOp<EnumType>::value
+EnumType &operator&=(EnumType &a, EnumType b) noexcept
+{
+    a = a & b;
+    return a;
+}
+
 namespace Wayland::HostUtils
 {
 

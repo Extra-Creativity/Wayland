@@ -84,8 +84,7 @@ extern "C" __global__ void __raygen__RenderFrame()
                                       OPTIX_RAY_FLAG_DISABLE_ANYHIT, 0, 1, 0);
         result += payload.color * sampleWeight;
     }
-    result = glm::clamp(result, 0.f, 1.f) * 255.0f;
-    param.colorBuffer[idx] = glm::u8vec4{ result.x, result.y, result.z, 0xFF };
+    param.colorBuffer[idx] = { result.x, result.y, result.z, 1.0f };
 }
 
 extern "C" __global__ void __miss__Empty()

@@ -9,14 +9,24 @@ namespace Wayland::Example
 
 Wayland::Optix::ContextManager SetupEnvironment();
 
-void SaveImageImpl(const std::filesystem::path &path, int width, int height,
-                   std::size_t elemSize, void *gpuBuffer);
+void SaveImageGPUImpl(const std::filesystem::path &path, int width, int height,
+                      std::size_t elemSize, void *gpuBuffer);
+
+void SaveImageCPUImpl(const std::filesystem::path &path, int width, int height,
+                      std::size_t elemSize, void *gpuBuffer);
 
 template<typename T>
-void SaveImage(const std::filesystem::path &path, int width, int height,
-               T *gpuBuffer)
+void SaveImageGPU(const std::filesystem::path &path, int width, int height,
+                  T *gpuBuffer)
 {
-    SaveImageImpl(path, width, height, sizeof(T), gpuBuffer);
+    SaveImageGPUImpl(path, width, height, sizeof(T), gpuBuffer);
+}
+
+template<typename T>
+void SaveImageCPU(const std::filesystem::path &path, int width, int height,
+                  T *gpuBuffer)
+{
+    SaveImageCPUImpl(path, width, height, sizeof(T), gpuBuffer);
 }
 
 struct StringHasher

@@ -4,6 +4,7 @@
 #include "Common.h"
 #include "SimpleModel/Model.h"
 
+#include "Conversion.h"
 #include "Param.h"
 
 using namespace Wayland;
@@ -44,6 +45,30 @@ Optix::ShaderBindingTable GetSBT(const Example::StaticModel &model,
 }
 
 const int maxDepth = 10;
+const bool needDenoise = true;
+
+HostUtils::DeviceUniquePtr<glm::vec4[]> Denoise(glm::vec4 *noisyBuffer,
+                                                unsigned int width,
+                                                unsigned int height)
+{
+    Optix::ColorInfo colorInfo{};
+    std::size_t totalSize = std::size_t{ width } * height;
+    // Denoiser only accepts fp16 or fp32; normally we can pass a float
+    // buffer directly, but here we don't want to change shader, so it's
+    // still u8vec4 and a vec4 buffer is allocated aside.
+    auto denoisedBuffer =
+        HostUtils::DeviceMakeUninitializedUnique<glm::vec4[]>(totalSize);
+
+    Optix::SetTightOptixImage2D<Optix::PixelFormat::Float4>(
+        colorInfo.imageInfo.input, noisyBuffer, width, height);
+    colorInfo.imageInfo.output = colorInfo.imageInfo.input;
+    colorInfo.imageInfo.output.data =
+        HostUtils::ToDriverPointer(denoisedBuffer.get());
+
+    Optix::LDRDenoiser denoiser{ Optix::BasicInfo{}, colorInfo };
+    denoiser.Denoise();
+    return denoisedBuffer;
+}
 
 int main()
 {
@@ -67,12 +92,13 @@ int main()
         Optix::ShaderBindingTable sbt = GetSBT(model, arr);
 
         unsigned int width = 1024, height = 1024;
-        auto buffer = HostUtils::DeviceMakeUninitializedUnique<glm::u8vec4[]>(
-            width * height);
+        std::size_t bufferSize = width * height;
+        auto buffer =
+            HostUtils::DeviceMakeUninitializedUnique<glm::vec4[]>(bufferSize);
         auto rawBuffer = buffer.get().get();
         Example::Camera camera{ { -0.23, 2.58, 5 }, { 0, 1, 0 }, { 0, 0, -1 } };
         Optix::Launcher launcher{ Example::PathTracing::LaunchParam{
-            .sampleNum = 1024 * 16,
+            .sampleNum = 1024,
             .maxDepth = maxDepth - 1,
             .camera = camera.ToDeviceCamera(1), // aspect is 1
             .colorBuffer = rawBuffer,
@@ -81,7 +107,18 @@ int main()
         launcher.Launch(pipeline, 0, sbt, width, height);
         cudaDeviceSynchronize(); // For ray gen.
 
-        Example::SaveImage(IMAGE_PATH, width, height, rawBuffer);
+        if (needDenoise)
+        {
+            auto result = Denoise(rawBuffer, width, height);
+            auto byteResult = FromFloatToChar(
+                reinterpret_cast<float *>(result.get().get()), bufferSize * 4);
+            Example::SaveImageCPU(IMAGE_PATH "-denoised", width, height,
+                                  byteResult.data());
+        }
+
+        auto byteResult = FromFloatToChar(reinterpret_cast<float *>(rawBuffer),
+                                          bufferSize * 4);
+        Example::SaveImageCPU(IMAGE_PATH, width, height, byteResult.data());
     }
     catch (const std::exception &exception)
     {

@@ -20,13 +20,9 @@ Wayland::Optix::ContextManager SetupEnvironment()
     return manager;
 }
 
-void SaveImageImpl(const std::filesystem::path &path, int width, int height,
-                   std::size_t elemSize, void *gpuBuffer)
+void SaveImageCPUImpl(const std::filesystem::path &path, int width, int height,
+                      std::size_t elemSize, void *cpuBuffer)
 {
-    auto bufferSize = width * height * elemSize;
-    auto cpuBuffer = std::make_unique_for_overwrite<std::byte[]>(bufferSize);
-    cudaMemcpy(cpuBuffer.get(), gpuBuffer, bufferSize, cudaMemcpyDeviceToHost);
-
     [[maybe_unused]] std::string pathBuffer;
     const char *rawPath;
     if constexpr (std::is_same_v<std::filesystem::path::value_type, char>)
@@ -40,8 +36,18 @@ void SaveImageImpl(const std::filesystem::path &path, int width, int height,
     }
 
     HostUtils::CheckError(
-        stbi_write_jpg(rawPath, width, height, 4, cpuBuffer.get(), 90) != 0,
+        stbi_write_jpg(rawPath, width, height, 4, cpuBuffer, 90) != 0,
         ("Cannot write image to " + path.string()).c_str());
+}
+
+void SaveImageGPUImpl(const std::filesystem::path &path, int width, int height,
+                      std::size_t elemSize, void *gpuBuffer)
+{
+    auto bufferSize = width * height * elemSize;
+    auto cpuBuffer = std::make_unique_for_overwrite<std::byte[]>(bufferSize);
+    cudaMemcpy(cpuBuffer.get(), gpuBuffer, bufferSize, cudaMemcpyDeviceToHost);
+
+    SaveImageCPUImpl(path, width, height, elemSize, cpuBuffer.get());
 }
 
 } // namespace Wayland::Example
