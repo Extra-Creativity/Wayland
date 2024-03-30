@@ -11,7 +11,7 @@ set(ENV{https_proxy} "http://127.0.0.1:7890")
 
 find_package(CUDAToolkit)
 link_libraries(CUDA::cuda_driver)
-link_libraries(CUDA::cudart_static)
+link_libraries(CUDA::cudart)
 
 set(CMAKE_PREFIX_PATH "${LibPaths}")
 

@@ -1,7 +1,7 @@
 FILE(GLOB PTSrc *.cpp)
 FILE(GLOB PTHeaders *.h)
 
-add_library(Example_PT_Conversion STATIC Conversion.cu)
+add_library(Example_PT_Conversion SHARED Conversion.cu)
 target_compile_options(Example_PT_Conversion PRIVATE --expt-extended-lambda)
 
 add_executable(Example_PT ${PTSrc} ${PTHeaders})
