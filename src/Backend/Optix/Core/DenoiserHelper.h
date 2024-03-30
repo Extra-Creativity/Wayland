@@ -4,6 +4,7 @@
 namespace Wayland::Optix
 {
 
+/// @brief Wrapper of OPTIX_PIXEL_FORMAT
 enum class PixelFormat
 {
     Half1 = OPTIX_PIXEL_FORMAT_HALF1,
@@ -36,6 +37,12 @@ template<> struct FormatInfo<PixelFormat::UChar4> { static constexpr std::size_t
 
 } // namespace Details
 
+/// @brief Set all information of Image2D for a tightly packed image.
+/// @tparam Format e.g. PixelFormat::Float4
+/// @param image image to be set
+/// @param data pointer to tightly packed image.
+/// @param width 
+/// @param height 
 template<PixelFormat Format>
 void SetTightOptixImage2D(OptixImage2D &image, void *data, unsigned int width,
                           unsigned int height)

@@ -16,6 +16,10 @@ static OptixDenoiserOptions GetDenoiserOptions(OptixDenoiserAlphaMode mode,
     return options;
 }
 
+/// @brief Copy from src to dst, and set the dst width or height if they're 0;
+/// Unsafe because it doesn't check format of images.
+/// @return Size of buffer that needs to be allocated; if it's already a device
+/// buffer, return 0.
 static std::size_t UnsafeCopyOptixImage(OptixImage2D &dstInfo,
                                         const OptixImage2D &srcInfo,
                                         unsigned int width, unsigned int height)
@@ -118,12 +122,21 @@ static bool CheckValidColor(const OptixImage2D &image)
 
 namespace Wayland::Optix
 {
+/// @brief For a host pointer in data of OptixImage2D, if the size is not zero,
+/// copy it to tPtr + offset and set the data to the driver pointer (if the
+/// pointer is null, then memset to all 0).
+/// @param tPtr the device buffer to be copied to.
+/// @param offset offset from the beginning pointer (tPtr).
+/// @param size size of the buffer to be copied.
+/// @param[in,out] dst dst.data is the host buffer, and will be changed to the
+/// device buffer.
 static void CopyOrZero(auto tPtr, std::size_t offset, std::size_t size,
                        OptixImage2D &dst)
 {
     using ElementType = decltype(*tPtr);
     if (size != 0)
     {
+        tPtr += offset;
         auto dPtr = HostUtils::ToDriverPointer(tPtr);
         if (dst.data != 0)
             thrust::copy_n(reinterpret_cast<std::byte *>(dst.data), size, tPtr);
@@ -260,6 +273,7 @@ void Denoiser::SetupDenoiser_(const TileInfo *tileInfo, unsigned int width,
         stateBufferSize_, GetScratchBufferPtr_(), scratchBufferSize_));
 }
 
+/// @brief Allocate guide buffer if it's available.
 void Denoiser::TrySetOtherGuides_(const GuideInfo *guideInfo,
                                   unsigned int width, unsigned int height)
 {
@@ -269,7 +283,7 @@ void Denoiser::TrySetOtherGuides_(const GuideInfo *guideInfo,
                                      width, height),
          albedoSize = SetGuideAlbedo(guideLayer_.albedo, guideInfo->albedo,
                                      width, height);
-    constexpr std::size_t albedoAlignment = 128; // Conservatice.
+    constexpr std::size_t albedoAlignment = 128; // Conservative.
     auto alignedNormalSize =
         UniUtils::RoundUpNonNegative(normalSize, albedoAlignment);
 
@@ -284,6 +298,10 @@ void Denoiser::TrySetOtherGuides_(const GuideInfo *guideInfo,
                guideLayer_.albedo);
 }
 
+/// @brief Allocate layer buffer on the device if it's a host pointer;
+/// layerBuffers_ will be pushed.
+/// @param[in,out] image dst.data is the host buffer, and will be changed to the
+/// device buffer.
 [[nodiscard]] void Denoiser::TryAllocOnDevice_(OptixImage2D &image)
 {
     if (HostUtils::IsFromDeviceMemory(reinterpret_cast<void *>(image.data)))
@@ -339,6 +357,12 @@ void Denoiser::PrepareAOVLayers_(const AOVInfo &info)
     }
 }
 
+/// @brief Set flow and flowtrust to `guideLayerTemporalBuffer_` if they're not
+/// on device buffers. Particularly, guideLayerTemporalBuffer_ will also be
+/// allocated with the additional size of two internal layers and set
+/// `guideLayerTemporalBufferSize_`.
+/// @param flowInfo
+/// @return Return the size of internal layer.
 std::size_t Denoiser::SetTemporalGuideInputs_(const FlowInfo &flowInfo)
 {
     auto &newLayer = layers_.back();
@@ -375,7 +399,10 @@ std::size_t Denoiser::SetTemporalGuideInputs_(const FlowInfo &flowInfo)
     return internalSize;
 }
 
-void Denoiser::SetGuideOutputs_(std::size_t internalSize)
+/// @brief Set the internal layers allocated by `SetTemporalGuideInputs_`.
+/// Previous layer will be memset to 0.
+/// @param internalSize
+void Denoiser::SetTemporalGuideOutputs_(std::size_t internalSize)
 {
     auto &newLayer = layers_.back();
     auto previousOffset = guideLayerTemporalBufferSize_ - internalSize;
@@ -406,7 +433,7 @@ void Denoiser::PrepareTemporalColorLayer_(const ImageIOPair &pair,
     newLayer.previousOutput = newLayer.output;
 
     auto internalSize = SetTemporalGuideInputs_(flowInfo);
-    SetGuideOutputs_(internalSize);
+    SetTemporalGuideOutputs_(internalSize);
 }
 
 void Denoiser::PrepareTemporalColorLayer_(const ImageIOPair &pair,
@@ -423,7 +450,7 @@ void Denoiser::PrepareTemporalColorLayer_(const ImageIOPair &pair,
     newLayer.previousOutput = newLayer.output;
 
     auto internalSize = SetTemporalGuideInputs_(flowInfo);
-    SetGuideOutputs_(internalSize);
+    SetTemporalGuideOutputs_(internalSize);
 }
 
 void Denoiser::Denoise(float blendFactor, unsigned int offsetX,
@@ -433,27 +460,24 @@ void Denoiser::Denoise(float blendFactor, unsigned int offsetX,
     auto bufferPtr = assistBuffer_.get();
     OptixDenoiserParams params{};
     auto scratchBufferDPtr = GetScratchBufferPtr_();
-    if (!HostUtils::TestEnum(mode_, Mode::LDR))
+    if (NeedIntensity())
     {
-        if (NeedIntensity())
-        {
-            auto dPtr = HostUtils::ToDriverPointer(bufferPtr);
-            HostUtils::CheckOptixError(optixDenoiserComputeIntensity(
-                denoiser_.get(), LocalContextSetter::GetCurrentCUDAStream(),
-                &layers_[0].input, dPtr, scratchBufferDPtr,
-                scratchBufferSize_));
-            params.hdrIntensity = dPtr;
-            bufferPtr = bufferPtr + 1;
-        }
-        if (NeedAverageColor())
-        {
-            auto dPtr = HostUtils::ToDriverPointer(bufferPtr);
-            HostUtils::CheckOptixError(optixDenoiserComputeAverageColor(
-                denoiser_.get(), LocalContextSetter::GetCurrentCUDAStream(),
-                &layers_[0].input, dPtr, scratchBufferDPtr,
-                scratchBufferSize_));
-            params.hdrAverageColor = dPtr;
-        }
+        assert(!HostUtils::TestEnum(mode_, Mode::LDR));
+        auto dPtr = HostUtils::ToDriverPointer(bufferPtr);
+        HostUtils::CheckOptixError(optixDenoiserComputeIntensity(
+            denoiser_.get(), LocalContextSetter::GetCurrentCUDAStream(),
+            &layers_[0].input, dPtr, scratchBufferDPtr, scratchBufferSize_));
+        params.hdrIntensity = dPtr;
+        bufferPtr = bufferPtr + 1;
+    }
+    if (NeedAverageColor())
+    {
+        assert(!HostUtils::TestEnum(mode_, Mode::LDR));
+        auto dPtr = HostUtils::ToDriverPointer(bufferPtr);
+        HostUtils::CheckOptixError(optixDenoiserComputeAverageColor(
+            denoiser_.get(), LocalContextSetter::GetCurrentCUDAStream(),
+            &layers_[0].input, dPtr, scratchBufferDPtr, scratchBufferSize_));
+        params.hdrAverageColor = dPtr;
     }
     params.temporalModeUsePreviousLayers =
         HostUtils::TestEnum(mode_, Mode::TemporalNotFirstFrame);
@@ -475,7 +499,7 @@ BasicDenoiser<Kind>::BasicDenoiser(const BasicInfo &basicInfo,
 {
     colorInfo.CheckValid();
     if constexpr (Kind == OPTIX_DENOISER_MODEL_KIND_LDR)
-        mode_ |= Optix::Mode::LDR;
+        mode_ |= Mode::LDR | Mode::NoIntensity | Mode::NoAverageColor;
 
     auto width = colorInfo.GetMaxWidth(), height = colorInfo.GetMaxHeight();
     SetupDenoiser_(tileInfo, width, height);
