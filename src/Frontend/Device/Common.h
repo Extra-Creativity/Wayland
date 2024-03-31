@@ -55,5 +55,9 @@ __host__ __device__ __forceinline__ glm::vec3 NormalToColor(glm::vec3 N)
     return (N+v)/2.0f;
 }
 
+__host__ __device__ __forceinline__ float GetTriangleArea(glm::vec3* V, glm::ivec3 I) {
+    glm::vec3 a = V[I.x], b = V[I.y], c = V[I.z];
+	return 0.5f * glm::length(glm::cross(b - a, c - a));
+}
 
 } // namespace EasyRender

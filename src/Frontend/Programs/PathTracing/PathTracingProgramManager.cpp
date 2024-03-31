@@ -58,7 +58,7 @@ void PathTracingProgramManager::Setup()
                mVertex.size() * sizeof(glm::vec3));
         v_offset += mVertex.size();
     }
-     cudaMemcpy(device.d_AreaLightBuffer, hostBuf, device.areaLightBufferSize,
+    cudaMemcpy(device.d_AreaLightBuffer, hostBuf, device.areaLightBufferSize,
                cudaMemcpyHostToDevice);
     ::operator delete(hostBuf);
 }
@@ -85,12 +85,16 @@ Optix::ShaderBindingTable PathTracingProgramManager::GenerateSBT(
 {
     using namespace Optix;
     SBTData<void> raygenData{};
-    SBTData<MissData> missData{};
-    missData.data.bg_color = { 0, 0, 0 };
-    std::vector<SBTData<HitData>> hitData;
+
+    uint32_t rayTypeCount = static_cast<uint32_t>(RAY_TYPE_COUNT);
+
+    std::vector<SBTData<MissData>> missData{};
+    std::vector<std::size_t> missIdx{ 1, 2 };
+    missData.resize(rayTypeCount);
+    for (auto &m : missData)
+        m.data.bg_color = { 0, 0, 0 };
+
     auto &scene = renderer->scene;
-    std::vector<std::size_t> hitIdx(scene.meshes.size(), 2);
-    hitData.resize(scene.meshes.size());
 
     /* I believe this part should be put in DeviceManager/SceneManager. This is
      * just a temporary solution. */
@@ -109,7 +113,8 @@ Optix::ShaderBindingTable PathTracingProgramManager::GenerateSBT(
         memcpy(normalAggregate.data() + scene.vertexOffset[i],
                mesh->normal.data(), mesh->normal.size() * sizeof(glm::vec3));
         memcpy(indexAggregate.data() + scene.triangleOffset[i],
-               mesh->triangle.data(), mesh->triangle.size() * sizeof(glm::ivec3));
+               mesh->triangle.data(),
+               mesh->triangle.size() * sizeof(glm::ivec3));
     }
     normalBuffer = renderer->device.d_NormalBuffer;
     indexBuffer = renderer->device.d_IndexBuffer;
@@ -119,37 +124,60 @@ Optix::ShaderBindingTable PathTracingProgramManager::GenerateSBT(
     cudaMemcpy(indexBuffer, indexAggregate.data(), iSize * sizeof(glm::ivec3),
                cudaMemcpyHostToDevice);
 
-    for (int i = 0; i < hitData.size(); ++i)
+    
+    std::vector<SBTData<HitData>> hitDatas;
+    std::vector<std::size_t> hitIdx(scene.meshes.size() * rayTypeCount);
+    hitDatas.resize(scene.meshes.size() * rayTypeCount);
+
+    for (int meshID = 0; meshID < scene.meshes.size(); ++meshID)
     {
-        uint32_t matIdx = scene.meshes[i]->material;
-        if (matIdx < INVALID_INDEX &&
-            scene.materials[matIdx]->type() == MaterialType::Diffuse)
+        for (int rayID = 0; rayID < rayTypeCount; ++rayID)
         {
-            hitData[i].data.Kd =
-                static_cast<Diffuse *>(scene.materials[matIdx].get())->Kd;
+            uint32_t idx = static_cast<uint32_t>(meshID * rayTypeCount + rayID);
+            if (rayID == RADIANCE_TYPE)
+            {
+                hitIdx[idx] = 3;
+            }
+            else if (rayID == SHADOW_TYPE)
+            {
+                hitIdx[idx] = 4;
+                continue;
+            }
+
+            uint32_t matIdx = scene.meshes[meshID]->material;
+            if (matIdx < INVALID_INDEX &&
+                scene.materials[matIdx]->type() == MaterialType::Diffuse)
+            {
+                hitDatas[idx].data.Kd =
+                    static_cast<Diffuse *>(scene.materials[matIdx].get())->Kd;
+            }
+            else
+            {
+                hitDatas[idx].data.Kd = { 0.0, 0.0, 0.0 };
+            }
+            uint32_t lightIdx = scene.meshes[meshID]->areaLight;
+            if (lightIdx < INVALID_INDEX)
+            {
+                hitDatas[idx].data.L = scene.lights[lightIdx]->L;
+                hitDatas[idx].data.twoSided = scene.lights[lightIdx]->twoSided;
+            }
+            else
+            {
+                hitDatas[idx].data.L = { -1, -1, -1 };
+            }
+            hitDatas[idx].data.meshID = meshID;
+            hitDatas[idx].data.normals = normalBuffer + scene.vertexOffset[meshID];
+            hitDatas[idx].data.indices = indexBuffer + scene.triangleOffset[meshID];
         }
-        else
-        {
-            hitData[i].data.Kd = { 0.0, 0.0, 0.0 };
-        }
-        uint32_t lightIdx = scene.meshes[i]->areaLight;
-        if (lightIdx < INVALID_INDEX)
-        {
-            hitData[i].data.L = scene.lights[lightIdx]->L;
-            hitData[i].data.twoSided = scene.lights[lightIdx]->twoSided;
-        }
-        else
-        {
-            hitData[i].data.L = { -1, -1, -1 };
-        }
-        hitData[i].data.meshID = i;
-        hitData[i].data.normals = normalBuffer + scene.vertexOffset[i];
-        hitData[i].data.indices = indexBuffer + scene.triangleOffset[i];
     }
 
-    return ShaderBindingTable{
-        raygenData, 0, missData, 1, std::span(hitData), hitIdx.data(), pg
-    };
+    return ShaderBindingTable{ raygenData,
+                               0,
+                               std::span(missData),
+                               missIdx.data(),
+                               std::span(hitDatas),
+                               hitIdx.data(),
+                               pg };
 }
 
 } // namespace EasyRender
