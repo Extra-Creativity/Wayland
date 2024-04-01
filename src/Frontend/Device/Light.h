@@ -8,8 +8,8 @@ namespace EasyRender::Device
 /* TBD: Importance sampling */
 struct DeviceAreaLight
 {
-    int triangleNum;
-    int twoSided;
+    uint32_t triangleNum;
+    uint32_t twoSided;
     glm::vec3 L;
     glm::vec3 *vertices;
     glm::vec3 *normals;
@@ -31,17 +31,15 @@ struct DeviceAreaLight
 
 struct LightSample
 {
-    glm::vec3 L;
+    uint32_t areaLightID;
+    float pdf;
     glm::vec3 N;
     glm::vec3 pos;
     glm::vec3 dir;
-    int twoSided;
-    float pdf;
 
     __host__ __device__ __forceinline__ void Print()
     {
-        printf("pdf: %f\n", pdf);
-        printf("L: %f %f %f\n", L.x, L.y, L.z);
+        printf("areaLightID: %d    pdf: %f\n", areaLightID, pdf);
         printf("pos: %f %f %f\n", pos.x, pos.y, pos.z);
         printf("dir: %f %f %f\n", dir.x, dir.y, dir.z);
     }

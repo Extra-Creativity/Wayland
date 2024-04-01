@@ -129,9 +129,9 @@ Optix::ShaderBindingTable PathTracingProgramManager::GenerateSBT(
     std::vector<std::size_t> hitIdx(scene.meshes.size() * rayTypeCount);
     hitDatas.resize(scene.meshes.size() * rayTypeCount);
 
-    for (int meshID = 0; meshID < scene.meshes.size(); ++meshID)
+    for (size_t meshID = 0; meshID < scene.meshes.size(); ++meshID)
     {
-        for (int rayID = 0; rayID < rayTypeCount; ++rayID)
+        for (uint32_t rayID = 0; rayID < rayTypeCount; ++rayID)
         {
             uint32_t idx = static_cast<uint32_t>(meshID * rayTypeCount + rayID);
             if (rayID == RADIANCE_TYPE)
@@ -155,16 +155,8 @@ Optix::ShaderBindingTable PathTracingProgramManager::GenerateSBT(
             {
                 hitDatas[idx].data.Kd = { 0.0, 0.0, 0.0 };
             }
-            uint32_t lightIdx = scene.meshes[meshID]->areaLight;
-            if (lightIdx < INVALID_INDEX)
-            {
-                hitDatas[idx].data.L = scene.lights[lightIdx]->L;
-                hitDatas[idx].data.twoSided = scene.lights[lightIdx]->twoSided;
-            }
-            else
-            {
-                hitDatas[idx].data.L = { -1, -1, -1 };
-            }
+            hitDatas[idx].data.areaLightID = scene.meshes[meshID]->areaLight;
+            hitDatas[idx].data.materialID = scene.meshes[meshID]->material;
             hitDatas[idx].data.meshID = meshID;
             hitDatas[idx].data.normals = normalBuffer + scene.vertexOffset[meshID];
             hitDatas[idx].data.indices = indexBuffer + scene.triangleOffset[meshID];

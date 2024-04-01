@@ -75,13 +75,13 @@ __device__ __forceinline__ glm::vec3 SampleTrianglePos(glm::vec3 *vertices,
 
 /* Sample only position*/
 __host__ __device__ __forceinline__ void SampleAreaLightPos(
-    int lightNum, DeviceAreaLight *areaLights, LightSample &ls,
-    unsigned int &seed)
+    uint32_t lightNum, DeviceAreaLight *areaLights, LightSample &ls,
+    uint32_t &seed)
 {
-    int idx = static_cast<int>(lightNum * rnd(seed));
+    uint32_t idx = static_cast<uint32_t>(lightNum * rnd(seed));
     auto &lt = areaLights[idx];
     float pdf = 1.0f / lightNum;
-    int triIdx = static_cast<int>(rnd(seed) * lt.triangleNum);
+    uint32_t triIdx = static_cast<uint32_t>(rnd(seed) * lt.triangleNum);
     pdf = pdf / lt.triangleNum;
     glm::ivec3 &tri = lt.indices[triIdx];
     glm::vec3 coord;
@@ -90,11 +90,9 @@ __host__ __device__ __forceinline__ void SampleAreaLightPos(
     /* Get normal */
     glm::vec3 N = BarycentricByIndices(lt.normals, tri, coord);
     ls.N = glm::normalize(N);
-    ls.L = lt.L;
     ls.pdf = pdf;
-    ls.twoSided = lt.twoSided;
+    ls.areaLightID = idx;
     return;
 }
-
 
 } // namespace EasyRender::Device

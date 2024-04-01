@@ -1,10 +1,11 @@
-#include "Device/Camera.h"
-#include "Device/Common.h"
-#include "Device/Sample.h"
-#include "DeviceUtils/Payload.h"
 #include "UniUtils/ConversionUtils.h"
 #include "glm/glm.hpp"
 #include <optix_device.h>
+
+#include "Device/Common.h"
+#include "Device/Pdf.h"
+#include "Device/Sample.h"
+#include "Device/Scene.h"
 
 #include "PathTracingLaunchParams.h"
 
@@ -12,13 +13,24 @@ using namespace EasyRender;
 using namespace EasyRender::Device;
 using namespace EasyRender::Programs::PathTracing;
 
-__constant__ int minDepth = 5;
-__constant__ float continuePossiblity = 0.99;
-__constant__ float epsilon = 1e-5;
+__constant__ float EPSILON = 1e-3;
 
-__constant__ bool UPT_only = 1;
-__constant__ bool NEE_only = 0;
-__constant__ bool PT_MIS = 0;
+enum STRATEGY
+{
+    UPT = 0,
+    NEE = 1,
+    MIS = 2,
+    STRATEGY_MAX
+};
+
+__constant__ STRATEGY strategy = MIS;
+
+static __forceinline__ __device__ float UptMisWeight(float uptPdf, float neePdf)
+{
+    assert(uptPdf + neePdf > 0);
+    //printf("%f\n", uptPdf / (uptPdf + neePdf));
+    return uptPdf / (uptPdf + neePdf);
+}
 
 extern "C" __constant__ Programs::PathTracing::LaunchParams param;
 
@@ -29,9 +41,6 @@ extern "C" __global__ void __raygen__RenderFrame()
     auto idx_x = optixGetLaunchIndex().x, idx_y = optixGetLaunchIndex().y;
     auto idx = (std::size_t)optixGetLaunchDimensions().x * idx_y + idx_x;
     Payload prd;
-
-    /* Check rendering option */
-    assert(int(UPT_only) + int(NEE_only) + int(PT_MIS) == 1);
 
     /* Generate random seed */
     prd.seed = tea<4>(idx, param.frameID);
@@ -52,7 +61,7 @@ extern "C" __global__ void __raygen__RenderFrame()
     {
 
         optixTrace(param.traversable, UniUtils::ToFloat3(prd.rayPos),
-                   UniUtils::ToFloat3(prd.rayDir), 1e-3, 1e30, 0,
+                   UniUtils::ToFloat3(prd.rayDir), EPSILON, 1e30, 0,
                    OptixVisibilityMask(255), OPTIX_RAY_FLAG_DISABLE_ANYHIT,
                    RADIANCE_TYPE, RAY_TYPE_COUNT, RADIANCE_TYPE, u0, u1);
         if (prd.done)
@@ -60,7 +69,7 @@ extern "C" __global__ void __raygen__RenderFrame()
             break;
         }
 
-        if (NEE_only || PT_MIS)
+        if (strategy != UPT)
         {
             LightSample ls;
             SampleAreaLightPos(param.areaLightCount, param.areaLights, ls,
@@ -72,8 +81,8 @@ extern "C" __global__ void __raygen__RenderFrame()
             visRay /= dist;
             std::uint32_t vis = 0;
             optixTrace(param.traversable, UniUtils::ToFloat3(prd.rayPos),
-                       UniUtils::ToFloat3(visRay), 1e-3, dist * (1 - 1e-3), 0,
-                       OptixVisibilityMask(255),
+                       UniUtils::ToFloat3(visRay), EPSILON,
+                       dist * (1 - EPSILON), 0, OptixVisibilityMask(255),
                        // For shadow rays: skip any/closest hit shaders and
                        // terminate on first intersection with anything. The
                        // miss shader is used to mark if the light was visible.
@@ -85,11 +94,13 @@ extern "C" __global__ void __raygen__RenderFrame()
             {
                 float cosTheta1 = glm::dot(ls.N, visRay);
                 float cosTheta2 = glm::dot(prd.lastNormal, visRay);
-                if ((ls.twoSided || cosTheta1 < 0) && cosTheta2 > 0)
+                auto &lt = param.areaLights[ls.areaLightID];
+                if ((lt.twoSided || cosTheta1 < 0) && cosTheta2 > 0)
                 {
-                    float cosTheta = fabsf(cosTheta1 * cosTheta2);
-                    prd.radiance += prd.throughput * ls.L * cosTheta * 2.0f /
-                                    (dist * dist) / ls.pdf;
+                    float neePdf = ls.pdf * dist * dist / fabsf(cosTheta1);
+                    float uptPdf = (strategy == NEE) ? 0 : RECIP_2PI;
+                    prd.radiance += prd.throughput * cosTheta2 * lt.L * 2.0f /
+                                    neePdf * (1 - UptMisWeight(uptPdf, neePdf));
                 }
             }
         }
@@ -135,6 +146,7 @@ extern "C" __global__ void __miss__radiance()
 /* PG id - 2 */
 extern "C" __global__ void __miss__shadow()
 {
+    /* Visibility = true */
     optixSetPayload_0(114514);
 }
 
@@ -145,17 +157,39 @@ extern "C" __global__ void __closesthit__radiance()
     HitData *mat = reinterpret_cast<HitData *>(optixGetSbtDataPointer());
     prd->depth += 1;
 
+    uint32_t primIdx = optixGetPrimitiveIndex();
     glm::ivec3 indices = mat->indices[optixGetPrimitiveIndex()];
     glm::vec3 N = BarycentricByIndices(mat->normals, indices,
                                        optixGetTriangleBarycentrics());
     N = glm::normalize(N);
 
+    glm::vec3 hitPos = GetHitPosition();
+
     /* Hit light */
-    if (mat->L.x + mat->L.y + mat->L.z > 0)
+    if (mat->areaLightID < INVALID_INDEX)
     {
-        if ((prd->depth <= 1 || !NEE_only) &&
-            (mat->twoSided || glm::dot(N, prd->rayDir) < 0))
-            prd->radiance += prd->throughput * mat->L * prd->lastTraceTerm * 2.0f;
+        auto &lt = param.areaLights[mat->areaLightID];
+        if ((prd->depth == 1 || (strategy != NEE)) &&
+            (lt.twoSided || glm::dot(N, prd->rayDir) < 0))
+        {
+            /* Directly hit light, NEE does not participate*/
+            float neePdf = 0.f;
+            if (strategy != UPT && prd->depth > 1)
+            {
+                LightSample ls;
+                ls.pos = hitPos;
+                ls.areaLightID = mat->areaLightID;
+                PdfAreaLightPos(param.areaLightCount, param.areaLights, primIdx,
+                                ls);
+                float dist = optixGetRayTmax();
+                neePdf = ls.pdf * dist * dist / fabs(-glm::dot(N, prd->rayDir));
+            }
+
+            float uptPdf = RECIP_2PI;
+            prd->radiance += prd->throughput * lt.L *
+                             fabs(glm::dot(prd->lastNormal, prd->rayDir)) *
+                             2.0f * UptMisWeight(uptPdf, neePdf);
+        }
         prd->done = true;
         return;
     }
@@ -168,13 +202,11 @@ extern "C" __global__ void __closesthit__radiance()
     if (glm::dot(N, prd->rayDir) > 0)
         N = -N;
 
-    glm::vec3 hitPos = GetHitPosition();
     float pdf;
     glm::vec3 rayDir = SampleUniformHemisphere(N, pdf, prd->seed);
 
     auto cosWeight = fmaxf(0.f, glm::dot(rayDir, N));
-    prd->throughput *=
-        mat->Kd / PI; // pdf = 1 / 2pi, albedo = kd / pi
+    prd->throughput *= mat->Kd / PI; // pdf = 1 / 2pi, albedo = kd / pi
     prd->throughput *= prd->lastTraceTerm;
     prd->lastTraceTerm = cosWeight / pdf;
     prd->rayPos = hitPos;
