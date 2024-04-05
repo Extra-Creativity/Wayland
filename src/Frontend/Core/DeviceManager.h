@@ -35,6 +35,8 @@ private:
     void BuildPipeline(std::string_view programSrc);
     void BuildSBT(ProgramManager *program);
     void AllocDeviceBuffer(SceneManager &scene, glm::ivec2 wSize);
+    void UploadDeviceBuffer(SceneManager &scene);
+    void UploadTextures(SceneManager &scene);
     //void FreeDeviceBuffer();
 
 
@@ -48,11 +50,20 @@ public:
     /* Device mesh normal buffer, pass to program via SBT */
     glm::vec3 *d_NormalBuffer;
     uint32_t normalBufferSize;
+    /* Device texcoord buffer, pass to program via SBT */
+    glm::vec2 *d_TexcoordBuffer;
+    uint32_t texcoordBufferSize;
+    
+
     /* Device areaLight buffer, pass to program via LaunchParams */
     /* This two buffers are consecutive, and malloced together */
     Device::DeviceAreaLight *d_AreaLightBuffer; 
     glm::vec3 *d_AreaLightVertexBuffer;
     uint32_t areaLightBufferSize;   
+
+    /* One texture object and pixel array per used texture */
+    std::vector<cudaArray_t> textureArrays;
+    std::vector<cudaTextureObject_t> textureObjects;
 
 private:
     Optix::ContextManager contextManager;

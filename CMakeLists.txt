@@ -56,7 +56,7 @@ set(minipbrt_dir ${PROJECT_SOURCE_DIR}/3rdParty/minipbrt/)
 include_directories(${minipbrt_dir})
 add_subdirectory(${minipbrt_dir})
 
-
+include_directories(${PROJECT_SOURCE_DIR}/3rdParty/stb_image/)
 
 # Enable UTF-8 and warnings.
 if(MSVC)

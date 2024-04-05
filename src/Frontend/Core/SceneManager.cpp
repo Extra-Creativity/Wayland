@@ -53,9 +53,10 @@ void SceneManager::TransformScene(minipbrt::Scene *miniScene)
     assert(miniScene);
     /* A legal scene should have a camera */
     TransformCamera(miniScene);
+    TransformTexture(miniScene);
     TransformMaterial(miniScene);
     TransformLight(miniScene);
-    TransformMeshes(miniScene);
+    TransformMesh(miniScene);
     BindAreaLight();
     return;
 }
@@ -111,12 +112,38 @@ void SceneManager::TransformMaterial(minipbrt::Scene *miniScene)
                    int(PBRTv3::MaterialType::MaterialTypeMax));
             spdlog::warn("Unsupported shape type: {}",
                          PBRTv3::MaterialTypeStr[(int)miniMat->type()]);
-            /* Break currently, for safety */
+            /* Break for safety */
             throw std::exception("");
         }
     }
     spdlog::info("Successfully transform materials");
     return;
+}
+
+void SceneManager::TransformTexture(minipbrt::Scene *miniScene)
+{
+    for (int i = 0; i < miniScene->textures.size(); ++i)
+    {
+        auto *miniTex = miniScene->textures[i];
+        switch (miniTex->type())
+        {
+        case minipbrt::TextureType::ImageMap: {
+            auto *t = dynamic_cast<minipbrt::ImageMapTexture *>(miniTex);
+            textures.push_back(make_unique<Texture>(t));
+        }
+        break;
+        case minipbrt::TextureType::Scale:
+            /* TBD */
+            break;
+        default:
+            assert(int(miniTex->type()) <
+                   int(PBRTv3::TextureType::TextureTypeMax));
+            spdlog::warn("Unsupported texture type: {}",
+                         PBRTv3::TextureTypeStr[(int)miniTex->type()]);
+            /* Break currently, for safety */
+            throw std::exception("");
+        }
+    }
 }
 
 void SceneManager::TransformLight(minipbrt::Scene *miniScene)
@@ -133,7 +160,7 @@ void SceneManager::TransformLight(minipbrt::Scene *miniScene)
     return;
 }
 
-void SceneManager::TransformMeshes(minipbrt::Scene *miniScene)
+void SceneManager::TransformMesh(minipbrt::Scene *miniScene)
 {
     /* Set for safety */
     vertexNum = triangleNum = areaLightVertexNum = 0;

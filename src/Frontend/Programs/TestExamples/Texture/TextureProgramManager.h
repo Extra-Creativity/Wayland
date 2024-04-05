@@ -1,26 +1,26 @@
 #pragma once
+#include "TextureLaunchParams.h"
 #include "Core/ProgramManager.h"
 #include "Core/Renderer.h"
-#include "PathTracingLaunchParams.h"
 
 namespace EasyRender
 {
 
-class PathTracingProgramManager : public ProgramManager
+class TextureProgramManager : public ProgramManager
 {
 public:
-    PathTracingProgramManager(Renderer *r_) : renderer(r_) {}
+    TextureProgramManager(Renderer *r_) : renderer(r_) {}
 
     void Setup();
     void Update();
-    void End();
+    void End(){};
     void *GetParamPtr() { return &param; }
     size_t GetParamSize() { return sizeof(param); };
     Optix::ShaderBindingTable GenerateSBT(const Optix::ProgramGroupArray &pg);
 
 private:
     Renderer *renderer;
-    Programs::PathTracing::LaunchParams param;
+    Programs::Texture::LaunchParams param;
 };
 
 } // namespace EasyRender

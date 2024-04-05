@@ -21,6 +21,7 @@ public:
     Material() = default;
     ~Material() = default;
     virtual MaterialType type() = 0;
+    virtual bool HasTexture() = 0;
     virtual std::string ToString() const = 0;
 };
 
@@ -32,9 +33,11 @@ public:
     Diffuse(minipbrt::MatteMaterial *);
     ~Diffuse() = default;
     MaterialType type() { return MaterialType::Diffuse; }
+    bool HasTexture();
     std::string ToString() const;
 
     glm::vec3 Kd;
+    uint32_t textureId;
 };
 
 } // namespace EasyRender

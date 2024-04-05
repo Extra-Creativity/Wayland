@@ -2,7 +2,7 @@ Integrator "path"
     "integer maxdepth" [ 65 ]
 Transform [ 1 -0 -0 -0 -0 1 -0 -0 -0 -0 -1 -0 -0 -1 6.8 1  ]
 Sampler "random"
-    "integer pixelsamples" [ 100 ]
+    "integer pixelsamples" [ 1 ]
 # PixelFilter "triangle"
 #     "float xradius" [ 1 ]
 #     "float yradius" [ 1 ]
@@ -143,7 +143,8 @@ Shape "trianglemesh"
 
 AttributeBegin
     AreaLightSource "diffuse"
-        "rgb L" [ 17 12 4 ]
+        # "rgb L" [ 17 12 4 ]
+        "rgb L" [ 50 35 15 ]
     NamedMaterial "Light"
     Shape "trianglemesh"
         "point2 uv" [ 0 0 1 0 1 1 0 1 

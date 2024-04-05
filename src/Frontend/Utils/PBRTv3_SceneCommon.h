@@ -13,8 +13,8 @@ enum class CameraType
     CameraTypeMax
 };
 
-const std::string CameraTypeStr[] = { "Perspective", "Orthographic", "Environment",
-                                 "Realistic", "Unknown" };
+const std::string CameraTypeStr[] = { "Perspective", "Orthographic",
+                                      "Environment", "Realistic", "Unknown" };
 
 enum class ShapeType
 {
@@ -32,11 +32,14 @@ enum class ShapeType
     PLYMesh,
     ShapeTypeMax
 };
-const std::string ShapeTypeStr[] = { "Cone", "Curve", "Cylinder", "Disk", "Hyperboloid",
-								"Paraboloid", "Sphere", "TriangleMesh", "HeightField",
-								"LoopSubdiv", "Nurbs", "PLYMesh", "Unknown" };
 
-  enum class MaterialType
+const std::string ShapeTypeStr[] = {
+    "Cone",       "Curve",   "Cylinder",     "Disk",        "Hyperboloid",
+    "Paraboloid", "Sphere",  "TriangleMesh", "HeightField", "LoopSubdiv",
+    "Nurbs",      "PLYMesh", "Unknown"
+};
+
+enum class MaterialType
 {
     Disney,
     Fourier,
@@ -56,8 +59,35 @@ const std::string ShapeTypeStr[] = { "Cone", "Curve", "Cylinder", "Disk", "Hyper
     MaterialTypeMax
 };
 
-const std::string MaterialTypeStr[] = { "Disney", "Fourier", "Glass", "Hair", "KdSubsurface",
-								   "Matte", "Metal", "Mirror", "Mix", "None", "Plastic",
-								   "Substrate", "Subsurface", "Translucent", "Uber", "Unknown" };
+const std::string MaterialTypeStr[] = {
+    "Disney",     "Fourier",     "Glass", "Hair",   "KdSubsurface", "Matte",
+    "Metal",      "Mirror",      "Mix",   "None",   "Plastic",      "Substrate",
+    "Subsurface", "Translucent", "Uber",  "Unknown"
+};
+
+enum class TextureType
+{
+    Bilerp,
+    Checkerboard2D,
+    Checkerboard3D,
+    Constant,
+    Dots,
+    FBM,
+    ImageMap,
+    Marble,
+    Mix,
+    Scale,
+    UV,
+    Windy,
+    Wrinkled,
+    PTex,
+    TextureTypeMax
+};
+
+const std::string TextureTypeStr[] = {
+    "Bilerp", "Checkerboard2D", "Checkerboard3D", "Constant", "Dots",
+    "FBM",    "ImageMap",       "Marble",         "Mix",      "Scale",
+    "UV",     "Windy",          "Wrinkled",       "PTex",     "TextureTypeMax"
+};
 
 } // namespace EasyRender::PBRTv3

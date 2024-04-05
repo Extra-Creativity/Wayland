@@ -24,6 +24,12 @@ __device__ __forceinline__ void GetOrthoNormalBasis(glm::vec3 vec, glm::vec3 &u,
     return;
 }
 
+/* Uniformly samples a disk */
+__device__ __forceinline__ void SampleUniformDisk()
+{
+    /* A dummy function to be implemented. */
+}
+
 /* Uniformly samples a hemisphere */
 __device__ __forceinline__ glm::vec3 SampleUniformHemisphere(glm::vec3 normal,
                                                              float &pdf,
@@ -35,6 +41,12 @@ __device__ __forceinline__ glm::vec3 SampleUniformHemisphere(glm::vec3 normal,
     auto angle = rnd(seed) * TWO_PI, h = rnd(seed);
     pdf = 1.0f / TWO_PI;
     return (sinf(angle) * x + cosf(angle) * y) * sqrtf(1 - h * h) + h * normal;
+}
+
+/* Samples a cosine weighted hemisphere */
+__device__ __forceinline__ void CosineSampleHemisphere()
+{
+	/* Use Malley' s Method: SampleUniformDisk and project to hemisphere. */
 }
 
 /* The correctness of this function needs tests */

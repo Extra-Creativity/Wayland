@@ -1,13 +1,13 @@
 #pragma once
-#include "NormalProgramManager.h"
+#include "TextureProgramManager.h"
 
 using namespace EasyRender::Device;
-using namespace EasyRender::Programs::Normal;
+using namespace EasyRender::Programs::Texture;
 
 namespace EasyRender
 {
 
-void NormalProgramManager::Setup()
+void TextureProgramManager::Setup()
 {
     param.frameID = 0;
     param.fbSize = renderer->window.size;
@@ -24,7 +24,7 @@ void NormalProgramManager::Setup()
     param.camera.right = pCam->right * (float(param.fbSize.x) / param.fbSize.y);
 }
 
-void NormalProgramManager::Update()
+void TextureProgramManager::Update()
 {
     param.frameID += 1;
     param.fbSize = renderer->window.size;
@@ -32,40 +32,48 @@ void NormalProgramManager::Update()
     param.traversable = renderer->device.GetTraversableHandle();
 }
 
-void NormalProgramManager::End() {}
-
-Optix::ShaderBindingTable NormalProgramManager::GenerateSBT(
+Optix::ShaderBindingTable TextureProgramManager::GenerateSBT(
     const Optix::ProgramGroupArray &pg)
 {
     using namespace Optix;
     SBTData<void> raygenData{};
     SBTData<MissData> missData{};
-    missData.data.bg_color = { 0, 0, 0 };
+    missData.data.bg_color = { 1, 1, 1, 1 };
     std::vector<SBTData<HitData>> hitData;
-    auto &s = renderer->scene;
-    std::vector<std::size_t> hitIdx(s.meshes.size(), 2);
-    hitData.resize(s.meshes.size());
+    auto &scene = renderer->scene;
+    std::vector<std::size_t> hitIdx(scene.meshes.size(), 2);
+    hitData.resize(scene.meshes.size());
 
     for (int i = 0; i < hitData.size(); ++i)
     {
-        uint32_t matIdx = s.meshes[i]->material;
+        uint32_t matIdx = scene.meshes[i]->material;
         if (matIdx < INVALID_INDEX &&
-            s.materials[matIdx]->type() == MaterialType::Diffuse)
+            scene.materials[matIdx]->type() == MaterialType::Diffuse)
         {
-            hitData[i].data.Kd =
-                static_cast<Diffuse *>(s.materials[matIdx].get())->Kd;
+            auto m = static_cast<Diffuse *>(scene.materials[matIdx].get());
+            hitData[i].data.Kd = m->Kd;
+            hitData[i].data.index =
+                renderer->device.d_IndexBuffer + scene.triangleOffset[i];
+            hitData[i].data.texcoord =
+				renderer->device.d_TexcoordBuffer + scene.vertexOffset[i];
+
+            if (m->HasTexture())
+            {
+                hitData[i].data.hasTexture = true;
+                assert(m->textureId < INVALID_INDEX);
+                hitData[i].data.texture =
+                    renderer->device.textureObjects[m->textureId];
+            }
+            else
+            {
+                hitData[i].data.hasTexture = false;
+            }
         }
         else
         {
             hitData[i].data.Kd = { 0.8, 0.8, 0.8 };
         }
-        hitData[i].data.meshID = i;
-        hitData[i].data.normals =
-            renderer->device.d_NormalBuffer + s.vertexOffset[i];
-        hitData[i].data.indices =
-            renderer->device.d_IndexBuffer + s.triangleOffset[i];
     }
-
     return ShaderBindingTable{
         raygenData, 0, missData, 1, std::span(hitData), hitIdx.data(), pg
     };

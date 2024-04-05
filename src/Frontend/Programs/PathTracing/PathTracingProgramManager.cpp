@@ -35,32 +35,6 @@ void PathTracingProgramManager::Setup()
     auto &lights = scene.lights;
     param.areaLights = renderer->device.d_AreaLightBuffer;
     param.areaLightCount = lights.size();
-    /* Use a little trick to malloc void buffer in Cpp */
-    void *hostBuf = ::operator new(device.areaLightBufferSize);
-    auto *lightBuf = reinterpret_cast<DeviceAreaLight *>(hostBuf);
-    auto *vertexBuf = reinterpret_cast<glm::vec3 *>(lightBuf + lights.size());
-
-    uint32_t v_offset = 0;
-    for (int i = 0; i < lights.size(); ++i)
-    {
-        lightBuf[i].L = lights[i]->L;
-        lightBuf[i].twoSided = lights[i]->twoSided;
-        uint32_t meshIdx = lights[i]->mesh;
-        /* AreaLight must have a corresponding mesh */
-        assert(meshIdx < INVALID_INDEX);
-        lightBuf[i].normals = normalBuffer + scene.vertexOffset[meshIdx];
-        lightBuf[i].indices = indexBuffer + scene.triangleOffset[meshIdx];
-        lightBuf[i].vertices = device.d_AreaLightVertexBuffer + v_offset;
-        lightBuf[i].triangleNum = scene.meshes[meshIdx]->triangle.size();
-
-        auto &mVertex = scene.meshes[meshIdx]->vertex;
-        memcpy(vertexBuf + v_offset, mVertex.data(),
-               mVertex.size() * sizeof(glm::vec3));
-        v_offset += mVertex.size();
-    }
-    cudaMemcpy(device.d_AreaLightBuffer, hostBuf, device.areaLightBufferSize,
-               cudaMemcpyHostToDevice);
-    ::operator delete(hostBuf);
 }
 
 void PathTracingProgramManager::Update()
@@ -95,36 +69,7 @@ Optix::ShaderBindingTable PathTracingProgramManager::GenerateSBT(
         m.data.bg_color = { 0, 0, 0 };
 
     auto &scene = renderer->scene;
-
-    /* I believe this part should be put in DeviceManager/SceneManager. This is
-     * just a temporary solution. */
-    std::vector<glm::vec3> normalAggregate;
-    std::vector<glm::ivec3> indexAggregate;
-
-    uint32_t nSize = scene.vertexNum, iSize = scene.triangleNum;
-
-    normalAggregate.resize(nSize);
-    indexAggregate.resize(iSize);
-    for (int i = 0; i < scene.meshes.size(); ++i)
-    {
-        auto *mesh = scene.meshes[i].get();
-        int n_s = mesh->normal.size();
-        int i_s = mesh->triangle.size();
-        memcpy(normalAggregate.data() + scene.vertexOffset[i],
-               mesh->normal.data(), mesh->normal.size() * sizeof(glm::vec3));
-        memcpy(indexAggregate.data() + scene.triangleOffset[i],
-               mesh->triangle.data(),
-               mesh->triangle.size() * sizeof(glm::ivec3));
-    }
-    normalBuffer = renderer->device.d_NormalBuffer;
-    indexBuffer = renderer->device.d_IndexBuffer;
-
-    cudaMemcpy(normalBuffer, normalAggregate.data(), nSize * sizeof(glm::vec3),
-               cudaMemcpyHostToDevice);
-    cudaMemcpy(indexBuffer, indexAggregate.data(), iSize * sizeof(glm::ivec3),
-               cudaMemcpyHostToDevice);
-
-    
+    auto &device = renderer->device;
     std::vector<SBTData<HitData>> hitDatas;
     std::vector<std::size_t> hitIdx(scene.meshes.size() * rayTypeCount);
     hitDatas.resize(scene.meshes.size() * rayTypeCount);
@@ -158,8 +103,10 @@ Optix::ShaderBindingTable PathTracingProgramManager::GenerateSBT(
             hitDatas[idx].data.areaLightID = scene.meshes[meshID]->areaLight;
             hitDatas[idx].data.materialID = scene.meshes[meshID]->material;
             hitDatas[idx].data.meshID = meshID;
-            hitDatas[idx].data.normals = normalBuffer + scene.vertexOffset[meshID];
-            hitDatas[idx].data.indices = indexBuffer + scene.triangleOffset[meshID];
+            hitDatas[idx].data.normals =
+                device.d_NormalBuffer + scene.vertexOffset[meshID];
+            hitDatas[idx].data.indices =
+                device.d_IndexBuffer + scene.triangleOffset[meshID];
         }
     }
 

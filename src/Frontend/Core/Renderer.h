@@ -18,6 +18,7 @@ enum class ProgramType
     Mesh,
     Normal,
     Simple,
+    Texture,
     WireFrame,
     PathTracing,
     ProgramTypeMax
@@ -30,6 +31,7 @@ const std::string PROGRAM_SRC[] = {
     R"(..\..\..\src\Frontend\Programs\TestExamples\Mesh\Mesh.cu)",
     R"(..\..\..\src\Frontend\Programs\TestExamples\Normal\Normal.cu)",
     R"(..\..\..\src\Frontend\Programs\TestExamples\Simple\Simple.cu)",
+    R"(..\..\..\src\Frontend\Programs\TestExamples\Texture\Texture.cu)",
     R"(..\..\..\src\Frontend\Programs\TestExamples\WireFrame\WireFrame.cu)",
     R"(..\..\..\src\Frontend\Programs\PathTracing\PathTracing.cu)",
     R"(PROGRAM OUT OF INDEX)",

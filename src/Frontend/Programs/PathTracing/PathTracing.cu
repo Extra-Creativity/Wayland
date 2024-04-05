@@ -37,7 +37,6 @@ extern "C" __constant__ Programs::PathTracing::LaunchParams param;
 /* PG id - 0 */
 extern "C" __global__ void __raygen__RenderFrame()
 {
-
     auto idx_x = optixGetLaunchIndex().x, idx_y = optixGetLaunchIndex().y;
     auto idx = (std::size_t)optixGetLaunchDimensions().x * idx_y + idx_x;
     Payload prd;
@@ -99,7 +98,7 @@ extern "C" __global__ void __raygen__RenderFrame()
                 {
                     float neePdf = ls.pdf * dist * dist / fabsf(cosTheta1);
                     float uptPdf = (strategy == NEE) ? 0 : RECIP_2PI;
-                    prd.radiance += prd.throughput * cosTheta2 * lt.L * 2.0f /
+                    prd.radiance += prd.throughput * cosTheta2 * lt.L /
                                     neePdf * (1 - UptMisWeight(uptPdf, neePdf));
                 }
             }
@@ -188,7 +187,7 @@ extern "C" __global__ void __closesthit__radiance()
             float uptPdf = RECIP_2PI;
             prd->radiance += prd->throughput * lt.L *
                              fabs(glm::dot(prd->lastNormal, prd->rayDir)) *
-                             2.0f * UptMisWeight(uptPdf, neePdf);
+                             UptMisWeight(uptPdf, neePdf);
         }
         prd->done = true;
         return;

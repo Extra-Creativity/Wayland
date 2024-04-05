@@ -28,7 +28,7 @@ void Renderer::Run()
 
 void Renderer::SetProgram(ProgramType pgType)
 {
-    assert((int)pgType > 0 && (int)pgType < (int)ProgramType::ProgramTypeMax);
+    assert((int)pgType >= 0 && (int)pgType < (int)ProgramType::ProgramTypeMax);
     programType = pgType;
     programSrc = PROGRAM_SRC[static_cast<int>(pgType)];
     switch (pgType) {
@@ -47,6 +47,9 @@ void Renderer::SetProgram(ProgramType pgType)
     case ProgramType::Simple:
          program = make_unique<SimpleProgramManager>(this);
          break;
+    case ProgramType::Texture:
+		 program = make_unique<TextureProgramManager>(this);
+		 break;
     case ProgramType::WireFrame:
          program = make_unique<WireFrameProgramManager>(this);
         break;

@@ -53,12 +53,16 @@ struct MissData
 
 struct HitData
 {
+    bool hasTexture;
+    cudaTextureObject_t texture;
+
     uint32_t meshID;
     uint32_t areaLightID;
     uint32_t materialID;
     glm::vec3 Kd;
     glm::ivec3 *indices;
     glm::vec3 *normals;
+    glm::vec2 *texcoords;
 };
 
 } // namespace EasyRender::Programs::PathTracing
