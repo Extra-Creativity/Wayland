@@ -12,7 +12,7 @@ const std::string sceneSrc =
 
 int main(int argc, char **argv)
 {
-    ProgramType program = ProgramType::Texture;
+    ProgramType program = ProgramType::PathTracing;
     try
     {
         EasyRender::Renderer app({ 1000, 1000 }, program, sceneSrc);

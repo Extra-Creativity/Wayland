@@ -184,7 +184,7 @@ void DeviceManager::UploadTextures(SceneManager &scene)
         cudaChannelFormatDesc channel_desc;
         int32_t width = tex->size.x;
         int32_t height = tex->size.y;
-        int32_t numComponents = tex->channels;
+        int32_t numComponents = 4;
         int32_t pitch = width * numComponents * sizeof(uint8_t);
         channel_desc = cudaCreateChannelDesc<uchar4>();
 

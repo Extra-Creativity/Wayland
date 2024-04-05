@@ -93,18 +93,31 @@ Optix::ShaderBindingTable PathTracingProgramManager::GenerateSBT(
             if (matIdx < INVALID_INDEX &&
                 scene.materials[matIdx]->type() == MaterialType::Diffuse)
             {
-                hitDatas[idx].data.Kd =
-                    static_cast<Diffuse *>(scene.materials[matIdx].get())->Kd;
+                auto m = static_cast<Diffuse *>(scene.materials[matIdx].get());
+                hitDatas[idx].data.Kd = m->Kd;
+                if (m->HasTexture())
+                {
+                    hitDatas[idx].data.hasTexture = true;
+                    hitDatas[idx].data.texture =
+                        renderer->device.textureObjects[m->textureId];
+                }
+                else
+                {
+                    hitDatas[idx].data.hasTexture = false;
+                }
             }
             else
             {
                 hitDatas[idx].data.Kd = { 0.0, 0.0, 0.0 };
             }
+
             hitDatas[idx].data.areaLightID = scene.meshes[meshID]->areaLight;
             hitDatas[idx].data.materialID = scene.meshes[meshID]->material;
             hitDatas[idx].data.meshID = meshID;
             hitDatas[idx].data.normals =
                 device.d_NormalBuffer + scene.vertexOffset[meshID];
+            hitDatas[idx].data.texcoords =
+                renderer->device.d_TexcoordBuffer + scene.vertexOffset[meshID];
             hitDatas[idx].data.indices =
                 device.d_IndexBuffer + scene.triangleOffset[meshID];
         }

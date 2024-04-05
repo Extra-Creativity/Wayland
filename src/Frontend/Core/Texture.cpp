@@ -12,7 +12,7 @@ Texture::Texture(minipbrt::ImageMapTexture *miniTex)
 
 void Texture::TexLoadImage(std::string_view src)
 {
-    data = stbi_load(src.data(), &size.x, &size.y, &channels, 0);
+    data = stbi_load(src.data(), &size.x, &size.y, &channels, 4);
 }
 
 Texture::~Texture()

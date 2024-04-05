@@ -205,7 +205,22 @@ extern "C" __global__ void __closesthit__radiance()
     glm::vec3 rayDir = SampleUniformHemisphere(N, pdf, prd->seed);
 
     auto cosWeight = fmaxf(0.f, glm::dot(rayDir, N));
-    prd->throughput *= mat->Kd / PI; // pdf = 1 / 2pi, albedo = kd / pi
+
+    glm::vec3 albedo;
+    if (mat->hasTexture)
+    {
+        glm::vec2 tc = BarycentricByIndices(mat->texcoords, indices,
+                                            optixGetTriangleBarycentrics());
+        glm::vec4 texColor = UniUtils::ToVec4<glm::vec4>(
+            tex2D<float4>(mat->texture, tc.x, tc.y));
+        albedo = texColor;
+	}
+    else
+    {
+		albedo = mat->Kd;
+	}
+
+    prd->throughput *= albedo/ PI; // pdf = 1 / 2pi, albedo = kd / pi
     prd->throughput *= prd->lastTraceTerm;
     prd->lastTraceTerm = cosWeight / pdf;
     prd->rayPos = hitPos;

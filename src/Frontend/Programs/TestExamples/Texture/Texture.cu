@@ -68,17 +68,14 @@ extern "C" __global__ void __closesthit__radiance()
         UnpackPointer<glm::vec3>(optixGetPayload_0(), optixGetPayload_1());
 
     const int primID = optixGetPrimitiveIndex();
-    glm::vec2 barcentrics = { optixGetTriangleBarycentrics().x,
-                              optixGetTriangleBarycentrics().y };
 
     HitData *mat = reinterpret_cast<HitData *>(optixGetSbtDataPointer());
     glm::ivec3 indices = mat->index[primID];
 
     if (mat->hasTexture)
     {
-        glm::vec2 UV[4] = { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } };
-        glm::vec2 tc =
-            BarycentricByIndices(UV, indices, barcentrics);
+        glm::vec2 tc = BarycentricByIndices(mat->texcoord, indices,
+                                            optixGetTriangleBarycentrics());
          glm::vec4 texColor = UniUtils::ToVec4<glm::vec4>(
              tex2D<float4>(mat->texture, tc.x, tc.y));
          result = texColor;
