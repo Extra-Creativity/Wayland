@@ -54,14 +54,14 @@ MakeNamedMaterial "Light"
     "rgb Kd" [ 0 0 0 ]
 NamedMaterial "Floor"
 Shape "trianglemesh"
-    "point2 uv" [ 0 0 1 0 1 1 0 1 ]
+    "float uv" [ 0 0 1 0 1 1 0 1 ]
     "normal N" [ 4.37114e-8 1 1.91069e-15 4.37114e-8 1 1.91069e-15 4.37114e-8 1 1.91069e-15 
                  4.37114e-8 1 1.91069e-15 ]
     "point3 P" [ -1 1.74846e-7 -1 -1 1.74846e-7 1 1 -1.74846e-7 1 1 -1.74846e-7 -1 ]
     "integer indices" [ 0 1 2 0 2 3 ]
 NamedMaterial "Ceiling"
 Shape "trianglemesh"
-    "point2 uv" [ 0 0 1 0 1 1 0 1 ]
+    "float uv" [ 0 0 1 0 1 1 0 1 ]
     "normal N" [ -8.74228e-8 -1 -4.37114e-8 -8.74228e-8 -1 -4.37114e-8 -8.74228e-8 
                  -1 -4.37114e-8 -8.74228e-8 -1 -4.37114e-8 ]
     "point3 P" [ 1 2 1 -1 2 1 -1 2 -1 1 2 -1 ]
@@ -70,28 +70,28 @@ Shape "trianglemesh"
 # NamedMaterial "BackWall"
 NamedMaterial "TexturedBackWall"
 Shape "trianglemesh"
-    "point2 uv" [ 0 0 1 0 1 1 0 1 ]
+    "float uv" [ 0 0 1 0 1 1 0 1 ]
     "normal N" [ 8.74228e-8 -4.37114e-8 -1 8.74228e-8 -4.37114e-8 -1 8.74228e-8 -4.37114e-8 
                  -1 8.74228e-8 -4.37114e-8 -1 ]
     "point3 P" [ -1 0 -1 -1 2 -1 1 2 -1 1 0 -1 ]
     "integer indices" [ 0 1 2 0 2 3 ]
 NamedMaterial "RightWall"
 Shape "trianglemesh"
-    "point2 uv" [ 0 0 1 0 1 1 0 1 ]
+    "float uv" [ 0 0 1 0 1 1 0 1 ]
     "normal N" [ 1 -4.37114e-8 1.31134e-7 1 -4.37114e-8 1.31134e-7 1 -4.37114e-8 
                  1.31134e-7 1 -4.37114e-8 1.31134e-7 ]
     "point3 P" [ 1 0 -1 1 2 -1 1 2 1 1 0 1 ]
     "integer indices" [ 0 1 2 0 2 3 ]
 NamedMaterial "LeftWall"
 Shape "trianglemesh"
-    "point2 uv" [ 0 0 1 0 1 1 0 1 ]
+    "float uv" [ 0 0 1 0 1 1 0 1 ]
     "normal N" [ -1 -4.37114e-8 -4.37114e-8 -1 -4.37114e-8 -4.37114e-8 -1 -4.37114e-8 
                  -4.37114e-8 -1 -4.37114e-8 -4.37114e-8 ]
     "point3 P" [ -1 0 1 -1 2 1 -1 2 -1 -1 0 -1 ]
     "integer indices" [ 0 1 2 0 2 3 ]
 # NamedMaterial "ShortBox"
 # Shape "trianglemesh"
-#     "point2 uv" [ 0 0 1 0 1 1 0 1 
+#     "float uv" [ 0 0 1 0 1 1 0 1 
 #         0 0 1 0 1 1 0 1 
 #         0 0 1 0 1 1 0 1 
 #         0 0 1 0 1 1 0 1 
@@ -121,7 +121,7 @@ Shape "trianglemesh"
 #                         16 18 17 16 19 18 20 22 21 20 23 22 ]
 # NamedMaterial "TallBox"
 # Shape "trianglemesh"
-#     "point2 uv" [ 0 0 1 0 1 1 0 1 
+#     "float uv" [ 0 0 1 0 1 1 0 1 
 #         0 0 1 0 1 1 0 1 
 #         0 0 1 0 1 1 0 1 
 #         0 0 1 0 1 1 0 1 
@@ -154,7 +154,7 @@ AttributeBegin
         "rgb L" [ 50 35 15 ]
     NamedMaterial "Light"
     Shape "trianglemesh"
-        "point2 uv" [ 0 0 1 0 1 1 0 1 ]
+        "float uv" [ 0 0 1 0 1 1 0 1 ]
         "normal N" [ -8.74228e-8 -1 1.86006e-7 -8.74228e-8 -1 1.86006e-7 -8.74228e-8 
                      -1 1.86006e-7 -8.74228e-8 -1 1.86006e-7 ]
         "point3 P" [ -0.24 1.98 -0.22 0.23 1.98 -0.22 0.23 1.98 0.16 -0.24 1.98 0.16 ]
