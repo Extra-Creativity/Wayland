@@ -4,7 +4,7 @@
 #include <cuda/std/array>
 #include <thrust/addressof.h>
 
-namespace Wayland::DeviceUtils
+namespace EasyRender::DeviceUtils
 {
 
 template<std::size_t Size, typename... Args>
@@ -141,11 +141,11 @@ __device__ __forceinline__ void SetToPayloadImpl(
 
 } // namespace Details
 
-} // namespace Wayland::DeviceUtils
+} // namespace EasyRender::DeviceUtils
 
 #define SPECIALIZE_OPTIX_GET_PAYLOAD(Index)             \
     template<>                                          \
-    struct Wayland::DeviceUtils::OptixGetPayload<Index> \
+    struct EasyRender::DeviceUtils::OptixGetPayload<Index> \
     {                                                   \
         __device__ __forceinline__ auto operator()()    \
         {                                               \
@@ -155,7 +155,7 @@ __device__ __forceinline__ void SetToPayloadImpl(
 
 #define SPECIALIZE_OPTIX_SET_PAYLOAD(Index)                               \
     template<>                                                            \
-    struct Wayland::DeviceUtils::OptixSetPayload<Index>                   \
+    struct EasyRender::DeviceUtils::OptixSetPayload<Index>                   \
     {                                                                     \
         __device__ __forceinline__ auto operator()(std::uint32_t payload) \
         {                                                                 \
