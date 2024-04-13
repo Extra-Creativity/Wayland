@@ -1,7 +1,7 @@
 #pragma once
 #include "HostUtils/CommonHeaders.h"
 
-namespace Wayland::Optix
+namespace EasyRender::Optix
 {
 
 /// @brief Wrapper of OPTIX_PIXEL_FORMAT
@@ -54,4 +54,4 @@ void SetTightOptixImage2D(OptixImage2D &image, void *data, unsigned int width,
     image.format = static_cast<decltype(image.format)>(Format);
 }
 
-} // namespace Wayland::Optix
+} // namespace EasyRender::Optix

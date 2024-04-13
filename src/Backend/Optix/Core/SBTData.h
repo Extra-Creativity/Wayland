@@ -2,7 +2,7 @@
 #include "HostUtils/CommonHeaders.h"
 #include <iterator>
 
-namespace Wayland::Optix
+namespace EasyRender::Optix
 {
 
 /// @brief template class for data passed to SBT.
@@ -34,4 +34,4 @@ concept IsSBTDataContiguousRange = requires(T x) {
     requires IsSBTData<std::remove_cvref_t<decltype(*std::ranges::data(x))>>;
 };
 
-} // namespace Wayland::Optix
+} // namespace EasyRender::Optix

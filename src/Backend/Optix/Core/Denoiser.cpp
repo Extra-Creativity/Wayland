@@ -4,7 +4,7 @@
 
 #include <ranges>
 
-using namespace Wayland;
+using namespace EasyRender;
 
 static OptixDenoiserOptions GetDenoiserOptions(OptixDenoiserAlphaMode mode,
                                                bool hasGuide)
@@ -120,7 +120,7 @@ static bool CheckValidColor(const OptixImage2D &image)
            (image.format == OPTIX_PIXEL_FORMAT_HALF4);
 }
 
-namespace Wayland::Optix
+namespace EasyRender::Optix
 {
 /// @brief For a host pointer in data of OptixImage2D, if the size is not zero,
 /// copy it to tPtr + offset and set the data to the driver pointer (if the
@@ -564,4 +564,4 @@ template class AOVTemporalBasicDenoiser<OPTIX_DENOISER_MODEL_KIND_TEMPORAL_AOV>;
 template class AOVTemporalBasicDenoiser<
     OPTIX_DENOISER_MODEL_KIND_TEMPORAL_UPSCALE2X>;
 
-} // namespace Wayland::Optix
+} // namespace EasyRender::Optix

@@ -198,7 +198,7 @@ void ProgramGroupArray::CleanProgramGroups_() noexcept
 {
     for (auto programGroup : programGroups_)
     {
-        Wayland::HostUtils::CheckOptixError<Wayland::HostUtils::OnlyLog>(
+        EasyRender::HostUtils::CheckOptixError<EasyRender::HostUtils::OnlyLog>(
             optixProgramGroupDestroy(programGroup));
     }
 }

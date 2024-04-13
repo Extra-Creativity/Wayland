@@ -26,9 +26,9 @@ public:
 static_assert(      // The first argument of SBTSetter is id of build input
     std::is_same_v< // which should be same as build input num limit.
         std::tuple_element_t<
-            0, FunctionTraits<Wayland::Optix::GeometryBuildInputArray::
+            0, FunctionTraits<EasyRender::Optix::GeometryBuildInputArray::
                                   SBTSetterProxy>::arguments>,
-        Wayland::Optix::AccelStructure::BuildInputNumLimitInt>);
+        EasyRender::Optix::AccelStructure::BuildInputNumLimitInt>);
 
 static auto CheckBuildInputArrLimit(const auto &buildInputs)
 {

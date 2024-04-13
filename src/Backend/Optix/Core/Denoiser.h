@@ -7,7 +7,7 @@
 #include <concepts>
 #include <optional>
 
-namespace Wayland::Optix
+namespace EasyRender::Optix
 {
 
 /// @brief Specify the mode of denoiser; currently only NoIntensity,
@@ -32,11 +32,11 @@ enum class Mode : std::uint32_t
     LDR = 64
 };
 
-} // namespace Wayland::Optix
+} // namespace EasyRender::Optix
 
-ENABLE_BINARY_OP_FOR_SCOPED_ENUM(Wayland::Optix::Mode)
+ENABLE_BINARY_OP_FOR_SCOPED_ENUM(EasyRender::Optix::Mode)
 
-namespace Wayland::Optix
+namespace EasyRender::Optix
 {
 /// @brief Specify the input and output of the denoiser; if your image is
 /// tightly packed, you can use SetTightOptixImage2D to set it.
@@ -203,23 +203,23 @@ protected:
     Mode mode_;
 
     // The size will be changed only when input size is changed.
-    Wayland::HostUtils::DeviceUniquePtr<std::byte[]> buffer_;
+    EasyRender::HostUtils::DeviceUniquePtr<std::byte[]> buffer_;
     std::size_t stateBufferSize_ = 0;
     std::size_t scratchBufferSize_ = 0;
 
     // The size will be changed only when mode is changed.
-    Wayland::HostUtils::DeviceUniquePtr<float[]> assistBuffer_;
+    EasyRender::HostUtils::DeviceUniquePtr<float[]> assistBuffer_;
 
     OptixDenoiserGuideLayer guideLayer_{};
     // The size will be changed when the input or output size is changed.
-    Wayland::HostUtils::DeviceUniquePtr<std::byte[]> guideLayerTemporalBuffer_;
+    EasyRender::HostUtils::DeviceUniquePtr<std::byte[]> guideLayerTemporalBuffer_;
     std::size_t guideLayerTemporalBufferSize_ = 0;
-    Wayland::HostUtils::DeviceUniquePtr<std::byte[]> guideLayerOrdinaryBuffer_;
+    EasyRender::HostUtils::DeviceUniquePtr<std::byte[]> guideLayerOrdinaryBuffer_;
     std::size_t guideLayerOrdinaryBufferSize_ = 0;
 
     std::vector<OptixDenoiserLayer> layers_;
     // The size will be changed when the output size is changed.
-    std::vector<Wayland::HostUtils::DeviceUniquePtr<std::byte[]>> layerBuffers_;
+    std::vector<EasyRender::HostUtils::DeviceUniquePtr<std::byte[]>> layerBuffers_;
 
     DenoiserWrapper denoiser_;
 };
@@ -267,4 +267,4 @@ using AOVTemporalDenoiser =
 using UpscaleTemporalDenoiser =
     AOVTemporalBasicDenoiser<OPTIX_DENOISER_MODEL_KIND_TEMPORAL_UPSCALE2X>;
 
-} // namespace Wayland::Optix
+} // namespace EasyRender::Optix

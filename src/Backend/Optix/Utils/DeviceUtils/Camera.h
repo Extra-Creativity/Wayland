@@ -1,7 +1,7 @@
 #pragma once
 #include "glm/glm.hpp"
 
-namespace Wayland::Example::DeviceUtils
+namespace EasyRender::Example::DeviceUtils
 {
 
 struct Camera
@@ -13,4 +13,4 @@ struct Camera
     glm::vec3 up;
 };
 
-} // namespace Wayland::Example::DeviceUtils
+} // namespace EasyRender::Example::DeviceUtils

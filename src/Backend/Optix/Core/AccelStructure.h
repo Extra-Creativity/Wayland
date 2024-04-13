@@ -31,8 +31,8 @@ enum class SBTSetterGatherFlag
     Move
 };
 
-} // namespace Wayland::Optix
-ENABLE_BINARY_OP_FOR_SCOPED_ENUM(Wayland::Optix::BuildFlags);
+} // namespace EasyRender::Optix
+ENABLE_BINARY_OP_FOR_SCOPED_ENUM(EasyRender::Optix::BuildFlags);
 
 namespace EasyRender::Optix
 {
@@ -239,4 +239,4 @@ private:
     IASSBTProvider provider_;
 };
 
-} // namespace Wayland::Optix
+} // namespace EasyRender::Optix

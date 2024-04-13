@@ -241,7 +241,7 @@ private:
     /// unnecessary.
     std::vector<const Traversable *> children_;
     std::vector<OptixInstance> instances_;
-    Wayland::HostUtils::DeviceUniquePtr<OptixInstance[]> deviceInstances_;
+    EasyRender::HostUtils::DeviceUniquePtr<OptixInstance[]> deviceInstances_;
     std::size_t deviceInstanceNum_ = 0;
 };
 

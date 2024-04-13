@@ -3,7 +3,7 @@
 #include <span>
 #include <type_traits>
 
-namespace Wayland::HostUtils
+namespace EasyRender::HostUtils
 {
 
 // @brief Store either an element or an array of elements; when size is 1, use
@@ -90,4 +90,4 @@ public:
     ~CompactVariant() { Clear_(); }
 };
 
-} // namespace Wayland::HostUtils
+} // namespace EasyRender::HostUtils

@@ -27,7 +27,7 @@ EnumType operator&(EnumType a, EnumType b) noexcept
 }
 
 template<typename EnumType>
-    requires Wayland::HostUtils::NeedBinaryOp<EnumType>::value
+    requires EasyRender::HostUtils::NeedBinaryOp<EnumType>::value
 EnumType &operator|=(EnumType &a, EnumType b) noexcept
 {
     a = a | b;
@@ -35,7 +35,7 @@ EnumType &operator|=(EnumType &a, EnumType b) noexcept
 }
 
 template<typename EnumType>
-    requires Wayland::HostUtils::NeedBinaryOp<EnumType>::value
+    requires EasyRender::HostUtils::NeedBinaryOp<EnumType>::value
 EnumType &operator&=(EnumType &a, EnumType b) noexcept
 {
     a = a & b;

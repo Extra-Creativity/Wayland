@@ -5,7 +5,7 @@ Same requirements of C++20 headers <numbers>, but can be used in C++17.
 
 #include <type_traits>
 
-namespace Wayland::DeviceUtils::Constants
+namespace EasyRender::DeviceUtils::Constants
 {
 
 template<class T>
@@ -67,4 +67,4 @@ inline constexpr float inv_sqrt3 = inv_sqrt3_v<float>;
 inline constexpr float egamma = egamma_v<float>;
 inline constexpr float phi = phi_v<float>;
 
-} // namespace Wayland::DeviceUtils::Constants
+} // namespace EasyRender::DeviceUtils::Constants
