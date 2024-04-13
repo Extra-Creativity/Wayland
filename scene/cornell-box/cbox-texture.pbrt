@@ -151,7 +151,7 @@ Shape "trianglemesh"
 AttributeBegin
     AreaLightSource "diffuse"
         # "rgb L" [ 17 12 4 ]
-        "rgb L" [ 50 35 15 ]
+        "rgb L" [ 60 45 25 ]
     NamedMaterial "Light"
     Shape "trianglemesh"
         "float uv" [ 0 0 1 0 1 1 0 1 ]
