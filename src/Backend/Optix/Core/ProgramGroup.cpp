@@ -194,4 +194,13 @@ ProgramGroupArray &ProgramGroupArray::AddMissProgramGroup(const Module &module,
     return AddRawMissProgramGroup(module, "__miss__" + std::string{ name });
 }
 
+void ProgramGroupArray::CleanProgramGroups_() noexcept
+{
+    for (auto programGroup : programGroups_)
+    {
+        Wayland::HostUtils::CheckOptixError<Wayland::HostUtils::OnlyLog>(
+            optixProgramGroupDestroy(programGroup));
+    }
+}
+
 } // namespace EasyRender::Optix

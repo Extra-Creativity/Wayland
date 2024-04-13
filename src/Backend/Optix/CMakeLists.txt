@@ -4,6 +4,11 @@ FILE(GLOB UniUtilsHeaders Utils/UniUtils/*.h)
 add_library(OptiX-HostUtils STATIC ${HostUtilsSrc} ${HostUtilsHeaders} ${UniUtilsHeaders})
 target_link_libraries(OptiX-HostUtils PRIVATE spdlog::spdlog)
 
+FILE(GLOB DeviceUtilsSrc Utils/DeviceUtils/*.cu)
+FILE(GLOB DeviceUtilsHeaders Utils/DeviceUtils/*.h)
+add_library(Optix-DeviceUtils STATIC ${DeviceUtilsSrc} ${DeviceUtilsHeaders})
+target_link_libraries(Optix-DeviceUtils PRIVATE glm::glm)
+
 FILE(GLOB CoreSrc Core/*.cpp)
 FILE(GLOB CoreHeaders Core/*.h)
 add_library(OptiX-Core STATIC ${CoreSrc} ${CoreHeaders})

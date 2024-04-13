@@ -2,24 +2,10 @@
 #include "HostUtils/CommonHeaders.h"
 #include "HostUtils/DeviceAllocators.h"
 
+#include "SBTData.h"
+
 namespace EasyRender::Optix
 {
-
-/// @brief template class for data passed to SBT.
-template<typename T>
-    requires std::is_trivially_copyable_v<T> || std::is_same_v<T, void>
-struct alignas(OPTIX_SBT_RECORD_ALIGNMENT) SBTData
-{
-    std::byte header[OPTIX_SBT_RECORD_HEADER_SIZE];
-    T data;
-};
-
-/// @brief specialized class to denote empty case (i.e. no data).
-template<>
-struct alignas(OPTIX_SBT_RECORD_ALIGNMENT) SBTData<void>
-{
-    std::byte header[OPTIX_SBT_RECORD_HEADER_SIZE];
-};
 
 class ProgramGroupArray;
 /// @brief Abstraction of SBT; used to create the SBT from the data passed to it
@@ -51,21 +37,25 @@ public:
     /// array; hitIdx[i] should be valid for any i in [0, hitData.size()).
     /// @param programGroups
     template<typename RaygenData, typename MissData, typename HitData>
+        requires IsSBTDataContiguousRange<MissData> &&
+                 IsSBTDataContiguousRange<HitData>
     ShaderBindingTable(SBTData<RaygenData> &raygenData, std::size_t raygenIdx,
-                       const std::span<SBTData<MissData>> missData,
-                       const std::size_t *missIdx,
-                       const std::span<SBTData<HitData>> hitData,
-                       const std::size_t *hitIdx,
+                       MissData &missData, const std::size_t *missIdx,
+                       HitData &hitData, const std::size_t *hitIdx,
                        const ProgramGroupArray &programGroups)
     {
         // Not included DebugUtils to use CheckInRange since we only do it once.
-        assert(missData.size() <= (std::numeric_limits<unsigned int>::max)() &&
-               hitData.size() <= (std::numeric_limits<unsigned int>::max)());
+        std::span missSpan{ std::ranges::data(missData),
+                            std::ranges::size(missData) },
+            hitSpan{ std::ranges::data(hitData), std::ranges::size(hitData) };
+        assert(missSpan.size() <= (std::numeric_limits<unsigned int>::max)() &&
+               hitSpan.size() <= (std::numeric_limits<unsigned int>::max)());
+
         SetSBTHeader_(&raygenData, programGroups, raygenIdx);
-        for (std::size_t i = 0; i < missData.size(); i++)
-            SetSBTHeader_(missData.data() + i, programGroups, missIdx[i]);
-        for (std::size_t i = 0; i < hitData.size(); i++)
-            SetSBTHeader_(hitData.data() + i, programGroups, hitIdx[i]);
+        for (std::size_t i = 0; i < missSpan.size(); i++)
+            SetSBTHeader_(missSpan.data() + i, programGroups, missIdx[i]);
+        for (std::size_t i = 0; i < hitSpan.size(); i++)
+            SetSBTHeader_(hitSpan.data() + i, programGroups, hitIdx[i]);
 
         CopyToBuffer_({
             CopyInfo{
@@ -73,29 +63,32 @@ public:
                                 sizeof(raygenData) },
                 .devicePtr = &sbt_.raygenRecord,
             },
-            { std::as_bytes(missData), &sbt_.missRecordBase },
-            { std::as_bytes(hitData), &sbt_.hitgroupRecordBase },
+            { std::as_bytes(missSpan), &sbt_.missRecordBase },
+            { std::as_bytes(hitSpan), &sbt_.hitgroupRecordBase },
         });
-        sbt_.missRecordCount = (unsigned int)missData.size();
-        sbt_.missRecordStrideInBytes = { sizeof(missData[0]) };
-        sbt_.hitgroupRecordCount = (unsigned int)hitData.size();
-        sbt_.hitgroupRecordStrideInBytes = { sizeof(hitData[0]) };
+        sbt_.missRecordCount = (unsigned int)missSpan.size();
+        sbt_.missRecordStrideInBytes = { sizeof(missSpan[0]) };
+        sbt_.hitgroupRecordCount = (unsigned int)hitSpan.size();
+        sbt_.hitgroupRecordStrideInBytes = { sizeof(hitSpan[0]) };
     }
 
     /// @brief same as ctor above; the miss program is restricted to be one so
     /// that index is passed directly.
     template<typename RaygenData, typename MissData, typename HitData>
+        requires IsSBTDataContiguousRange<HitData>
     ShaderBindingTable(SBTData<RaygenData> &raygenData, std::size_t raygenIdx,
                        SBTData<MissData> &missData, std::size_t missIdx,
-                       const std::span<SBTData<HitData>> hitData,
-                       const std::size_t *hitIdx,
+                       HitData &hitData, const std::size_t *hitIdx,
                        const ProgramGroupArray &programGroups)
     {
-        assert(hitData.size() <= (std::numeric_limits<unsigned int>::max)());
+        std::span hitSpan{ std::ranges::data(hitData),
+                           std::ranges::size(hitData) };
+        assert(hitSpan.size() <= (std::numeric_limits<unsigned int>::max)());
+
         SetSBTHeader_(&raygenData, programGroups, raygenIdx);
         SetSBTHeader_(&missData, programGroups, missIdx);
-        for (std::size_t i = 0; i < hitData.size(); i++)
-            SetSBTHeader_(hitData.data() + i, programGroups, hitIdx[i]);
+        for (std::size_t i = 0; i < hitSpan.size(); i++)
+            SetSBTHeader_(hitSpan.data() + i, programGroups, hitIdx[i]);
 
         CopyToBuffer_({
             CopyInfo{
@@ -107,12 +100,12 @@ public:
                 .hostBuffer = { (std::byte *)(&missData), sizeof(missData) },
                 .devicePtr = &sbt_.missRecordBase,
             },
-            { std::as_bytes(hitData), &sbt_.hitgroupRecordBase },
+            { std::as_bytes(hitSpan), &sbt_.hitgroupRecordBase },
         });
         sbt_.missRecordCount = 1;
         sbt_.missRecordStrideInBytes = sizeof(missData);
-        sbt_.hitgroupRecordCount = (unsigned int)hitData.size();
-        sbt_.hitgroupRecordStrideInBytes = { sizeof(hitData[0]) };
+        sbt_.hitgroupRecordCount = (unsigned int)hitSpan.size();
+        sbt_.hitgroupRecordStrideInBytes = { sizeof(hitSpan[0]) };
     }
 
     const auto &GetHandle() const noexcept { return sbt_; }

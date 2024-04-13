@@ -192,14 +192,19 @@ template<typename T>
     return static_cast<CUdeviceptr>(reinterpret_cast<std::uintptr_t>(ptr));
 }
 
+inline bool IsFromDeviceMemory(const void *ptr)
+{
+    cudaPointerAttributes attribute;
+    CheckCUDAError(cudaPointerGetAttributes(&attribute, ptr));
+    return attribute.type == cudaMemoryType::cudaMemoryTypeDevice ||
+           attribute.type == cudaMemoryType::cudaMemoryTypeManaged;
+}
+
 inline void CheckValidDevicePointer(const void *ptr)
 {
 #ifdef NEED_VALID_DEVICE_POINTER_CHECK
-    cudaPointerAttributes attribute;
-    CheckCUDAError(cudaPointerGetAttributes(&attribute, ptr));
-    CheckError(attribute.type == cudaMemoryType::cudaMemoryTypeDevice ||
-                   attribute.type == cudaMemoryType::cudaMemoryTypeManaged,
-               "Access Non-cuda memory", "Invalid access");
+    CheckError(IsFromDeviceMemory(ptr), "Access Non-cuda memory",
+               "Invalid access");
 #else
     return;
 #endif

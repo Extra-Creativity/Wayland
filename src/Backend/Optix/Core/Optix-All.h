@@ -2,6 +2,8 @@
 #include "AccelStructure.h"
 #include "BuildInput.h"
 #include "ContextManager.h"
+#include "Denoiser.h"
+#include "DenoiserHelper.h"
 #include "Launcher.h"
 #include "Module.h"
 #include "Pipeline.h"

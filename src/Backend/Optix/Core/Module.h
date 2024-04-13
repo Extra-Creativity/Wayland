@@ -33,6 +33,8 @@ class Module
     void CreateModule_(std::string_view, const ModuleConfig &,
                        const PipelineConfig &);
 
+    void CleanModule_() noexcept;
+
 public:
     /// @brief Create OptixModule with one file compiled by nvcc.
     /// @param fileName The file name of the source code; you can also pass e.g.
@@ -88,6 +90,19 @@ public:
     }
 
     auto GetHandle() const noexcept { return module_; }
+
+    Module(const Module &) = delete;
+    Module &operator=(const Module &) = delete;
+    Module(Module &&another) noexcept
+        : module_{ std::exchange(another.module_, nullptr) }
+    {
+    }
+    Module &operator=(Module &&another) noexcept
+    {
+        CleanModule_();
+        module_ = std::exchange(another.module_, nullptr);
+        return *this;
+    }
 
     ~Module();
 

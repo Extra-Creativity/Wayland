@@ -1,8 +1,17 @@
 #pragma once
 #include "HostUtils/CommonHeaders.h"
+#include "HostUtils/CompactVariant.h"
+#include "HostUtils/DebugUtils.h"
 #include "HostUtils/DeviceAllocators.h"
 #include "HostUtils/EnumUtils.h"
+
+#include "SBTData.h"
+#include "Traversable.h"
+
+#include <any>
+#include <functional>
 #include <span>
+#include <vector>
 
 namespace EasyRender::Optix
 {
@@ -28,7 +37,10 @@ public:
         buildInputs_.erase(buildInputs_.begin() + idx);
     }
 
+    auto GetBuildInputNum() const noexcept { return buildInputs_.size(); }
+
     virtual unsigned int GetDepth() const noexcept = 0;
+    virtual ~BuildInputArray() = default;
 
 protected:
     std::vector<OptixBuildInput> buildInputs_;
@@ -42,46 +54,6 @@ enum class GeometryFlags : unsigned int
     DiableAnyHit = OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT,
     SingleAnyhit = OPTIX_GEOMETRY_FLAG_REQUIRE_SINGLE_ANYHIT_CALL,
     FaceCulling = OPTIX_GEOMETRY_FLAG_DISABLE_TRIANGLE_FACE_CULLING
-};
-
-// @brief Store either a flag or an array of flags; when flag number is one, use
-// the single flag; otherwise allocate dynamically. Used by primitive types like
-// triangles.
-// @note Why not std::variant: we want to use "index" of variant to store the
-// number (which is also unique!), to reduce the space needed.
-class FlagVariant
-{
-    using UnderlyingType = std::underlying_type_t<GeometryFlags>;
-
-    std::size_t flagNum_;
-    union Data {
-        Data() {}
-        UnderlyingType singleFlag;
-        std::unique_ptr<UnderlyingType[]> flags;
-        ~Data() {}
-    } data_;
-    bool IsSingleFlag_() const noexcept { return flagNum_ == 1; }
-    void Clear_() const noexcept
-    {
-        if (!IsSingleFlag_())
-            data_.flags.~unique_ptr();
-    }
-
-public:
-    auto GetFlagNum() const noexcept { return flagNum_; }
-    auto GetFlagPtr() const noexcept
-    {
-        return IsSingleFlag_() ? &data_.singleFlag : data_.flags.get();
-    }
-
-    FlagVariant(GeometryFlags flag) : flagNum_{ 1 }
-    {
-        data_.singleFlag = std::to_underlying(flag);
-    }
-    ~FlagVariant() { Clear_(); }
-    FlagVariant(std::span<const GeometryFlags> flags);
-    FlagVariant(FlagVariant &&another) noexcept;
-    FlagVariant &operator=(FlagVariant &&another) noexcept;
 };
 
 /// @brief data buffer of triangle build input array; this shouldn't be used
@@ -99,15 +71,15 @@ public:
         return EasyRender::HostUtils::ToDriverPointer(trianglesBuffer_.get());
     }
     auto GetMotionKeyNum() const noexcept { return motionKeyNum_; }
-    auto GetFlagNum() const noexcept { return flagBuffer_.GetFlagNum(); }
-    auto GetFlagPtr() const noexcept { return flagBuffer_.GetFlagPtr(); }
+    auto GetFlagNum() const noexcept { return flagBuffer_.GetSize(); }
+    auto GetFlagPtr() const noexcept { return flagBuffer_.GetPtr(); }
     auto GetSBTIndexOffsetBuffer() const noexcept
     {
         return EasyRender::HostUtils::ToDriverPointer(sbtIndexOffsetBuffer_.get());
     }
 
 private:
-    FlagVariant flagBuffer_;
+    EasyRender::HostUtils::CompactVariant<GeometryFlags> flagBuffer_;
     EasyRender::HostUtils::DeviceUniquePtr<std::byte[]> sbtIndexOffsetBuffer_;
     EasyRender::HostUtils::DeviceUniquePtr<std::byte[]> verticesBuffer_;
     EasyRender::HostUtils::DeviceUniquePtr<std::byte[]> trianglesBuffer_;
@@ -119,8 +91,67 @@ private:
     std::size_t motionKeyNum_;
 };
 
+/// @details Parameters' meaning:
+/// + unsigned int: build input id.
+/// + unsigned int: sbt record id (<= numSbtRecord of the build input);
+/// + unsigned int: ray type.
+template<typename T>
+using SBTSetter = std::function<T(unsigned int, unsigned int, unsigned int)>;
+
+class GeometryBuildInputArray : public BuildInputArray
+{
+public:
+    GeometryBuildInputArray() = default;
+    GeometryBuildInputArray(std::size_t expectBuildInputNum)
+        : BuildInputArray{ expectBuildInputNum }
+    {
+    }
+
+    using SBTSetterProxy = std::function<void(unsigned int, unsigned int,
+                                              unsigned int, std::any &)>;
+
+    /// @note Set an automatic setter for build inputs.
+    template<typename T>
+    void SetSBTSetter(T &&init_setter)
+    {
+        using ResultType =
+            std::invoke_result_t<T, unsigned int, unsigned int, unsigned int>;
+        using HitDataType = std::tuple_element_t<0, ResultType>;
+
+        sbtSetter_ = [setter = SBTSetter<ResultType>{ std::forward<T>(
+                          init_setter) }](
+                         unsigned int buildInputID, unsigned int sbtRecordID,
+                         unsigned int rayType, std::any &sbtBuffer) {
+            using InfoType = std::invoke_result_t<
+                decltype(GetSBTHitRecordBuffer<HitDataType>), unsigned int,
+                const Traversable &>;
+            auto info = std::any_cast<InfoType>(&sbtBuffer);
+            HostUtils::CheckError(info,
+                                  "Type of buffer and setter doesn't match.");
+            auto &&[result, idx] = setter(buildInputID, sbtRecordID, rayType);
+            info->hitRecords.emplace_back(
+                SBTData<HitDataType>{ .data = std::move(result) });
+            info->groupIndices.push_back(idx);
+        };
+    }
+
+    const auto &GetSBTSetterProxy() const & { return sbtSetter_; }
+    auto GetSBTSetterProxy() && { return std::move(sbtSetter_); }
+
+    struct SBTSetterParamInfo
+    {
+        unsigned int buildInputNum_;
+        std::unique_ptr<unsigned int[]> sbtRecordIDs_;
+    };
+
+    virtual SBTSetterParamInfo GetSBTSetterParamInfo() const = 0;
+
+private:
+    SBTSetterProxy sbtSetter_;
+};
+
 /// @brief Buildinput array for triangle type, mostly used type.
-class TriangleBuildInputArray : public BuildInputArray
+class TriangleBuildInputArray : public GeometryBuildInputArray
 {
     void GeneralAddBuildInput_(auto &&);
 
@@ -131,7 +162,7 @@ public:
     /// @param expectBuildInputNum expected number of build inputs so that
     /// memory will be reserved to proper size.
     TriangleBuildInputArray(std::size_t expectBuildInputNum)
-        : BuildInputArray{ expectBuildInputNum }
+        : GeometryBuildInputArray{ expectBuildInputNum }
     {
         dataBuffers_.reserve(expectBuildInputNum);
     }
@@ -144,70 +175,74 @@ public:
     /// @param triangles triangle sequence, it's unrelated to motion.
     /// @param flag a single geometry flag, usual case for a whole mesh.
     void AddBuildInput(const std::vector<std::span<const float>> &vertices,
-                       std::span<const int> triangles,
+                       std::span<const unsigned int> triangles,
                        GeometryFlags flag = GeometryFlags::None);
 
     /// @param flags use more than one flag, whose size specifies numSbtRecords.
     /// @param sbtIndexOffset use sbt index to set every primitive, should have
     /// the same size as triangles.
     void AddBuildInput(const std::vector<std::span<const float>> &vertices,
-                       std::span<const int> triangles,
+                       std::span<const unsigned int> triangles,
                        std::span<GeometryFlags> flags,
                        std::span<const std::uint32_t> sbtIndexOffset);
     void RemoveBuildInput(std::size_t idx) noexcept;
 
+    void SyncIfSingleFlag() noexcept;
+
     unsigned int GetDepth() const noexcept override { return 1; }
 
-private:
-    std::vector<TriangleDataBuffer> dataBuffers_;
-};
+    SBTSetterParamInfo GetSBTSetterParamInfo() const override;
 
-/// @brief data buffer of instance build input array; this shouldn't be used
-/// by others, but InstanceBuildInputArray.
-class InstanceDataBuffer
-{
-public:
-    InstanceDataBuffer(auto instances);
-    auto GetInstanceBufferPtr() const noexcept
+    void *GetTriangleIndicesBuffer(std::size_t idx) const
     {
-        return EasyRender::HostUtils::ToDriverPointer(instancesBuffer_.get());
+        return reinterpret_cast<void *>(
+            HostUtils::Access(dataBuffers_, idx).GetTrianglesPtr());
     }
 
 private:
-    EasyRender::HostUtils::DeviceUniquePtr<OptixInstance[]> instancesBuffer_;
+    std::vector<TriangleDataBuffer> dataBuffers_;
 };
 
 class Traversable;
 class InstanceBuildInputArray : public BuildInputArray
 {
 public:
-    InstanceBuildInputArray() = default;
+    InstanceBuildInputArray() { buildInputs_.resize(1); }
     /// @brief Create build input array, with reserved memory to prevent
     /// reallocation when AddBuildInput.
     /// @param expectBuildInputNum expected number of build inputs so that
     /// memory will be reserved to proper size.
     InstanceBuildInputArray(std::size_t expectBuildInputNum)
-        : BuildInputArray{ expectBuildInputNum }
     {
+        buildInputs_.resize(1);
+        children_.reserve(expectBuildInputNum);
+        instances_.reserve(expectBuildInputNum);
     }
 
     /// @brief Add a build input constructed by parameters.
     /// @param instances instances to be added, whose traversable handle can be
-    /// unset (i.e. the ctor will set it).
-    /// @param children children of the instances, used to get depth and set
+    /// not set (i.e. the ctor will set it).
+    /// @param child child of the instance, used to get depth and set
     /// traverable handles.
-    void AddBuildInput(std::span<OptixInstance> instances,
-                       std::span<const Traversable *> children);
+    void AddBuildInput(OptixInstance &instance, const Traversable *child);
 
     void RemoveBuildInput(std::size_t idx) noexcept;
 
     unsigned int GetDepth() const noexcept override;
 
+    const auto &GetChildren() const noexcept { return children_; }
+
+    const auto &GetInstances() const noexcept { return instances_; }
+
+    void SyncToDevice();
+
 private:
     /// @brief This member is used to get depth of the traversable, otherwise
     /// unnecessary.
-    std::vector<std::vector<const Traversable *>> children_;
-    std::vector<InstanceDataBuffer> dataBuffers_;
+    std::vector<const Traversable *> children_;
+    std::vector<OptixInstance> instances_;
+    Wayland::HostUtils::DeviceUniquePtr<OptixInstance[]> deviceInstances_;
+    std::size_t deviceInstanceNum_ = 0;
 };
 
 enum class InstanceFlags : unsigned int

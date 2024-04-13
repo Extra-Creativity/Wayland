@@ -10,7 +10,30 @@
 namespace EasyRender::Optix
 {
 
-class StaticTransform : public Traversable
+class TransformBase : public Traversable
+{
+public:
+    TransformBase(const Traversable &childTraversable)
+        : childTraversablePtr_{ &childTraversable }
+    {
+    }
+
+    unsigned int GetDepth() const noexcept override
+    {
+        return UncheckedGetDepthForSingleChild_(childTraversablePtr_);
+    }
+
+    void FillSBT(unsigned int rayTypeNum,
+                 SBTHitRecordBufferProxy &buffer) const override
+    {
+        return childTraversablePtr_->FillSBT(rayTypeNum, buffer);
+    }
+
+private:
+    const Traversable *childTraversablePtr_;
+};
+
+class StaticTransform : public TransformBase
 {
 public:
     StaticTransform(const glm::mat3x4 &transform,
@@ -18,10 +41,6 @@ public:
 
     void SetNewTransform(const glm::mat3x4 &transform);
     std::string DisplayInfo() const override { return "static transform"; }
-    unsigned int GetDepth() const noexcept override
-    {
-        return UncheckedGetDepthForSingleChild_(childTraversablePtr_);
-    }
 
 private:
     const Traversable *childTraversablePtr_;
@@ -30,16 +49,11 @@ private:
 };
 
 template<typename Optix_TransformType>
-class MotionTransformBase : public Traversable
+class MotionTransformBase : public TransformBase
 {
 public:
-    unsigned int GetDepth() const noexcept override
-    {
-        return UncheckedGetDepthForSingleChild_(childTraversablePtr_);
-    }
-
     MotionTransformBase(const Traversable &childTraversable)
-        : childTraversablePtr_{ &childTraversable }
+        : TransformBase{ childTraversable }
     {
     }
 
@@ -49,9 +63,6 @@ protected:
     EasyRender::HostUtils::DeviceUniquePtr<std::byte[]> buffer_;
     template<OptixTraversableType TypeEnum>
     void SetUpTraversableHandle_(std::span<const std::byte>);
-
-private:
-    const Traversable *childTraversablePtr_;
 };
 
 class MatrixMotionTransform

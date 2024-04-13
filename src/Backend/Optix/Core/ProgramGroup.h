@@ -14,6 +14,7 @@ class ProgramGroupArray
 {
     void AddProgramGroup_(const OptixProgramGroupDesc &, std::size_t);
     void GeneralAddHitProgramGroup_(auto &&, auto &&, auto &&);
+    void CleanProgramGroups_() noexcept;
 
 public:
     ProgramGroupArray() = default;
@@ -23,14 +24,18 @@ public:
         programGroups_.reserve(expectedNum);
     }
 
-    ~ProgramGroupArray()
+    ProgramGroupArray(const ProgramGroupArray &) = delete;
+    ProgramGroupArray &operator=(const ProgramGroupArray &) = delete;
+
+    ProgramGroupArray(ProgramGroupArray &&) noexcept = default;
+    ProgramGroupArray &operator=(ProgramGroupArray &&another) noexcept
     {
-        for (auto programGroup : programGroups_)
-        {
-            EasyRender::HostUtils::CheckOptixError<EasyRender::HostUtils::OnlyLog>(
-                optixProgramGroupDestroy(programGroup));
-        }
+        CleanProgramGroups_();
+        programNames_ = std::move(another.programNames_);
+        programGroups_ = std::move(another.programGroups_);
     }
+
+    ~ProgramGroupArray() { CleanProgramGroups_(); }
 
     /// @brief Add raygen program to the array, with pure name.
     /// @param module module that the program is in; this should be guaranteed

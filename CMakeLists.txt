@@ -1,10 +1,13 @@
 cmake_minimum_required(VERSION 3.17)
-project(EasyRender)
+project(EasyRender LANGUAGES CXX CUDA)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CUDA_STANDARD 20)
 set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 set(CMAKE_BINARY_DIR build)
+
+set(ENV{http_proxy} "http://127.0.0.1:7890")
+set(ENV{https_proxy} "http://127.0.0.1:7890")
 
 find_package(CUDAToolkit)
 link_libraries(CUDA::cuda_driver)
@@ -17,7 +20,7 @@ include(ExternalProject)
 
 set(SPDLOG_USE_STD_FORMAT ON)
 if(MSVC)
-    add_compile_options(/wd4996)
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/wd4996>)
 endif()
 
 FetchContent_Declare(
@@ -60,15 +63,23 @@ include_directories(${PROJECT_SOURCE_DIR}/3rdParty/stb_image/)
 
 # Enable UTF-8 and warnings.
 if(MSVC)
-    add_compile_options(/utf-8 /W3) # 4996 is warning from spdlog.
+    set(UTFFlags /utf-8 /W3)
+    add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:${UTFFlags}>")
+    foreach(flag IN LISTS UTFFlags)
+        add_compile_options("$<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=${flag}>")
+    endforeach()
 else()
-    add_compile_options(-fexec-charset=UTF-8 -finput-charset=UTF-8 -Wall)
+    set(UTFFlags -fexec-charset=UTF-8 -finput-charset=UTF-8 -Wall)
+    add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:${UTFFlags}>")
+    foreach(flag IN LISTS UTFFlags)
+        add_compile_options("$<$<COMPILE_LANGUAGE:CUDA>:--compiler-options=${flag}>")
+    endforeach()
 endif()
 
 option(DEBUG OFF)
 if(DEBUG)
     add_definitions(-DERROR_DEBUG -DNEED_VALIDATION_MODE -DNEED_IN_RANGE_CHECK 
-                  -DNEED_VALID_DEVICE_POINTER_CHECK -DNEED_SAFE_INT_CHECK)
+                    -DNEED_VALID_DEVICE_POINTER_CHECK -DNEED_SAFE_INT_CHECK)
     message("Enabling debug mode...")
 endif()
 
@@ -78,3 +89,8 @@ if(RELEASE)
 endif()
 
 add_subdirectory(src)
+
+option(NEED_BACKEND_EXAMPLE OFF)
+if (NEED_BACKEND_EXAMPLE)
+    add_subdirectory(examples)
+endif()

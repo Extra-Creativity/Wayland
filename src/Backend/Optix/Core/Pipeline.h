@@ -65,7 +65,24 @@ public:
 
     auto GetHandle() const noexcept { return pipeline_; }
 
+    Pipeline(const Pipeline &) = delete;
+    Pipeline &operator=(const Pipeline &) = delete;
+    Pipeline(Pipeline &&) noexcept
+        : pipeline_{ std::exchange(pipeline_, nullptr) }
+    {
+    }
+    Pipeline &operator=(Pipeline &&) noexcept
+    {
+        CleanPipeline_();
+        pipeline_ = std::exchange(pipeline_, nullptr);
+        return *this;
+    }
+
+    ~Pipeline();
+
 private:
+    void CleanPipeline_() noexcept;
+
     OptixPipeline pipeline_;
     // For safety, i.e. used to check whether the scene exceeds limit.
     unsigned int maxTraversableDepth_;

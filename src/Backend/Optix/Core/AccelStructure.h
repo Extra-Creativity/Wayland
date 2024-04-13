@@ -3,9 +3,9 @@
 #include "HostUtils/DeviceAllocators.h"
 #include "HostUtils/EnumUtils.h"
 #include "Traversable.h"
+#include <algorithm>
 
-namespace EasyRender::Optix
-{
+namespace EasyRender::Optix {
 
 /// @brief Build flags is just scoped enumeration for OptixBuildFlags, used by
 /// Optix AS.
@@ -25,8 +25,14 @@ enum class BuildFlags : unsigned int
 #endif
 };
 
-} // namespace EasyRender::Optix
-ENABLE_BINARY_OP_FOR_SCOPED_ENUM(EasyRender::Optix::BuildFlags);
+enum class SBTSetterGatherFlag
+{
+    Copy,
+    Move
+};
+
+} // namespace Wayland::Optix
+ENABLE_BINARY_OP_FOR_SCOPED_ENUM(Wayland::Optix::BuildFlags);
 
 namespace EasyRender::Optix
 {
@@ -111,4 +117,126 @@ private:
     std::size_t updateBufferSize_ = 0;
 };
 
-} // namespace EasyRender::Optix
+class GASSBTProvider
+{
+public:
+    // Why not const: may move away its setter.
+    GASSBTProvider(GeometryBuildInputArray &arr,
+                   SBTSetterGatherFlag gatherFlag);
+
+    void FillSBT(unsigned int rayTypeNum, SBTHitRecordBufferProxy &proxy) const
+    {
+        auto &buffer = proxy.GetBuffer();
+        for (unsigned int buildInputID = 0;
+             buildInputID < paramInfo_.buildInputNum_; buildInputID++)
+        {
+            auto sbtRecordNum = paramInfo_.sbtRecordIDs_[buildInputID];
+            for (unsigned int sbtRecordID = 0; sbtRecordID < sbtRecordNum;
+                 sbtRecordID++)
+            {
+                for (unsigned int rayType = 0; rayType < rayTypeNum; rayType++)
+                    sbtSetter_(buildInputID, sbtRecordID, rayType, buffer);
+            }
+        }
+    }
+
+private:
+    GeometryBuildInputArray::SBTSetterProxy sbtSetter_;
+    GeometryBuildInputArray::SBTSetterParamInfo paramInfo_;
+};
+
+class StaticGeometryAccelStructure : public StaticAccelStructure
+{
+public:
+    StaticGeometryAccelStructure(
+        GeometryBuildInputArray &arr,
+        SBTSetterGatherFlag gatherFlag = SBTSetterGatherFlag::Copy,
+        BuildFlags buildFlag = BuildFlags::None)
+        : StaticAccelStructure{ arr, buildFlag }, provider_{ arr, gatherFlag }
+    {
+    }
+
+    void FillSBT(unsigned int rayTypeNum,
+                 SBTHitRecordBufferProxy &proxy) const override
+    {
+        return provider_.FillSBT(rayTypeNum, proxy);
+    }
+
+private:
+    GASSBTProvider provider_;
+};
+
+class DynamicGeometryAccelStructure : public DynamicAccelStructure
+{
+public:
+    DynamicGeometryAccelStructure(
+        GeometryBuildInputArray &arr,
+        SBTSetterGatherFlag gatherFlag = SBTSetterGatherFlag::Copy,
+        BuildFlags buildFlag = BuildFlags::None)
+        : DynamicAccelStructure{ arr, buildFlag }, provider_{ arr, gatherFlag }
+    {
+    }
+
+    void FillSBT(unsigned int rayTypeNum,
+                 SBTHitRecordBufferProxy &proxy) const override
+    {
+        return provider_.FillSBT(rayTypeNum, proxy);
+    }
+
+private:
+    GASSBTProvider provider_;
+};
+
+class IASSBTProvider
+{
+public:
+    IASSBTProvider(const InstanceBuildInputArray &arr);
+
+    void FillSBT(unsigned int rayTypeNum, SBTHitRecordBufferProxy &proxy) const
+    {
+        sbtSetter_(rayTypeNum, proxy);
+    }
+
+private:
+    std::function<void(unsigned int, SBTHitRecordBufferProxy &)> sbtSetter_;
+};
+
+class StaticInstanceAccelStrucutre : public StaticAccelStructure
+{
+public:
+    StaticInstanceAccelStrucutre(const InstanceBuildInputArray &arr,
+                                 BuildFlags buildFlag = BuildFlags::None)
+        : StaticAccelStructure{ arr, buildFlag }, provider_{ arr }
+    {
+    }
+
+    void FillSBT(unsigned int rayTypeNum,
+                 SBTHitRecordBufferProxy &proxy) const override
+    {
+        return provider_.FillSBT(rayTypeNum, proxy);
+    }
+
+private:
+    IASSBTProvider provider_;
+};
+
+class DynamicInstanceAccelStrucutre : public DynamicAccelStructure
+{
+public:
+    DynamicInstanceAccelStrucutre(const InstanceBuildInputArray &arr,
+                                  BuildFlags buildFlag = BuildFlags::None)
+        : DynamicAccelStructure{ arr, buildFlag }, provider_{ arr }
+    {
+    }
+
+    void FillSBT(unsigned int rayTypeNum,
+                 SBTHitRecordBufferProxy &proxy) const override
+    {
+        return provider_.FillSBT(rayTypeNum, proxy);
+    }
+
+private:
+    IASSBTProvider provider_;
+};
+
+} // namespace Wayland::Optix

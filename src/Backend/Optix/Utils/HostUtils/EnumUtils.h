@@ -12,8 +12,6 @@ struct NeedBinaryOp
     static const inline bool value = false;
 };
 
-} // namespace EasyRender::HostUtils
-
 template<typename EnumType>
     requires EasyRender::HostUtils::NeedBinaryOp<EnumType>::value
 EnumType operator|(EnumType a, EnumType b) noexcept
@@ -28,8 +26,22 @@ EnumType operator&(EnumType a, EnumType b) noexcept
     return EnumType{ std::to_underlying(a) & std::to_underlying(b) };
 }
 
-namespace EasyRender::HostUtils
+template<typename EnumType>
+    requires Wayland::HostUtils::NeedBinaryOp<EnumType>::value
+EnumType &operator|=(EnumType &a, EnumType b) noexcept
 {
+    a = a | b;
+    return a;
+}
+
+template<typename EnumType>
+    requires Wayland::HostUtils::NeedBinaryOp<EnumType>::value
+EnumType &operator&=(EnumType &a, EnumType b) noexcept
+{
+    a = a & b;
+    return a;
+}
+
 
 template<typename EnumType>
     requires EasyRender::HostUtils::NeedBinaryOp<EnumType>::value

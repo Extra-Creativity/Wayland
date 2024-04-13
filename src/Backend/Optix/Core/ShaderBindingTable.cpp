@@ -2,7 +2,7 @@
 
 #include "HostUtils/ErrorCheck.h"
 #include "ProgramGroup.h"
-#include "UniUtils/MathUtils.h"
+#include "UniUtils/IntUtils.h"
 
 #include <algorithm>
 #include <ranges>
