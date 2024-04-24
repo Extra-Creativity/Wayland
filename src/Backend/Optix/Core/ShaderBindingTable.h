@@ -46,8 +46,8 @@ public:
     {
         // Not included DebugUtils to use CheckInRange since we only do it once.
         std::span missSpan{ std::ranges::data(missData),
-                            std::ranges::size(missData) },
-            hitSpan{ std::ranges::data(hitData), std::ranges::size(hitData) };
+                            std::ranges::size(missData) };
+        std::span hitSpan{ std::ranges::data(hitData), std::ranges::size(hitData) };
         assert(missSpan.size() <= (std::numeric_limits<unsigned int>::max)() &&
                hitSpan.size() <= (std::numeric_limits<unsigned int>::max)());
 

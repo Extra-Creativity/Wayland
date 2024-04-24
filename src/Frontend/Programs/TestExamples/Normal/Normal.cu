@@ -1,4 +1,5 @@
 #include <optix_device.h>
+#include <optix_function_table.h>
 
 #include "Device/Camera.h"
 #include "Device/Common.h"

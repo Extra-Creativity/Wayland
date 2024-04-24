@@ -47,7 +47,7 @@ void DeviceManager::BuildAccelStructure(SceneManager &scene)
     {
         asBuildInput->AddBuildInput(
             { VecToSpan<const float, 3>(scene.meshes[i]->vertex) },
-            VecToSpan<int, 3>(scene.meshes[i]->triangle),
+            VecToSpan<const unsigned int, 3>(scene.meshes[i]->triangle),
             GeometryFlags::DiableAnyHit);
     }
     as = std::make_unique<StaticAccelStructure>(*asBuildInput);

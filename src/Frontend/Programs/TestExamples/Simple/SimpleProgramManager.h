@@ -38,7 +38,7 @@ public:
         std::vector<SBTData<int>> hitData(1);
         std::size_t index = 2;
         return ShaderBindingTable{ raygenData,         0,      missData, 1,
-                                   std::span(hitData), &index, pg };
+                                   hitData, &index, pg };
     }
 
 private:

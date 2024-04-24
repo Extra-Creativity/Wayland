@@ -20,7 +20,7 @@ endmacro(source_group_by_dir)
 set(TARGET_NAME EasyRender)
 
 file(GLOB_RECURSE HEADERS *.h)
-file(GLOB_RECURSE SOURCE *.cpp *.cu)
+file(GLOB_RECURSE SOURCE *.cpp)
 set(all_files ${HEADERS} ${SOURCE})
 source_group_by_dir(all_files)
 

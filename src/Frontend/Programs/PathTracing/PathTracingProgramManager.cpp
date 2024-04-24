@@ -125,9 +125,9 @@ Optix::ShaderBindingTable PathTracingProgramManager::GenerateSBT(
 
     return ShaderBindingTable{ raygenData,
                                0,
-                               std::span(missData),
+                               missData,
                                missIdx.data(),
-                               std::span(hitDatas),
+                               hitDatas,
                                hitIdx.data(),
                                pg };
 }

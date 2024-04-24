@@ -79,7 +79,7 @@ public:
         hitData.resize(renderer->scene.meshes.size());
         std::vector<std::size_t> hitIdx(renderer->scene.meshes.size(), 2);
         return ShaderBindingTable{
-            raygenData, 0, missData, 1, std::span(hitData), hitIdx.data(), pg
+            raygenData, 0, missData, 1, hitData, hitIdx.data(), pg
         };
     }
 

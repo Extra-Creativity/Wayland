@@ -75,7 +75,7 @@ Optix::ShaderBindingTable TextureProgramManager::GenerateSBT(
         }
     }
     return ShaderBindingTable{
-        raygenData, 0, missData, 1, std::span(hitData), hitIdx.data(), pg
+        raygenData, 0, missData, 1, hitData, hitIdx.data(), pg
     };
 }
 
