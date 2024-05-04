@@ -1,4 +1,5 @@
 #pragma once
+#include "AO/AOProgramManager.h"
 #include "PathTracing/PathTracingProgramManager.h"
 #include "TestExamples/Color/ColorProgramManager.h"
 #include "TestExamples/Depth/DepthProgramManager.h"

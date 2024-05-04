@@ -13,6 +13,7 @@ namespace EasyRender
 
 enum class ProgramType
 {
+    AO,
     Color,
     Depth,
     Mesh,
@@ -26,6 +27,7 @@ enum class ProgramType
 
 /* TBD: use more robust path string */
 const std::string PROGRAM_SRC[] = {
+    R"(..\..\..\src\Frontend\Programs\AO\AO.cu)",
     R"(..\..\..\src\Frontend\Programs\TestExamples\Color\Color.cu)",
     R"(..\..\..\src\Frontend\Programs\TestExamples\Depth\Depth.cu)",
     R"(..\..\..\src\Frontend\Programs\TestExamples\Mesh\Mesh.cu)",

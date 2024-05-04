@@ -32,6 +32,9 @@ void Renderer::SetProgram(ProgramType pgType)
     programType = pgType;
     programSrc = PROGRAM_SRC[static_cast<int>(pgType)];
     switch (pgType) {
+    case ProgramType::AO:
+        program = make_unique<AOProgramManager>(this);
+        break;
     case ProgramType::Color:
          program = make_unique<ColorProgramManager>(this);
         break;
