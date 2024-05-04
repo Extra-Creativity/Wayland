@@ -43,80 +43,92 @@ extern "C" __global__ void __raygen__RenderFrame()
 
     /* Generate random seed */
     prd.seed = tea<4>(idx, param.frameID);
-    prd.depth = 0;
-    prd.done = false;
-    prd.radiance = { 0, 0, 0 };
-    prd.throughput = { 1, 1, 1 };
-    prd.lastTraceTerm = 1.f;
-    prd.rayPos = param.camera.pos;
-    prd.rayDir = PinholeGenerateRay({ idx_x, idx_y }, param.fbSize,
-                                    param.camera, prd.seed);
 
-    std::uint32_t u0, u1;
-    PackPointer(&prd, u0, u1);
+    glm::dvec4 thisFrame = { 0.f, 0.f, 0.f, 1.f };
 
-    float RR_rate = 0.8;
-    while (true)
+    int pixelSampleCount = 4;
+    for (int i = 0; i < pixelSampleCount; ++i)
     {
 
-        optixTrace(param.traversable, UniUtils::ToFloat3(prd.rayPos),
-                   UniUtils::ToFloat3(prd.rayDir), EPSILON, 1e30, 0,
-                   OptixVisibilityMask(255), OPTIX_RAY_FLAG_DISABLE_ANYHIT,
-                   RADIANCE_TYPE, RAY_TYPE_COUNT, RADIANCE_TYPE, u0, u1);
-        if (prd.done)
-        {
-            break;
-        }
+        prd.depth = 0;
+        prd.done = false;
+        prd.radiance = { 0, 0, 0 };
+        prd.throughput = { 1, 1, 1 };
+        prd.lastTraceTerm = 1.f;
+        prd.rayPos = param.camera.pos;
+        prd.rayDir = PinholeGenerateRay({ idx_x, idx_y }, param.fbSize,
+                                        param.camera, prd.seed);
 
-        if (strategy != UPT)
-        {
-            LightSample ls;
-            SampleAreaLightPos(param.areaLightCount, param.areaLights, ls,
-                               prd.seed);
+        std::uint32_t u0, u1;
+        PackPointer(&prd, u0, u1);
 
-            /* Visibility test */
-            glm::vec3 visRay = ls.pos - prd.rayPos;
-            float dist = glm::length(visRay);
-            visRay /= dist;
-            std::uint32_t vis = 0;
+        float RR_rate = 0.8;
+        while (true)
+        {
+
             optixTrace(param.traversable, UniUtils::ToFloat3(prd.rayPos),
-                       UniUtils::ToFloat3(visRay), EPSILON,
-                       dist * (1 - EPSILON), 0, OptixVisibilityMask(255),
-                       // For shadow rays: skip any/closest hit shaders and
-                       // terminate on first intersection with anything. The
-                       // miss shader is used to mark if the light was visible.
-                       OPTIX_RAY_FLAG_DISABLE_ANYHIT |
-                           OPTIX_RAY_FLAG_TERMINATE_ON_FIRST_HIT |
-                           OPTIX_RAY_FLAG_DISABLE_CLOSESTHIT,
-                       SHADOW_TYPE, RAY_TYPE_COUNT, SHADOW_TYPE, vis);
-            if (vis > 0)
+                       UniUtils::ToFloat3(prd.rayDir), EPSILON, 1e30, 0,
+                       OptixVisibilityMask(255), OPTIX_RAY_FLAG_DISABLE_ANYHIT,
+                       RADIANCE_TYPE, RAY_TYPE_COUNT, RADIANCE_TYPE, u0, u1);
+            if (prd.done)
             {
-                float cosTheta1 = glm::dot(ls.N, visRay);
-                float cosTheta2 = glm::dot(prd.lastNormal, visRay);
-                auto &lt = param.areaLights[ls.areaLightID];
-                if ((lt.twoSided || cosTheta1 < 0) && cosTheta2 > 0)
-                {
-                    float neePdf = ls.pdf * dist * dist / fabsf(cosTheta1);
-                    float uptPdf = (strategy == NEE) ? 0 : RECIP_2PI;
-                    prd.radiance += prd.throughput * cosTheta2 * lt.L /
-                                    neePdf * (1 - UptMisWeight(uptPdf, neePdf));
-                }
-            }
-        }
-
-        if (prd.depth > 5)
-        {
-            if (rnd(prd.seed) > RR_rate)
-            {
-                prd.throughput = { 0, 0, 0 };
                 break;
             }
-            prd.throughput /= RR_rate;
+
+            if (strategy != UPT)
+            {
+                LightSample ls;
+                SampleAreaLightPos(param.areaLightCount, param.areaLights, ls,
+                                   prd.seed);
+
+                /* Visibility test */
+                glm::vec3 visRay = ls.pos - prd.rayPos;
+                float dist = glm::length(visRay);
+                visRay /= dist;
+                std::uint32_t vis = 0;
+                optixTrace(
+                    param.traversable, UniUtils::ToFloat3(prd.rayPos),
+                    UniUtils::ToFloat3(visRay), EPSILON, dist * (1 - EPSILON),
+                    0, OptixVisibilityMask(255),
+                    // For shadow rays: skip any/closest hit shaders and
+                    // terminate on first intersection with anything. The
+                    // miss shader is used to mark if the light was visible.
+                    OPTIX_RAY_FLAG_DISABLE_ANYHIT |
+                        OPTIX_RAY_FLAG_TERMINATE_ON_FIRST_HIT |
+                        OPTIX_RAY_FLAG_DISABLE_CLOSESTHIT,
+                    SHADOW_TYPE, RAY_TYPE_COUNT, SHADOW_TYPE, vis);
+                if (vis > 0)
+                {
+                    float cosTheta1 = glm::dot(ls.N, visRay);
+                    float cosTheta2 = glm::dot(prd.lastNormal, visRay);
+                    auto &lt = param.areaLights[ls.areaLightID];
+                    if ((lt.twoSided || cosTheta1 < 0) && cosTheta2 > 0)
+                    {
+                        float neePdf = ls.pdf * dist * dist / fabsf(cosTheta1);
+                        float uptPdf = (strategy == NEE) ? 0 : RECIP_2PI;
+                        prd.radiance += prd.throughput * cosTheta2 * lt.L /
+                                        neePdf *
+                                        (1 - UptMisWeight(uptPdf, neePdf));
+                    }
+                }
+            }
+            if (prd.depth > 5)
+            {
+                if (rnd(prd.seed) > RR_rate)
+                {
+                    prd.throughput = { 0, 0, 0 };
+                    break;
+                }
+                prd.throughput /= RR_rate;
+            }
         }
+        thisFrame.x += prd.radiance.x / pixelSampleCount;
+        thisFrame.y += prd.radiance.y / pixelSampleCount;
+        thisFrame.z += prd.radiance.z / pixelSampleCount;
     }
 
-    glm::dvec4 thisFrame = { prd.radiance.x, prd.radiance.y, prd.radiance.z,
-                             0xFF };
+
+
     int frameID = param.frameID;
     if (frameID == 0)
         param.radianceBuffer[idx] = thisFrame;
@@ -202,7 +214,7 @@ extern "C" __global__ void __closesthit__radiance()
         N = -N;
 
     float pdf;
-    glm::vec3 rayDir = SampleUniformHemisphere(N, pdf, prd->seed);
+    glm::vec3 rayDir = SampleCosineHemisphere(N, pdf, prd->seed);
 
     auto cosWeight = fmaxf(0.f, glm::dot(rayDir, N));
 
@@ -220,7 +232,7 @@ extern "C" __global__ void __closesthit__radiance()
 		albedo = mat->Kd;
 	}
 
-    prd->throughput *= albedo/ PI; // pdf = 1 / 2pi, albedo = kd / pi
+    prd->throughput *= albedo / PI; // albedo = kd / pi
     prd->throughput *= prd->lastTraceTerm;
     prd->lastTraceTerm = cosWeight / pdf;
     prd->rayPos = hitPos;

@@ -25,9 +25,21 @@ __device__ __forceinline__ void GetOrthoNormalBasis(glm::vec3 vec, glm::vec3 &u,
 }
 
 /* Uniformly samples a disk */
-__device__ __forceinline__ void SampleUniformDisk()
+__device__ __forceinline__ glm::vec3 SampleUniformDisk(
+    glm::vec3 pos, glm::vec3 normal, float &pdf, unsigned int &seed)
 {
-    /* A dummy function to be implemented. */
+    glm::vec3 x, y;
+	GetOrthoNormalBasis(normal, x, y);
+
+	float r = sqrtf(rnd(seed)), theta = rnd(seed) * TWO_PI;
+    pdf = 1.0f / PI;
+	return pos + r * (cosf(theta) * x + sinf(theta) * y);
+}
+
+__device__ __forceinline__ glm::vec2 SampleUniformDisk(unsigned int &seed)
+{
+    float r = sqrtf(rnd(seed)), theta = rnd(seed) * TWO_PI;
+	return glm::vec2{r * cosf(theta), r * sinf(theta)};
 }
 
 /* Uniformly samples a hemisphere */
@@ -44,9 +56,17 @@ __device__ __forceinline__ glm::vec3 SampleUniformHemisphere(glm::vec3 normal,
 }
 
 /* Samples a cosine weighted hemisphere */
-__device__ __forceinline__ void CosineSampleHemisphere()
+__device__ __forceinline__ glm::vec3 SampleCosineHemisphere(glm::vec3 normal,
+                                                       float &pdf,
+                                                       unsigned int &seed)
 {
 	/* Use Malley' s Method: SampleUniformDisk and project to hemisphere. */
+    glm::vec3 x, y;
+    GetOrthoNormalBasis(normal, x, y);
+    glm::vec2 dPos = SampleUniformDisk(seed);
+    float z = sqrtf(1 - dPos.x * dPos.x - dPos.y * dPos.y);
+    pdf = z / PI;
+    return x * dPos.x + y * dPos.y + normal * z;
 }
 
 /* The correctness of this function needs tests */
