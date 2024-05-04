@@ -20,11 +20,18 @@ endmacro(source_group_by_dir)
 set(TARGET_NAME EasyRender)
 
 file(GLOB_RECURSE HEADERS *.h)
-file(GLOB_RECURSE SOURCE *.cpp)
-set(all_files ${HEADERS} ${SOURCE})
-source_group_by_dir(all_files)
+file(GLOB_RECURSE SOURCE_CXX *.cpp)
+file(GLOB_RECURSE SOURCE_CU *.cu)
+file(GLOB_RECURSE DUMMY *.*)
+# https://cmake.org/pipermail/cmake/2008-June/022387.html (but not work) 
+set_source_files_properties(DUMMY PROPERTIES HEADER_FILE_ONLY TRUE)
+set(all_files ${HEADERS} ${SOURCE_CXX} ${SOURCE_CU})
+set(src_files ${HEADERS} ${SOURCE_CXX})
 
-add_executable(${TARGET_NAME} ${all_files})
+source_group_by_dir(DUMMY)
+add_library(EasyRender-Dummy ${DUMMY})
+source_group_by_dir(src_files)
+add_executable(${TARGET_NAME} ${src_files})
 
 target_compile_definitions(
     ${TARGET_NAME} 
