@@ -142,27 +142,52 @@ AttributeEnd
 
 
 AttributeBegin
-    Material "plastic" "color Kd" [0.07 0.09 0.13] "float roughness" [0.005] "color Ks" [1.0 1.0 1.0] "bool remaproughness" ["false"]
+    Material "matte"
+    "rgb Kd" [ 0.6 0.6 0.6 ]
+    # Material "plastic" "color Kd" [0.07 0.09 0.13] "float roughness" [0.005] "color Ks" [1.0 1.0 1.0] "bool remaproughness" ["false"]
     Shape "plymesh" "string filename" ["geometry/plate1.ply"]
+    # Shape "trianglemesh" "string filename" ["geometry/plate1.obj"]
+    # Shape "trianglemesh"    
+    # "point2 uv" [ 0 0 1 0 1 1 0 1 ]
+    # "normal N" [ -0.0000 0.6228 -0.7824 
+    #              -0.0000 0.6228 -0.7824
+    #              -0.0000 0.6228 -0.7824 
+    #              -0.0000 0.6228 -0.7824 ]
+    # "point3 P" [ 4.000000 0.256090 2.706510
+    #              4.000000 -0.526323 2.083750
+    #             -4.000000 -0.526323 2.083750
+    #             -4.000000 0.256090 2.706510 ]
+    # "integer indices" [ 0 1 2
+    #                     0 2 3 ]
 AttributeEnd
 
 AttributeBegin
-    Material "plastic" "color Kd" [0.07 0.09 0.13] "float roughness" [0.02] "color Ks" [1.0 1.0 1.0] "bool remaproughness" ["false"]
+    Material "matte"
+    "rgb Kd" [ 0.6 0.6 0.6 ]
+    # Material "plastic" "color Kd" [0.07 0.09 0.13] "float roughness" [0.02] "color Ks" [1.0 1.0 1.0] "bool remaproughness" ["false"]
     Shape "plymesh" "string filename" ["geometry/plate2.ply"]
+    # Shape "trianglemesh" "string filename" ["geometry/plate2.obj"]
 AttributeEnd
 
 AttributeBegin
-    Material "plastic" "color Kd" [0.07 0.09 0.13] "float roughness" [0.05] "color Ks" [1.0 1.0 1.0] "bool remaproughness" ["false"]
+    Material "matte"
+    "rgb Kd" [ 0.6 0.6 0.6 ]
+    # Material "plastic" "color Kd" [0.07 0.09 0.13] "float roughness" [0.05] "color Ks" [1.0 1.0 1.0] "bool remaproughness" ["false"]
     Shape "plymesh" "string filename" ["geometry/plate3.ply"]
+    # Shape "trianglemesh" "string filename" ["geometry/plate3.obj"]
 AttributeEnd
 
 AttributeBegin
-    Material "plastic" "color Kd" [0.07 0.09 0.13] "float roughness" [0.1] "color Ks" [1.0 1.0 1.0] "bool remaproughness" ["false"]
+    Material "matte"
+    "rgb Kd" [ 0.6 0.6 0.6 ]
+    # Material "plastic" "color Kd" [0.07 0.09 0.13] "float roughness" [0.1] "color Ks" [1.0 1.0 1.0] "bool remaproughness" ["false"]
     Shape "plymesh" "string filename" ["geometry/plate4.ply"]
+    # Shape "trianglemesh" "string filename" ["geometry/plate4.obj"]
 AttributeEnd
 
 AttributeBegin
     Material "matte" "color Kd" [0.4 0.4 0.4]
     Shape "plymesh" "string filename" ["geometry/floor.ply"]
+    # Shape "trianglemesh" "string filename" ["geometry/floor.obj"]
 AttributeEnd
 WorldEnd
