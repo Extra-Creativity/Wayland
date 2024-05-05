@@ -49,10 +49,22 @@ extern "C" __global__ void __miss__radiance()
 extern "C" __global__ void __closesthit__radiance()
 {
     auto *result = GetPRD<glm::vec3>();
-    HitData *sbt = reinterpret_cast<HitData *>(optixGetSbtDataPointer());
-    glm::ivec3 primIdx = sbt->indices[optixGetPrimitiveIndex()];
-    glm::vec3 N = BarycentricByIndices(sbt->normals, primIdx,
-                                             optixGetTriangleBarycentrics());
+    HitData *mat = reinterpret_cast<HitData *>(optixGetSbtDataPointer());
+    glm::ivec3 primIdx = mat->indices[optixGetPrimitiveIndex()];
+    glm::vec3 N;
+    if (mat->hasNormal)
+        N = BarycentricByIndices(mat->normals, primIdx,
+                                 optixGetTriangleBarycentrics());
+    else
+    {
+        N = glm::normalize(glm::cross(mat->vertices[primIdx[1]] - mat->vertices[primIdx[0]],
+                       mat->vertices[primIdx[2]] - mat->vertices[primIdx[0]]));
+        /*N = glm::dot(
+                N, UniUtils::ToVec3<glm::vec3>(optixGetWorldRayDirection())) < 0
+                ? N
+                : -N;*/
+    }
+
     *result = NormalToColor(N);
 }
 

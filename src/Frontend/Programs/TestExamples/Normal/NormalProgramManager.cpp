@@ -60,6 +60,9 @@ Optix::ShaderBindingTable NormalProgramManager::GenerateSBT(
             hitData[i].data.Kd = { 0.8, 0.8, 0.8 };
         }
         hitData[i].data.meshID = i;
+        hitData[i].data.hasNormal = s.meshes[i]->hasNormal;
+        hitData[i].data.vertices = 
+            renderer->device.d_VertexBuffer + s.vertexOffset[i];
         hitData[i].data.normals =
             renderer->device.d_NormalBuffer + s.vertexOffset[i];
         hitData[i].data.indices =

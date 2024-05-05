@@ -23,7 +23,7 @@ enum STRATEGY
     STRATEGY_MAX
 };
 
-__constant__ STRATEGY strategy = MIS;
+__constant__ STRATEGY strategy = UPT;
 
 static __forceinline__ __device__ float UptMisWeight(float uptPdf, float neePdf)
 {
@@ -127,8 +127,6 @@ extern "C" __global__ void __raygen__RenderFrame()
         thisFrame.z += prd.radiance.z / pixelSampleCount;
     }
 
-
-
     int frameID = param.frameID;
     if (frameID == 0)
         param.radianceBuffer[idx] = thisFrame;
@@ -170,8 +168,20 @@ extern "C" __global__ void __closesthit__radiance()
 
     uint32_t primIdx = optixGetPrimitiveIndex();
     glm::ivec3 indices = mat->indices[optixGetPrimitiveIndex()];
-    glm::vec3 N = BarycentricByIndices(mat->normals, indices,
-                                       optixGetTriangleBarycentrics());
+    glm::vec3 N;
+    //if (mat->hasNormal)
+    //{
+        N = BarycentricByIndices(mat->normals, indices,
+                                 optixGetTriangleBarycentrics());
+    //}
+    //else
+    //{
+    //    glm::vec3 v0 = mat->vertices[indices.x];
+    //    glm::vec3 v1 = mat->vertices[indices.y];
+    //    glm::vec3 v2 = mat->vertices[indices.z];
+    //    N = glm::cross(v1 - v0, v2 - v0);
+    //}
+
     N = glm::normalize(N);
 
     glm::vec3 hitPos = GetHitPosition();

@@ -34,6 +34,7 @@ SceneManager::SceneManager(string_view sceneSrc_)
     {
         spdlog::info("Successfully load {}", sceneSrc);
         miniScene = loader.take_scene();
+        miniScene->load_all_ply_meshes();
         /* Transform minipbrt scene to ours */
         TransformScene(miniScene);
         delete miniScene;
@@ -168,8 +169,10 @@ void SceneManager::TransformMesh(minipbrt::Scene *miniScene)
     for (int i = 0; i < miniScene->shapes.size(); ++i)
     {
         auto miniShape = miniScene->shapes[i];
-        if (miniShape->type() == minipbrt::ShapeType::TriangleMesh)
+
+        switch (miniShape->type())
         {
+        case minipbrt::ShapeType::TriangleMesh: {
             auto miniMesh = dynamic_cast<minipbrt::TriangleMesh *>(miniShape);
             meshes.push_back(make_unique<TriangleMesh>(miniMesh));
             vertexOffset.push_back(vertexNum);
@@ -178,15 +181,31 @@ void SceneManager::TransformMesh(minipbrt::Scene *miniScene)
             vertexNum += miniMesh->num_vertices;
             if (miniMesh->areaLight < minipbrt::kInvalidIndex)
                 areaLightVertexNum += miniMesh->num_vertices;
+            break;
         }
-        else
-        {
+        //case minipbrt::ShapeType::PLYMesh: {
+
+        //    auto miniMesh = dynamic_cast<minipbrt::PLYMesh *>(miniShape);
+        //    auto triangleMesh = miniMesh->triangle_mesh();
+        //    /* Same as TriangleMesh */
+        //    meshes.push_back(make_unique<TriangleMesh>(triangleMesh));
+        //    vertexOffset.push_back(vertexNum);
+        //    triangleOffset.push_back(triangleNum);
+        //    triangleNum += triangleMesh->num_indices / 3;
+        //    vertexNum += triangleMesh->num_vertices;
+        //    if (triangleMesh->areaLight < minipbrt::kInvalidIndex)
+        //        areaLightVertexNum += triangleMesh->num_vertices;
+        //    delete triangleMesh;
+        //    break;
+        //}
+        default: {
             assert(int(miniShape->type()) <
                    int(PBRTv3::ShapeType::ShapeTypeMax));
             spdlog::warn("Unsupported shape type: {}",
                          PBRTv3::ShapeTypeStr[(int)miniShape->type()]);
             /* Break currently, for safety */
             throw std::exception("");
+        }
         }
     }
     spdlog::info("Successfully transform meshes");

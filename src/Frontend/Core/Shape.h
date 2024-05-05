@@ -24,6 +24,8 @@ public:
     std::vector<glm::ivec3> triangle;
     uint32_t material;
     uint32_t areaLight;
+    bool hasNormal;
+    bool hasUV;
 };
 
 using TriangleMeshPtr = std::unique_ptr<TriangleMesh>;

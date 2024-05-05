@@ -21,10 +21,6 @@ public:
 private:
     Renderer *renderer;
     Programs::Normal::LaunchParams param;
-
-    /* Device Pointers */
-    glm::vec3* normalBuffer;
-    glm::ivec3* indexBuffer;
 };
 
 } // namespace EasyRender

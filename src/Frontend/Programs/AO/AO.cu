@@ -107,12 +107,24 @@ extern "C" __global__ void __closesthit__radiance()
     HitData *mat = reinterpret_cast<HitData *>(optixGetSbtDataPointer());
     glm::ivec3 indices = mat->indices[optixGetPrimitiveIndex()];
     glm::vec3 hitPos = GetHitPosition();
-    glm::vec3 N = BarycentricByIndices(mat->normals, indices,
-                                       optixGetTriangleBarycentrics());
+
+    glm::vec3 N;
+    if (mat->hasNormal)
+    {
+        N = BarycentricByIndices(mat->normals, indices,
+                                           optixGetTriangleBarycentrics());
+    }
+    else
+    {
+        glm::vec3 v0 = mat->vertices[indices.x];
+		glm::vec3 v1 = mat->vertices[indices.y];
+		glm::vec3 v2 = mat->vertices[indices.z];
+		N = glm::cross(v1 - v0, v2 - v0);
+	}
     N = glm::normalize(N);
     if (glm::dot(N, prd->rayDir) > 0)
         N = -N;
-    
+
     prd->N = N;
     prd->hitPos = hitPos;
 }

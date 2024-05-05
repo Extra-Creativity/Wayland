@@ -47,6 +47,9 @@ public:
     /* Device mesh index buffer, pass to program via SBT */
     glm::ivec3 *d_IndexBuffer;
     uint32_t indexBufferSize;
+    /* Device mesh vertex buffer, pass to program via SBT */
+    glm::vec3 *d_VertexBuffer;
+    uint32_t vertexBufferSize;
     /* Device mesh normal buffer, pass to program via SBT */
     glm::vec3 *d_NormalBuffer;
     uint32_t normalBufferSize;

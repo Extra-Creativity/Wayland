@@ -25,7 +25,9 @@ struct HitData
     unsigned int meshID; 
     glm::vec3 Kd;
     glm::ivec3 *indices;
+    glm::vec3 *vertices;
     glm::vec3 *normals;
+    bool hasNormal;
 };
 
 } // namespace EasyRender

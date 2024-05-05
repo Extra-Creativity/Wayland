@@ -8,8 +8,9 @@ namespace EasyRender::Device
 /* TBD: Importance sampling */
 struct DeviceAreaLight
 {
+    bool twoSided;
+    bool hasNormal;
     uint32_t triangleNum;
-    uint32_t twoSided;
     glm::vec3 L;
     glm::vec3 *vertices;
     glm::vec3 *normals;

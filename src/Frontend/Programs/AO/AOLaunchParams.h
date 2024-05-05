@@ -46,11 +46,13 @@ struct MissData
 struct HitData
 {
     bool hasTexture;
+    bool hasNormal;
     cudaTextureObject_t texture;
     uint32_t meshID;
     uint32_t areaLightID;
     uint32_t materialID;
     glm::ivec3 *indices;
+    glm::vec3 *vertices;
     glm::vec3 *normals;
     glm::vec2 *texcoords;
 };

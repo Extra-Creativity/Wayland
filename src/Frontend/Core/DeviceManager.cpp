@@ -81,18 +81,21 @@ void DeviceManager::AllocDeviceBuffer(SceneManager &scene, glm::ivec2 wSize)
     cudaMalloc(&d_FrameBuffer, frameBufferSize);
     spdlog::info("Malloc {} bytes at device -> frameBuffer", frameBufferSize);
 
-    assert(scene.triangleNum % 3 == 0);
     indexBufferSize = (uint32_t)scene.triangleNum * sizeof(glm::ivec3);
     cudaMalloc(&d_IndexBuffer, indexBufferSize);
     spdlog::info("Malloc {} bytes at device -> indexBuffer", indexBufferSize);
 
+    vertexBufferSize = (uint32_t)scene.vertexNum * sizeof(glm::vec3);
+    cudaMalloc(&d_VertexBuffer, vertexBufferSize);
+    spdlog::info("Malloc {} bytes at device -> vertexBuffer", indexBufferSize);
+
     normalBufferSize = (uint32_t)scene.vertexNum * sizeof(glm::vec3);
     cudaMalloc(&d_NormalBuffer, normalBufferSize);
-    spdlog::info("Malloc {} bytes at device -> vertexBuffer", normalBufferSize);
+    spdlog::info("Malloc {} bytes at device -> normalBuffer", normalBufferSize);
 
     texcoordBufferSize = (uint32_t)scene.vertexNum * sizeof(glm::vec2);
     cudaMalloc(&d_TexcoordBuffer, texcoordBufferSize);
-    spdlog::info("Malloc {} bytes at device -> vertexBuffer", normalBufferSize);
+    spdlog::info("Malloc {} bytes at device -> texcoordBufferSize", texcoordBufferSize);
 
     /* We only have areaLight, for now */
     areaLightBufferSize =
@@ -107,23 +110,27 @@ void DeviceManager::AllocDeviceBuffer(SceneManager &scene, glm::ivec2 wSize)
 
 void DeviceManager::UploadDeviceBuffer(SceneManager &scene)
 {
-
-    /* Upload normal, index, texcoord */
+    /* Upload vertex, normal, index, texcoord */
+    std::vector<glm::vec3> vertexAggregate;
     std::vector<glm::vec3> normalAggregate;
     std::vector<glm::ivec3> indexAggregate;
     std::vector<glm::vec2> texcoordAggregate;
 
-    uint32_t nSize = scene.vertexNum, iSize = scene.triangleNum;
+    uint32_t vSize = scene.vertexNum, iSize = scene.triangleNum;
 
-    normalAggregate.resize(nSize);
+    vertexAggregate.resize(vSize);
+    normalAggregate.resize(vSize);
     indexAggregate.resize(iSize);
-    texcoordAggregate.resize(nSize);
+    texcoordAggregate.resize(vSize);
     for (int i = 0; i < scene.meshes.size(); ++i)
     {
         auto *mesh = scene.meshes[i].get();
+        int v_s = mesh->vertex.size();
         int n_s = mesh->normal.size();
         int i_s = mesh->triangle.size();
         int t_s = mesh->uv.size();
+        memcpy(vertexAggregate.data() + scene.vertexOffset[i],
+               mesh->vertex.data(), mesh->vertex.size() * sizeof(glm::vec3));
         memcpy(normalAggregate.data() + scene.vertexOffset[i],
                mesh->normal.data(), mesh->normal.size() * sizeof(glm::vec3));
         memcpy(indexAggregate.data() + scene.triangleOffset[i],
@@ -133,12 +140,14 @@ void DeviceManager::UploadDeviceBuffer(SceneManager &scene)
                mesh->uv.data(), mesh->uv.size() * sizeof(glm::vec2));
     }
 
+    cudaMemcpy(d_VertexBuffer, vertexAggregate.data(),
+               vSize * sizeof(glm::vec3), cudaMemcpyHostToDevice);
     cudaMemcpy(d_NormalBuffer, normalAggregate.data(),
-               nSize * sizeof(glm::vec3), cudaMemcpyHostToDevice);
+               vSize * sizeof(glm::vec3), cudaMemcpyHostToDevice);
     cudaMemcpy(d_IndexBuffer, indexAggregate.data(), iSize * sizeof(glm::ivec3),
                cudaMemcpyHostToDevice);
     cudaMemcpy(d_TexcoordBuffer, texcoordAggregate.data(),
-               nSize * sizeof(glm::vec2), cudaMemcpyHostToDevice);
+               vSize * sizeof(glm::vec2), cudaMemcpyHostToDevice);
 
     /* Upload areaLight */
     auto &lights = scene.lights;
@@ -156,6 +165,7 @@ void DeviceManager::UploadDeviceBuffer(SceneManager &scene)
         /* AreaLight must have a corresponding mesh */
         assert(meshIdx < INVALID_INDEX);
         lightBuf[i].normals = d_NormalBuffer + scene.vertexOffset[meshIdx];
+        lightBuf[i].hasNormal = scene.meshes[meshIdx]->hasNormal;
         lightBuf[i].indices = d_IndexBuffer + scene.triangleOffset[meshIdx];
         lightBuf[i].vertices = d_AreaLightVertexBuffer + v_offset;
         lightBuf[i].triangleNum = static_cast<uint32_t>(scene.meshes[meshIdx]->triangle.size());

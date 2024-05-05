@@ -114,6 +114,9 @@ Optix::ShaderBindingTable PathTracingProgramManager::GenerateSBT(
             hitDatas[idx].data.areaLightID = scene.meshes[meshID]->areaLight;
             hitDatas[idx].data.materialID = scene.meshes[meshID]->material;
             hitDatas[idx].data.meshID = meshID;
+            hitDatas[idx].data.hasNormal = scene.meshes[meshID]->hasNormal;
+            hitDatas[idx].data.vertices =
+                renderer->device.d_VertexBuffer + scene.vertexOffset[meshID];
             hitDatas[idx].data.normals =
                 device.d_NormalBuffer + scene.vertexOffset[meshID];
             hitDatas[idx].data.texcoords =
