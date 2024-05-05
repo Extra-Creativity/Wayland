@@ -28,7 +28,6 @@ __constant__ STRATEGY strategy = UPT;
 static __forceinline__ __device__ float UptMisWeight(float uptPdf, float neePdf)
 {
     assert(uptPdf + neePdf > 0);
-    //printf("%f\n", uptPdf / (uptPdf + neePdf));
     return uptPdf / (uptPdf + neePdf);
 }
 
@@ -169,18 +168,18 @@ extern "C" __global__ void __closesthit__radiance()
     uint32_t primIdx = optixGetPrimitiveIndex();
     glm::ivec3 indices = mat->indices[optixGetPrimitiveIndex()];
     glm::vec3 N;
-    //if (mat->hasNormal)
-    //{
+    if (mat->hasNormal)
+    {
         N = BarycentricByIndices(mat->normals, indices,
                                  optixGetTriangleBarycentrics());
-    //}
-    //else
-    //{
-    //    glm::vec3 v0 = mat->vertices[indices.x];
-    //    glm::vec3 v1 = mat->vertices[indices.y];
-    //    glm::vec3 v2 = mat->vertices[indices.z];
-    //    N = glm::cross(v1 - v0, v2 - v0);
-    //}
+    }
+    else
+    {
+        glm::vec3 v0 = mat->vertices[indices.x];
+        glm::vec3 v1 = mat->vertices[indices.y];
+        glm::vec3 v2 = mat->vertices[indices.z];
+        N = glm::cross(v1 - v0, v2 - v0);
+    }
 
     N = glm::normalize(N);
 
@@ -207,9 +206,11 @@ extern "C" __global__ void __closesthit__radiance()
             }
 
             float uptPdf = RECIP_2PI;
+            //prd->radiance += prd->throughput * lt.L *
+            //                 fabs(glm::dot(prd->lastNormal, prd->rayDir)) *
+            //                 UptMisWeight(uptPdf, neePdf);
             prd->radiance += prd->throughput * lt.L *
-                             fabs(glm::dot(prd->lastNormal, prd->rayDir)) *
-                             UptMisWeight(uptPdf, neePdf);
+                             prd->lastTraceTerm * UptMisWeight(uptPdf, neePdf);
         }
         prd->done = true;
         return;
