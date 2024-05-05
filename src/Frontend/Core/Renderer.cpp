@@ -59,6 +59,9 @@ void Renderer::SetProgram(ProgramType pgType)
     case ProgramType::PathTracing:
         program = make_unique<PathTracingProgramManager>(this);
         break;
+    case ProgramType::RandomWalk:
+        program = make_unique<RandomWalkProgramManager>(this);
+        break;
     default:
         assert(0);
     }

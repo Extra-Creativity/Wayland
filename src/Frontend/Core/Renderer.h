@@ -22,6 +22,7 @@ enum class ProgramType
     Texture,
     WireFrame,
     PathTracing,
+    RandomWalk,
     ProgramTypeMax
 };
 
@@ -36,6 +37,7 @@ const std::string PROGRAM_SRC[] = {
     R"(..\..\..\src\Frontend\Programs\TestExamples\Texture\Texture.cu)",
     R"(..\..\..\src\Frontend\Programs\TestExamples\WireFrame\WireFrame.cu)",
     R"(..\..\..\src\Frontend\Programs\PathTracing\PathTracing.cu)",
+    R"(..\..\..\src\Frontend\Programs\RandomWalk\RandomWalk.cu)",
     R"(PROGRAM OUT OF INDEX)",
 };
 

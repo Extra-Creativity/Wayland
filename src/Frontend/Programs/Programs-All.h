@@ -1,6 +1,7 @@
 #pragma once
 #include "AO/AOProgramManager.h"
 #include "PathTracing/PathTracingProgramManager.h"
+#include "RandomWalk/RandomWalkProgramManager.h"
 #include "TestExamples/Color/ColorProgramManager.h"
 #include "TestExamples/Depth/DepthProgramManager.h"
 #include "TestExamples/Mesh/MeshProgramManager.h"
