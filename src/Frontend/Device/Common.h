@@ -60,4 +60,35 @@ __host__ __device__ __forceinline__ float GetTriangleArea(glm::vec3* V, glm::ive
 	return 0.5f * glm::length(glm::cross(b - a, c - a));
 }
 
+__host__ __device__ __forceinline__ glm::vec3 GetGeometryNormal(glm::vec3 *V,
+                                                          glm::ivec3 I)
+{
+    glm::vec3 a = V[I.x], b = V[I.y], c = V[I.z];
+    return glm::normalize(glm::cross(b - a, c - a));
+}
+
+
+__host__ __device__ __forceinline__ float clamp(float a, float lo, float hi)
+{
+    return a < lo ? lo : (a > hi ? hi : a);
+}
+
+__host__ __device__ __forceinline__ float lerp(float a, float b, float w)
+{
+    return a * (1 - w) + b * w;
+}
+
+__host__ __device__ __forceinline__ glm::vec3 clamp(glm::vec3 v, float lo,
+                                                   float hi)
+{
+    return glm::vec3{ clamp(v.x, lo, hi), clamp(v.y, lo, hi),
+                      clamp(v.z, lo, hi) };
+}
+
+__host__ __device__ __forceinline__ glm::vec3 lerp(glm::vec3 a, glm::vec3 b,
+                                                  float w)
+{
+    return glm::vec3{ lerp(a.x, b.x, w), lerp(a.y, b.y, w), lerp(a.z, b.z, w) };
+}
+
 } // namespace EasyRender

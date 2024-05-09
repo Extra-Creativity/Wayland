@@ -6,6 +6,8 @@
 #include "Device/Pdf.h"
 #include "Device/Sample.h"
 #include "Device/Scene.h"
+#include "Device/Material.h" 
+#include "Device/Evaluate.h"
 
 #include "PathTracingLaunchParams.h"
 
@@ -23,7 +25,7 @@ enum STRATEGY
     STRATEGY_MAX
 };
 
-__constant__ STRATEGY strategy = UPT;
+__constant__ STRATEGY strategy = MIS;
 
 static __forceinline__ __device__ float UptMisWeight(float uptPdf, float neePdf)
 {
@@ -45,7 +47,7 @@ extern "C" __global__ void __raygen__RenderFrame()
 
     glm::dvec4 thisFrame = { 0.f, 0.f, 0.f, 1.f };
 
-    int pixelSampleCount = 4;
+    int pixelSampleCount = 16;
     for (int i = 0; i < pixelSampleCount; ++i)
     {
 
@@ -167,21 +169,20 @@ extern "C" __global__ void __closesthit__radiance()
 
     uint32_t primIdx = optixGetPrimitiveIndex();
     glm::ivec3 indices = mat->indices[optixGetPrimitiveIndex()];
-    glm::vec3 N;
+    glm::vec3 Ns;
+    glm::vec3 Ng;
+
+    Ng = GetGeometryNormal(mat->vertices, indices);
+
     if (mat->hasNormal)
     {
-        N = BarycentricByIndices(mat->normals, indices,
-                                 optixGetTriangleBarycentrics());
+        Ns = glm::normalize(BarycentricByIndices(
+            mat->normals, indices, optixGetTriangleBarycentrics()));
     }
     else
     {
-        glm::vec3 v0 = mat->vertices[indices.x];
-        glm::vec3 v1 = mat->vertices[indices.y];
-        glm::vec3 v2 = mat->vertices[indices.z];
-        N = glm::cross(v1 - v0, v2 - v0);
+        Ns = Ng;
     }
-
-    N = glm::normalize(N);
 
     glm::vec3 hitPos = GetHitPosition();
 
@@ -189,8 +190,8 @@ extern "C" __global__ void __closesthit__radiance()
     if (mat->areaLightID < INVALID_INDEX)
     {
         auto &lt = param.areaLights[mat->areaLightID];
-        if ((prd->depth == 1 || (strategy != NEE)) &&
-            (lt.twoSided || glm::dot(N, prd->rayDir) < 0))
+        if ((prd->depth == 1) || (strategy != NEE &&
+            (lt.twoSided || glm::dot(Ns, prd->rayDir) < 0)))
         {
             /* Directly hit light, NEE does not participate*/
             float neePdf = 0.f;
@@ -202,13 +203,10 @@ extern "C" __global__ void __closesthit__radiance()
                 PdfAreaLightPos(param.areaLightCount, param.areaLights, primIdx,
                                 ls);
                 float dist = optixGetRayTmax();
-                neePdf = ls.pdf * dist * dist / fabs(-glm::dot(N, prd->rayDir));
+                neePdf = ls.pdf * dist * dist / fabsf(-glm::dot(Ns, prd->rayDir));
             }
 
             float uptPdf = RECIP_2PI;
-            //prd->radiance += prd->throughput * lt.L *
-            //                 fabs(glm::dot(prd->lastNormal, prd->rayDir)) *
-            //                 UptMisWeight(uptPdf, neePdf);
             prd->radiance += prd->throughput * lt.L *
                              prd->lastTraceTerm * UptMisWeight(uptPdf, neePdf);
         }
@@ -221,34 +219,39 @@ extern "C" __global__ void __closesthit__radiance()
         prd->done = true;
         return;
     }
-    if (glm::dot(N, prd->rayDir) > 0)
-        N = -N;
+
+    if (mat->disneyMat.trans < 0.1)
+    {
+        if (glm::dot(Ng, prd->rayDir) > 0)
+            Ng = -Ng;
+        if (glm::dot(Ns, prd->rayDir) > 0)
+            Ns = -Ns;
+    }
 
     float pdf;
-    glm::vec3 rayDir = SampleCosineHemisphere(N, pdf, prd->seed);
+    glm::vec3 rayDir = SampleCosineHemisphere(Ns, pdf, prd->seed);
 
-    auto cosWeight = fmaxf(0.f, glm::dot(rayDir, N));
+    auto cosWeight = fmaxf(0.f, glm::dot(rayDir, Ns));
 
-    glm::vec3 albedo;
+    glm::vec3 texColor = {1.f, 1.f, 1.f};
     if (mat->hasTexture)
     {
         glm::vec2 tc = BarycentricByIndices(mat->texcoords, indices,
                                             optixGetTriangleBarycentrics());
-        glm::vec4 texColor = UniUtils::ToVec4<glm::vec4>(
+        texColor = UniUtils::ToVec4<glm::vec4>(
             tex2D<float4>(mat->texture, tc.x, tc.y));
-        albedo = texColor;
-	}
-    else
-    {
-		albedo = mat->Kd;
 	}
 
-    prd->throughput *= albedo / PI; // albedo = kd / pi
+    auto albedo = texColor * mat->disneyMat.color;
+
+    //prd->throughput *= albedo / PI; // albedo = kd / pi
+    prd->throughput *=
+        EvalDisneyBSDF(mat->disneyMat, Ns, Ng, -prd->rayDir, rayDir, texColor); 
     prd->throughput *= prd->lastTraceTerm;
     prd->lastTraceTerm = cosWeight / pdf;
     prd->rayPos = hitPos;
     prd->rayDir = rayDir;
-    prd->lastNormal = N;
+    prd->lastNormal = Ns;
 
     return;
 }

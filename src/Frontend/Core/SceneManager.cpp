@@ -71,13 +71,14 @@ void SceneManager::TransformCamera(minipbrt::Scene *miniScene)
 
     switch (miniScene->camera->type())
     {
+
     case minipbrt::CameraType::Perspective: {
         /* pinhole */
         auto miniCamera =
             dynamic_cast<minipbrt::PerspectiveCamera *>(miniScene->camera);
         mCamera = new PinholeCamera(miniCamera->fov, miniCamera->cameraToWorld);
+        break;
     }
-    break;
 
     default:
         /* We only handle pinhole(perspective), currently */
@@ -102,19 +103,34 @@ void SceneManager::TransformMaterial(minipbrt::Scene *miniScene)
     for (int i = 0; i < miniScene->materials.size(); ++i)
     {
         auto miniMat = miniScene->materials[i];
-        if (miniMat->type() == minipbrt::MaterialType::Matte)
+
+        switch (miniMat->type())
         {
+        case minipbrt::MaterialType::Matte: {
             auto miniMatte = dynamic_cast<minipbrt::MatteMaterial *>(miniMat);
-            materials.push_back(make_unique<Diffuse>(miniMatte));
+            materials.push_back(make_unique<Disney>(miniMatte));
+            break;
         }
-        else
-        {
+        case minipbrt::MaterialType::Plastic: {
+            auto miniPlastic =
+                dynamic_cast<minipbrt::PlasticMaterial *>(miniMat);
+            materials.push_back(make_unique<Disney>(miniPlastic));
+			break;
+		}
+        case minipbrt::MaterialType::Disney: {
+			auto miniDisney =
+			    dynamic_cast<minipbrt::DisneyMaterial *>(miniMat);
+			materials.push_back(make_unique<Disney>(miniDisney));
+            break;
+        }
+        default: {
             assert(int(miniMat->type()) <
                    int(PBRTv3::MaterialType::MaterialTypeMax));
             spdlog::warn("Unsupported shape type: {}",
                          PBRTv3::MaterialTypeStr[(int)miniMat->type()]);
             /* Break for safety */
             throw std::exception("");
+        }
         }
     }
     spdlog::info("Successfully transform materials");

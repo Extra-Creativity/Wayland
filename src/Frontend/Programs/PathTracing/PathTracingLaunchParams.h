@@ -1,6 +1,7 @@
 #pragma once
 #include "Device/Camera.h"
 #include "Device/Light.h"
+#include "Device/Material.h"
 #include "glm/glm.hpp"
 #include "optix.h"
 
@@ -60,7 +61,7 @@ struct HitData
     uint32_t meshID;
     uint32_t areaLightID;
     uint32_t materialID;
-    glm::vec3 Kd;
+    Device::DisneyMaterial disneyMat;
     glm::ivec3 *indices;
     glm::vec3 *vertices;
     glm::vec3 *normals;

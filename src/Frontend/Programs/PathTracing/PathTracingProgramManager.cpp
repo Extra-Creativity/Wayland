@@ -91,10 +91,10 @@ Optix::ShaderBindingTable PathTracingProgramManager::GenerateSBT(
 
             uint32_t matIdx = scene.meshes[meshID]->material;
             if (matIdx < INVALID_INDEX &&
-                scene.materials[matIdx]->type() == MaterialType::Diffuse)
+                scene.materials[matIdx]->type() == MaterialType::Disney)
             {
-                auto m = static_cast<Diffuse *>(scene.materials[matIdx].get());
-                hitDatas[idx].data.Kd = m->Kd;
+                auto m = static_cast<Disney *>(scene.materials[matIdx].get());
+                m->ToDevice(hitDatas[idx].data.disneyMat);
                 if (m->HasTexture())
                 {
                     hitDatas[idx].data.hasTexture = true;
@@ -105,10 +105,6 @@ Optix::ShaderBindingTable PathTracingProgramManager::GenerateSBT(
                 {
                     hitDatas[idx].data.hasTexture = false;
                 }
-            }
-            else
-            {
-                hitDatas[idx].data.Kd = { 0.0, 0.0, 0.0 };
             }
 
             hitDatas[idx].data.areaLightID = scene.meshes[meshID]->areaLight;
