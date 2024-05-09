@@ -48,6 +48,7 @@ public:
     Disney(minipbrt::DisneyMaterial *);
     Disney(minipbrt::MatteMaterial *);
     Disney(minipbrt::PlasticMaterial *);
+    Disney(minipbrt::GlassMaterial *);
     ~Disney() = default;
     MaterialType type() { return MaterialType::Disney; }
     bool HasTexture();

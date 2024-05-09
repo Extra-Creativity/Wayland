@@ -86,6 +86,13 @@ __host__ __device__ __forceinline__ glm::vec3 clamp(glm::vec3 v, float lo,
                       clamp(v.z, lo, hi) };
 }
 
+__host__ __device__ __forceinline__ glm::dvec4 clamp(glm::dvec4 v, float lo,
+                                                    float hi)
+{
+    return glm::dvec4{ clamp(v.x, lo, hi), clamp(v.y, lo, hi),
+                       clamp(v.z, lo, hi), clamp(v.w, lo, hi) };
+}
+
 __host__ __device__ __forceinline__ glm::vec3 lerp(glm::vec3 a, glm::vec3 b,
                                                   float w)
 {

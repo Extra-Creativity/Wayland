@@ -86,6 +86,26 @@ Disney::Disney(minipbrt::PlasticMaterial *miniPlastic)
     clearcoatgloss = 1.0f;
 }
 
+Disney::Disney(minipbrt::GlassMaterial *miniGlass)
+{
+    glm::vec3 Kr = glm::make_vec3(miniGlass->Kr.value);
+    glm::vec3 Kt = glm::make_vec3(miniGlass->Kt.value);
+    color = (Kr + Kt) / 2.f;
+    textureId = miniGlass->Kt.texture;
+    metallic = 0.0f;
+    roughness = 0.01f;
+    sheenTint = 0.5f;
+    specular = 0.5f;
+    specularTint = 0.0f;
+    eta = miniGlass->eta.value;
+    trans = 1.f;
+    subsurface = 0.0f;
+    anisotropic = 0.0f;
+    sheen = 0.0f;
+    clearcoat = 0.0f;
+    clearcoatgloss = 1.0f;
+}
+
 bool Disney::HasTexture()
 {
     return textureId < INVALID_INDEX;

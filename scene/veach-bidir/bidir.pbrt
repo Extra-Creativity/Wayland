@@ -2,12 +2,12 @@ Integrator "bdpt" "integer maxdepth" [5]
 #"bool visualizestrategies" ["true"]
 #"bool visualizeweights" ["true"]
 
-Sampler "sobol" "integer pixelsamples" [256]
+Sampler "sobol" "integer pixelsamples" [16]
 
 PixelFilter "box"
 
 Film "image" "integer xresolution" [768] "integer yresolution" [576]
-  "string filename" "bidir.exr"
+  "string filename" "bidir.png"
 
 Scale -1 1 1
 LookAt -0.223944 -6.64245 0.366128 -0.261616 -5.64477 0.309317 0.0 0.0 1.0
@@ -60,6 +60,7 @@ AttributeEnd
 
 AttributeBegin
     AreaLightSource "diffuse" "color L" [6999.999881 5450.000167 3630.000055]
+    # AreaLightSource "diffuse" "color L" [5450.999881 5450.000167 5450.000055]
     NamedMaterial "Luminaire2Material"
     Shape "plymesh" "string filename" ["geometry/bidir_6.ply"]
 AttributeEnd

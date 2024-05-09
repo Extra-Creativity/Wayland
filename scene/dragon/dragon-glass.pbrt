@@ -1,0 +1,193 @@
+Integrator "path"
+    "integer maxdepth" [ 17 ]
+Transform [ 0.678116 -0.167853 -0.715531 -0 -0 0.973571 -0.228385 -0 -0.734955 -0.154871 -0.660194 -0 -0.554465 -6.29907 82.2988 1  ]
+Sampler "sobol"
+    "integer pixelsamples" [ 64 ]
+# PixelFilter "triangle"
+#     "float xradius" [ 1 ]
+#     "float yradius" [ 1 ]
+Film "image"
+    "string filename" [ "dragon.png" ]
+    "integer yresolution" [ 720 ]
+    "integer xresolution" [ 1280 ]
+Camera "perspective"
+    "float fov" [ 20.114292 ]
+
+
+WorldBegin
+
+MakeNamedMaterial "GroundInner"
+    "string type" [ "matte" ]
+    "rgb Kd" [ 0.456263 0.456263 0.456263 ]
+MakeNamedMaterial "GroundOuter"
+    "string type" [ "matte" ]
+    "rgb Kd" [ 0.456263 0.456263 0.456263 ]
+MakeNamedMaterial "Wall"
+    "string type" [ "matte" ]
+    "rgb Kd" [ 0.7 0.7 0.7 ]
+MakeNamedMaterial "Cloth"
+    "string type" [ "matte" ]
+    "rgb Kd" [ 0.456263 0.456263 0.456263 ]
+MakeNamedMaterial "Dragon"
+    # "string type" [ "matte" ]
+    # "rgb Kd" [ 0.79311 0.79311 0.79311 ]
+    "string type" ["disney"]
+    "rgb color" [ 0.98 0.95 0.94 ]
+    "float spectrans" [1.0]
+    "float eta" [1.15]
+    "float roughness" [0.01]
+
+
+NamedMaterial "Wall"
+Shape "trianglemesh"
+    "point3 P" [  100  100 -20 
+                  100 -100 -20  
+                 -100 -100 -20 
+                 -100  100 -20 ]
+    "integer indices" [ 0 1 2 0 2 3 ]
+
+# NamedMaterial "Wall"
+# Shape "trianglemesh"
+#     "point3 P" [  100  100 100 
+#                   100 -100 100  
+#                  -100 -100 100 
+#                  -100  100 100 ]
+#     "integer indices" [ 0 1 2 0 2 3 ]
+
+NamedMaterial "Wall"
+Shape "trianglemesh"
+    "point3 P" [  100 -1.5  100
+                  100 -1.5 -100 
+                 -100 -1.5 -100
+                 -100 -1.5  100]
+    "integer indices" [ 0 1 2 0 2 3 ]
+
+# NamedMaterial "Wall"
+# Shape "trianglemesh"
+#     "point3 P" [  100 100  100
+#                   100 100 -100 
+#                  -100 100 -100
+#                  -100 100  100]
+#     "integer indices" [ 0 1 2 0 2 3 ]
+
+NamedMaterial "Wall"
+Shape "trianglemesh"
+    "point3 P" [ -20  100  100
+                 -20  100 -100 
+                 -20 -100 -100
+                 -20 -100  100]
+    "integer indices" [ 0 1 2 0 2 3 ]
+
+MakeNamedMaterial "Blade"
+    "string type" [ "matte" ]
+    "rgb Kd" [ 0.79311 0.79311 0.79311 ]
+MakeNamedMaterial "Sword"
+    "string type" [ "matte" ]
+    "rgb Kd" [ 0.79311 0.79311 0.79311 ]
+MakeNamedMaterial "Deco"
+    "string type" [ "matte" ]
+    "rgb Kd" [ 0.79311 0.79311 0.79311 ]
+MakeNamedMaterial "Diamond"
+    "string type" [ "matte" ]
+    "rgb Kd" [ 0.79311 0.79311 0.79311 ]
+MakeNamedMaterial "Deco2"
+    "string type" [ "matte" ]
+    "rgb Kd" [ 0.79311 0.79311 0.79311 ]
+NamedMaterial "GroundOuter"
+Shape "plymesh"
+    "string filename" [ "models/Mesh011.ply" ]
+NamedMaterial "Cloth"
+Shape "plymesh"
+    "string filename" [ "models/Mesh010.ply" ]
+NamedMaterial "GroundOuter"
+Shape "plymesh"
+    "string filename" [ "models/Mesh005.ply" ]
+Shape "plymesh"
+    "string filename" [ "models/Mesh006.ply" ]
+NamedMaterial "GroundInner"
+Shape "plymesh"
+    "string filename" [ "models/Mesh012.ply" ]
+NamedMaterial "GroundOuter"
+Shape "plymesh"
+    "string filename" [ "models/Mesh007.ply" ]
+NamedMaterial "Dragon"
+Shape "plymesh"
+    "string filename" [ "models/Mesh008.ply" ]
+Shape "plymesh"
+    "string filename" [ "models/Mesh013.ply" ]
+Shape "plymesh"
+    "string filename" [ "models/Mesh014.ply" ]
+Shape "plymesh"
+    "string filename" [ "models/Mesh015.ply" ]
+NamedMaterial "Blade"
+Shape "plymesh"
+    "string filename" [ "models/Mesh004.ply" ]
+NamedMaterial "Sword"
+Shape "plymesh"
+    "string filename" [ "models/Mesh009.ply" ]
+NamedMaterial "Deco"
+Shape "plymesh"
+    "string filename" [ "models/Mesh003.ply" ]
+NamedMaterial "Diamond"
+Shape "plymesh"
+    "string filename" [ "models/Mesh002.ply" ]
+NamedMaterial "Deco2"
+Shape "plymesh"
+    "string filename" [ "models/Mesh001.ply" ]
+Shape "plymesh"
+    "string filename" [ "models/Mesh000.ply" ]
+# LightSource "distant"
+#     "rgb L" [ 8 8 8 ]
+#     "point3 to" [ 0 0 0 ]
+#     "point3 from" [ -0.18862 0.692312 0.69651 ]
+
+
+AttributeBegin
+    AreaLightSource "diffuse"
+        "rgb L" [0.4 1 2]
+        "bool twosided" ["true"]
+    Material "matte" "color Kd" [0.0 0.0 0.0]
+    Translate 60.0 0.0 0.0
+    Shape "trianglemesh"
+        "point2 uv" [ 0 0 1 0 1 1 0 1 ]
+        # "normal N" [ 0 -1 0
+        #              0 -1 0
+        #              0 -1 0
+        #              0 -1 0 ]
+        "point3 P" [  0  100  100
+                      0 -100  100 
+                      0 -100 -100
+                      0  100 -100]
+        "integer indices" [ 0 1 2 0 2 3 ]
+AttributeEnd
+
+AttributeBegin
+    AreaLightSource "diffuse"
+        "rgb L" [3.0 1.5 0.7]
+        "bool twosided" ["true"]
+    Material "matte" "color Kd" [0.0 0.0 0.0]
+    Translate 0.0 0.0 60.0
+    Shape "trianglemesh"
+        "point2 uv" [ 0 0 1 0 1 1 0 1 ]
+        "point3 P" [  100  100 0 
+                      100 -100 0  
+                     -100 -100 0 
+                     -100  100 0 ]
+        "integer indices" [ 0 1 2 0 2 3 ]
+AttributeEnd
+
+AttributeBegin
+    AreaLightSource "diffuse"
+        "rgb L" [0.3 0.3 0.3]
+        "bool twosided" ["true"]
+    Material "matte" "color Kd" [0.0 0.0 0.0]
+    Translate 0.0 100.0 0.0
+    Shape "trianglemesh"
+        "point2 uv" [ 0 0 1 0 1 1 0 1 ]
+        "point3 P" [  100 0  100
+                      100 0 -100 
+                     -100 0 -100
+                     -100 0  100]
+        "integer indices" [ 0 1 2 0 2 3 ]
+AttributeEnd
+

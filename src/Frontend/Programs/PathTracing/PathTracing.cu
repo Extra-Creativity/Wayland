@@ -8,13 +8,14 @@
 #include "Device/Scene.h"
 #include "Device/Material.h" 
 #include "Device/Evaluate.h"
+#include "Device/Tonemap.h"
 
 #include "PathTracingLaunchParams.h"
 
 using namespace EasyRender;
 using namespace EasyRender::Device;
 using namespace EasyRender::Programs::PathTracing;
-
+ 
 __constant__ float EPSILON = 1e-3;
 
 enum STRATEGY
@@ -25,7 +26,7 @@ enum STRATEGY
     STRATEGY_MAX
 };
 
-__constant__ STRATEGY strategy = UPT;
+__constant__ STRATEGY strategy = MIS;
 
 static __forceinline__ __device__ float UptMisWeight(float uptPdf, float neePdf)
 {
@@ -47,7 +48,7 @@ extern "C" __global__ void __raygen__RenderFrame()
 
     glm::dvec4 thisFrame = { 0.f, 0.f, 0.f, 1.f };
 
-    int pixelSampleCount = 16;
+    int pixelSampleCount = 4;
     for (int i = 0; i < pixelSampleCount; ++i)
     {
 
@@ -56,6 +57,7 @@ extern "C" __global__ void __raygen__RenderFrame()
         prd.radiance = { 0, 0, 0 };
         prd.throughput = { 1.f, 1.f, 1.f };
         prd.lastTraceTerm = { 1.f, 1.f, 1.f };
+        prd.lastPdf = 1.0f;
         prd.rayPos = param.camera.pos;
         prd.rayDir = PinholeGenerateRay({ idx_x, idx_y }, param.fbSize,
                                         param.camera, prd.seed);
@@ -63,7 +65,7 @@ extern "C" __global__ void __raygen__RenderFrame()
         std::uint32_t u0, u1;
         PackPointer(&prd, u0, u1);
 
-        float RR_rate = 0.8;
+        float RR_rate = 0.9;
         while (true)
         {
 
@@ -112,17 +114,20 @@ extern "C" __global__ void __raygen__RenderFrame()
                             uptPdf = PdfDisneyBSDF(*prd.lastMat, prd.lastNs,
                                                    prd.lastNg,
                                                    -prd.lastRayDir, visRay);
+                            if (uptPdf < 0 || isnan(uptPdf))
+                                uptPdf = 0.f;
                         }
                         glm::vec3 BSDFVal = EvalDisneyBSDF(
                             *prd.lastMat, prd.lastNs, prd.lastNg,
                             -prd.lastRayDir, visRay, prd.lastTexcolor);
-                        prd.radiance += prd.throughput * BSDFVal * cosTheta2 *
+                        BSDFVal = clamp(BSDFVal, 0.f, 1e30f);
+                        prd.radiance += prd.throughput * BSDFVal * fabsf(cosTheta2) *
                                         lt.L / neePdf *
                                         (1 - UptMisWeight(uptPdf, neePdf));
                     }
                 }
             }
-            if (prd.depth > 5)
+            if (prd.depth > 10)
             {
                 if (rnd(prd.seed) > RR_rate)
                 {
@@ -149,6 +154,9 @@ extern "C" __global__ void __raygen__RenderFrame()
     }
     param.colorBuffer[idx] =
         glm::clamp(param.radianceBuffer[idx], 0.f, 1.f) * 255.0f;
+    //glm::vec3 rad = glm::clamp(param.radianceBuffer[idx], 0.f, 1e30f);
+    //param.colorBuffer[idx] = glm::vec4{ AceApprox(rad), 1.0f } * 255.0f;
+    //param.colorBuffer[idx] = glm::vec4{ Reinhard(rad), 1.0f } * 255.0f;
 }
 
 /* PG id - 1 */
@@ -213,7 +221,7 @@ extern "C" __global__ void __closesthit__radiance()
                                 ls);
                 float dist = optixGetRayTmax();
                 neePdf =
-                    ls.pdf * dist * dist / fabsf(-glm::dot(Ns, prd->rayDir));
+                    ls.pdf * dist * dist / fabsf(glm::dot(Ns, prd->rayDir));
             }
 
             float uptPdf = prd->lastPdf;
@@ -223,7 +231,8 @@ extern "C" __global__ void __closesthit__radiance()
         prd->done = true;
         return;
     }
-    if (prd->depth >= 25)
+
+    if (prd->depth >= 50)
     {
         prd->throughput = { 0, 0, 0 };
         prd->done = true;
@@ -242,9 +251,12 @@ extern "C" __global__ void __closesthit__radiance()
 
     glm::vec3 rayDir =
         SampleDisneyBSDF(mat->disneyMat, Ns, Ng, -prd->rayDir, prd->seed);
+    rayDir = glm::normalize(rayDir);
     pdf = PdfDisneyBSDF(mat->disneyMat, Ns, Ng, -prd->rayDir, rayDir);
-
-    auto cosWeight = fmaxf(0.f, glm::dot(rayDir, Ns));
+    if (pdf < 0.0f || isnan(pdf)) {
+        prd->done = true;
+        return;
+    }
 
     glm::vec3 texColor = { 1.f, 1.f, 1.f };
     if (mat->hasTexture)
@@ -256,9 +268,13 @@ extern "C" __global__ void __closesthit__radiance()
     }
     /* Compute last BSDF */
     prd->throughput *= prd->lastTraceTerm;
-    prd->lastTraceTerm =
-        EvalDisneyBSDF(mat->disneyMat, Ns, Ng, -prd->rayDir, rayDir, texColor) *
-        cosWeight / pdf;
+
+    float cosWeight = glm::dot(rayDir, Ns);
+    glm::vec3 BsdfTerm =
+        EvalDisneyBSDF(mat->disneyMat, Ns, Ng, -prd->rayDir, rayDir, texColor);
+    BsdfTerm = clamp(BsdfTerm, 0.f, 1e30f); 
+    prd->lastTraceTerm = BsdfTerm * fabsf(cosWeight) / pdf;
+
     prd->rayPos = hitPos;
     prd->lastRayDir = prd->rayDir;
     prd->lastTexcolor = texColor;

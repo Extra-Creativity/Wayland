@@ -116,7 +116,12 @@ void SceneManager::TransformMaterial(minipbrt::Scene *miniScene)
                 dynamic_cast<minipbrt::PlasticMaterial *>(miniMat);
             materials.push_back(make_unique<Disney>(miniPlastic));
 			break;
-		}
+        }
+        case minipbrt::MaterialType::Glass: {
+            auto miniGlass = dynamic_cast<minipbrt::GlassMaterial *>(miniMat);
+            materials.push_back(make_unique<Disney>(miniGlass));
+            break;
+        }
         case minipbrt::MaterialType::Disney: {
 			auto miniDisney =
 			    dynamic_cast<minipbrt::DisneyMaterial *>(miniMat);
