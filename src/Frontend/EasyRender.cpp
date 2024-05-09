@@ -11,7 +11,9 @@ const std::string sceneSrc =
     //R"(..\..\..\scene\cornell-box\cbox-texture.pbrt)";
     //R"(..\..\..\scene\dragon\dragon.pbrt)";
     //R"(..\..\..\scene\veach-mis\mis-lambert.pbrt)";
-    R"(..\..\..\scene\veach-mis\mis.pbrt)";
+    //R"(..\..\..\scene\veach-mis\mis.pbrt)";
+     R"(..\..\..\scene\veach-bidir\bidir.pbrt)";
+    //R"(..\..\..\scene\dragon\dragon.pbrt)";
 
 int main(int argc, char **argv)
 {

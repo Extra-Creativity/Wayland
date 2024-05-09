@@ -22,23 +22,43 @@ WorldBegin
 #     Shape "sphere" "float radius" [0.5]
 # AttributeEnd
 
-# AttributeBegin
-#     AreaLightSource "diffuse"
-#         "rgb L" [200.0 200.0 200.0]
-#     Material "matte" "color Kd" [0.0 0.0 0.0]
-#     Translate 10.0 10.0 4.0
-#     Shape "trianglemesh"
-#         "point2 uv" [ 0 0 1 0 1 1 0 1 ]
-#         # "normal N" [ -0.7071068 0 -0.7071068
-#         #              -0.7071068 0 -0.7071068
-#         #              -0.7071068 0 -0.7071068
-#         #              -0.7071068 0 -0.7071068 ]
-#         "point3 P" [ -1 -1  1
-#                      -1  1  1 
-#                       1  1 -1
-#                       1 -1 -1]
-#         "integer indices" [ 0 1 2 0 2 3 ]
-# AttributeEnd
+AttributeBegin
+    AreaLightSource "diffuse"
+        "rgb L" [1.0 1.0 1.0]
+        "bool twosided" ["true"]
+    Material "matte" "color Kd" [0.0 0.0 0.0]
+    Translate 10.0 0.0 0.0
+    Shape "trianglemesh"
+        "point2 uv" [ 0 0 1 0 1 1 0 1 ]
+        # "normal N" [ 0 -1 0
+        #              0 -1 0
+        #              0 -1 0
+        #              0 -1 0 ]
+        "point3 P" [  0  10  10
+                      0 -10  10 
+                      0 -10 -10
+                      0  10 -10]
+        "integer indices" [ 0 1 2 0 2 3 ]
+AttributeEnd
+
+AttributeBegin
+    AreaLightSource "diffuse"
+        "rgb L" [1.0 1.0 1.0]
+        "bool twosided" ["true"]
+    Material "matte" "color Kd" [0.0 0.0 0.0]
+    Translate -10.0 0.0 0.0
+    Shape "trianglemesh"
+        "point2 uv" [ 0 0 1 0 1 1 0 1 ]
+        # "normal N" [ 0 -1 0
+        #              0 -1 0
+        #              0 -1 0
+        #              0 -1 0 ]
+        "point3 P" [  0  10  10
+                      0 -10  10 
+                      0 -10 -10
+                      0  10 -10]
+        "integer indices" [ 0 1 2 0 2 3 ]
+AttributeEnd
 
 # AttributeBegin
 #     AreaLightSource "diffuse" "color L" [100.0 100.0 100.0]
