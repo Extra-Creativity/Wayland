@@ -1,0 +1,209 @@
+Integrator "path"
+    "integer maxdepth" [ 13 ]
+Transform [ 0.137285 -0.0319925  -0.990015  -0 
+           -0         0.999478   -0.0322983 -0
+           -0.990531 -0.00443405 -0.137212  -0
+           -2.84124  -1.49616     3.74927    1 ]
+Sampler "sobol"
+    "integer pixelsamples" [ 64 ]
+PixelFilter "triangle"
+    "float xradius" [ 1 ]
+    "float yradius" [ 1 ]
+Film "image"
+    "string filename" [ "veach-ajar.png" ]
+    "integer yresolution" [ 720 ]
+    "integer xresolution" [ 1280 ]
+    
+Camera "perspective"
+    "float fov" [ 40 ]
+
+
+WorldBegin
+
+Texture "Texture01" "spectrum" "imagemap"
+    "string filter" "trilinear"
+    "string filename" [ "textures/landscape-with-a-lake.tga" ]
+Texture "Texture02" "spectrum" "imagemap"
+    "string filter" "trilinear"
+    "string filename" [ "textures/Good Textures_005844.tga" ]
+Texture "Texture03" "spectrum" "imagemap"
+    "string filter" "trilinear"
+    "string filename" [ "textures/cherry-wood-texture.tga" ]
+MakeNamedMaterial "Landscape"
+    "string type" [ "matte" ]
+    "texture Kd" [ "Texture01" ]
+MakeNamedMaterial "Table"
+    "string type" [ "matte" ]
+    "texture Kd" [ "Texture02" ]
+MakeNamedMaterial "DoorHandle"
+    # "string type" [ "conductor" ]
+    # "float vroughness" [ 0.25 ]
+    # "float uroughness" [ 0.25 ]
+    # "bool remaproughness" [ false ]
+    # "rgb k" [ 9.223869 6.269523 4.837001 ]
+    # "rgb eta" [ 1.65746 0.880369 0.521229 ]
+    "string type" [ "disney" ]
+    "float roughness" [ 0.25 ]
+    "float metallic" [1]
+    "rgb color" [0.9 0.9 0.9]
+
+MakeNamedMaterial "Door"
+    "string type" [ "matte" ]
+    "texture Kd" [ "Texture03" ]
+MakeNamedMaterial "Diffuse"
+    "string type" [ "matte" ]
+    "rgb Kd" [ 0.8 0.8 0.8 ]
+MakeNamedMaterial "Floor"
+    # "string type" [ "conductor" ]
+    # "float vroughness" [ 0.1 ]
+    # "float uroughness" [ 0.1 ]
+    # "bool remaproughness" [ false ]
+    # "rgb k" [ 9.223869 6.269523 4.837001 ]
+    # "rgb eta" [ 1.65746 0.880369 0.521229 ]
+    "string type" [ "disney" ]
+    "float roughness" [ 0.1 ]
+    "float metallic" [0.9]
+    "rgb color" [0.95 0.95 0.95]
+
+MakeNamedMaterial "DoorFrame"
+    "string type" [ "matte" ]
+    "rgb Kd" [ 0.247059 0.168627 0.090196 ]
+MakeNamedMaterial "PictureFrame"
+    "string type" [ "matte" ]
+    "rgb Kd" [ 0.258824 0.207843 0.145098 ]
+
+MakeNamedMaterial "Hinge"
+    # "string type" [ "conductor" ]
+    # "float vroughness" [ 0.1 ]
+    # "float uroughness" [ 0.1 ]
+    # "bool remaproughness" [ false ]
+    # "rgb k" [ 9.223869 6.269523 4.837001 ]
+    # "rgb eta" [ 1.65746 0.880369 0.521229 ]    
+    "string type" [ "disney" ]
+    "float roughness" [ 0.1 ]
+    "float metallic" [1]
+    "rgb color" [0.9 0.9 0.9]
+
+MakeNamedMaterial "Light"
+    "string type" [ "matte" ]
+    "rgb Kd" [ 0 0 0 ]
+
+MakeNamedMaterial "Pot2"
+    # "string type" [ "conductor" ]
+    # "float vroughness" [ 0.15 ]
+    # "float uroughness" [ 0.15 ]
+    # "bool remaproughness" [ false ]
+    # "rgb k" [ 9.223869 6.269523 4.837001 ]
+    # "rgb eta" [ 1.65746 0.880369 0.521229 ]    
+    "string type" [ "disney" ]
+    "float roughness" [ 0.2 ]
+    "float metallic" [1]
+    "rgb color" [1 1 1]
+
+MakeNamedMaterial "Pot1"
+    # "string type" [ "dielectric" ]
+    # "float eta" [ 1.5 ]
+    # "bool remaproughness" [ false ]
+    "string type" [ "disney" ]
+    "float roughness" [ 0.01 ]
+    "float metallic" [0]
+    "rgb color" [1 1 1]
+    "float spectrans" [1]
+    "float eta" [1.2]
+
+MakeNamedMaterial "Pot3"
+    "string type" [ "matte" ]
+    "rgb Kd" [ 0.99 0.99 0.99 ]
+
+AttributeBegin
+    AreaLightSource "diffuse"
+        "rgb L" [ 1500 1500 1500 ]
+    NamedMaterial "Light"
+    Shape "trianglemesh"
+        "point2 uv" [ 0 0 1 0 1 1 0 1 
+            ]
+        "normal N" [ 0 -1.03553e-7 -1 0 -1.03553e-7 -1 0 -1.03553e-7 -1 0 -1.03553e-7 
+                     -1 ]
+        "point3 P" [ -5.16954 2.82792 -4.44377 -3.70865 2.82792 -4.44377 -3.70865 
+                     0.185195 -4.44377 -5.16954 0.185195 -4.44377 ]
+        "integer indices" [ 0 1 2 0 2 3 ]
+AttributeEnd
+NamedMaterial "Landscape"
+Shape "plymesh"
+    "string filename" [ "models/Mesh008.ply" ]
+NamedMaterial "PictureFrame"
+Shape "plymesh"
+    "string filename" [ "models/Mesh013.ply" ]
+NamedMaterial "Floor"
+AttributeBegin
+    Transform [ 1.8 0 0 0 0 1 0 0 0 0 1 0 2.3 0 0 1  ]
+    Shape "plymesh"
+        "string filename" [ "models/Mesh011.ply" ]
+AttributeEnd
+NamedMaterial "DoorHandle"
+Shape "plymesh"
+    "string filename" [ "models/Mesh015.ply" ]
+NamedMaterial "Hinge"
+Shape "plymesh"
+    "string filename" [ "models/Mesh016.ply" ]
+Shape "plymesh"
+    "string filename" [ "models/Mesh012.ply" ]
+Shape "plymesh"
+    "string filename" [ "models/Mesh010.ply" ]
+NamedMaterial "Door"
+Shape "plymesh"
+    "string filename" [ "models/Mesh006.ply" ]
+NamedMaterial "DoorFrame"
+Shape "plymesh"
+    "string filename" [ "models/Mesh005.ply" ]
+NamedMaterial "Diffuse"
+Shape "plymesh"
+    "string filename" [ "models/Mesh007.ply" ]
+Shape "plymesh"
+    "string filename" [ "models/Mesh003.ply" ]
+Shape "plymesh"
+    "string filename" [ "models/Mesh002.ply" ]
+Shape "plymesh"
+    "string filename" [ "models/Mesh001.ply" ]
+NamedMaterial "Table"
+Shape "plymesh"
+    "string filename" [ "models/Mesh004.ply" ]
+NamedMaterial "Diffuse"
+AttributeBegin
+    Transform [ 1.8 0 0 0 0 1 0 0 0 0 1 0 2.3 0 0 1  ]
+    Shape "plymesh"
+        "string filename" [ "models/Mesh014.ply" ]
+AttributeEnd
+NamedMaterial "Pot2"
+AttributeBegin
+    Transform [ -0.0757886 0 0.0468591 0 0 0.0891049 0 0 -0.0468591 0 -0.0757886 0 -1.95645 0.648205 -1.77687 1  ]
+    Shape "plymesh"
+        "string filename" [ "models/Mesh009.ply" ]
+AttributeEnd
+AttributeBegin
+    Transform [ -0.0757886 0 0.0468591 0 0 0.0891049 0 0 -0.0468591 0 -0.0757886 0 -1.95645 0.648205 -1.77687 1  ]
+    Shape "plymesh"
+        "string filename" [ "models/Mesh000.ply" ]
+AttributeEnd
+NamedMaterial "Pot3"
+AttributeBegin
+    Transform [ -0.0891049 0 -7.7898e-9 0 0 0.0891049 0 0 7.7898e-9 0 -0.0891049 0 -1.95645 0.648205 -2.67687 1  ]
+    Shape "plymesh"
+        "string filename" [ "models/Mesh000.ply" ]
+AttributeEnd
+AttributeBegin
+    Transform [ -0.0891049 0 -7.7898e-9 0 0 0.0891049 0 0 7.7898e-9 0 -0.0891049 0 -1.95645 0.648205 -2.67687 1  ]
+    Shape "plymesh"
+        "string filename" [ "models/Mesh009.ply" ]
+AttributeEnd
+NamedMaterial "Pot1"
+AttributeBegin
+    Transform [ -0.0837611 0 -0.0303939 0 0 0.0891049 0 0 0.0303939 0 -0.0837611 0 -1.95645 0.651268 -3.57687 1  ]
+    Shape "plymesh"
+        "string filename" [ "models/Mesh009.ply" ]
+AttributeEnd
+AttributeBegin
+    Transform [ -0.083761 0 -0.0303938 0 0 0.0891049 0 0 0.0303938 0 -0.083761 0 -1.95645 0.651268 -3.57687 1  ]
+    Shape "plymesh"
+        "string filename" [ "models/Mesh000.ply" ]
+AttributeEnd

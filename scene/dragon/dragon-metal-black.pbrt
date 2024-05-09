@@ -24,7 +24,7 @@ MakeNamedMaterial "GroundOuter"
     "rgb Kd" [ 0.456263 0.456263 0.456263 ]
 MakeNamedMaterial "Wall"
     "string type" [ "matte" ]
-    "rgb Kd" [ 0.7 0.7 0.7 ]
+    "rgb Kd" [ 0.3 0.4 0.5 ]
 MakeNamedMaterial "Cloth"
     "string type" [ "matte" ]
     "rgb Kd" [ 0.456263 0.456263 0.456263 ]
