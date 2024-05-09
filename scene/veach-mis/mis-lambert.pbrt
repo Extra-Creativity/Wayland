@@ -24,7 +24,7 @@ WorldBegin
 
 AttributeBegin
     AreaLightSource "diffuse"
-        "rgb L" [200.0 200.0 200.0]
+        "rgb L" [100.0 100.0 100.0]
     Material "matte" "color Kd" [0.0 0.0 0.0]
     Translate 10.0 10.0 4.0
     Shape "trianglemesh"
@@ -49,7 +49,8 @@ AttributeEnd
 
 AttributeBegin
     AreaLightSource "diffuse"
-        "rgb L" [100.0 100.0 100.0]
+        "rgb L" [500.0 500.0 500.0]
+        # "bool twosided" ["true"]
     Material "matte" "color Kd" [0.0 0.0 0.0]
     Translate -1.25 0.0 0.0
     Shape "trianglemesh"
@@ -74,7 +75,7 @@ AttributeEnd
 
 AttributeBegin
     AreaLightSource "diffuse"
-        "rgb L" [901.803 901.803 901.803]
+        "rgb L" [4500 4500 4500]
     Material "matte" "color Kd" [0.0 0.0 0.0]
     Translate -3.75 0.0 0.0
     Shape "trianglemesh"
@@ -99,7 +100,7 @@ AttributeEnd
 
 AttributeBegin
     AreaLightSource "diffuse"
-        "rgb L" [11.1111 11.1111 11.1111]
+        "rgb L" [55 55 55]
     Material "matte" "color Kd" [0.0 0.0 0.0]
     Translate 1.25 0.0 0.0
     Shape "trianglemesh"
@@ -124,7 +125,7 @@ AttributeEnd
 
 AttributeBegin
     AreaLightSource "diffuse"
-        "rgb L" [1.23457 1.23457 1.23457]
+        "rgb L" [6 6 6]
     Material "matte" "color Kd" [0.0 0.0 0.0]
     Translate 3.75 0.0 0.0
     Shape "trianglemesh"
@@ -143,7 +144,7 @@ AttributeEnd
 
 AttributeBegin
     Material "matte"
-    "rgb Kd" [ 0.6 0.6 0.6 ]
+    "rgb Kd" [ 0.9 0.9 0.9 ]
     # Material "plastic" "color Kd" [0.07 0.09 0.13] "float roughness" [0.005] "color Ks" [1.0 1.0 1.0] "bool remaproughness" ["false"]
     Shape "plymesh" "string filename" ["geometry/plate1.ply"]
     # Shape "trianglemesh" "string filename" ["geometry/plate1.obj"]
@@ -163,7 +164,7 @@ AttributeEnd
 
 AttributeBegin
     Material "matte"
-    "rgb Kd" [ 0.6 0.6 0.6 ]
+    "rgb Kd" [ 0.9 0.9 0.9 ]
     # Material "plastic" "color Kd" [0.07 0.09 0.13] "float roughness" [0.02] "color Ks" [1.0 1.0 1.0] "bool remaproughness" ["false"]
     Shape "plymesh" "string filename" ["geometry/plate2.ply"]
     # Shape "trianglemesh" "string filename" ["geometry/plate2.obj"]
@@ -171,7 +172,7 @@ AttributeEnd
 
 AttributeBegin
     Material "matte"
-    "rgb Kd" [ 0.6 0.6 0.6 ]
+    "rgb Kd" [ 0.9 0.9 0.9 ]
     # Material "plastic" "color Kd" [0.07 0.09 0.13] "float roughness" [0.05] "color Ks" [1.0 1.0 1.0] "bool remaproughness" ["false"]
     Shape "plymesh" "string filename" ["geometry/plate3.ply"]
     # Shape "trianglemesh" "string filename" ["geometry/plate3.obj"]
@@ -179,14 +180,14 @@ AttributeEnd
 
 AttributeBegin
     Material "matte"
-    "rgb Kd" [ 0.6 0.6 0.6 ]
+    "rgb Kd" [ 0.9 0.9 0.9 ]
     # Material "plastic" "color Kd" [0.07 0.09 0.13] "float roughness" [0.1] "color Ks" [1.0 1.0 1.0] "bool remaproughness" ["false"]
     Shape "plymesh" "string filename" ["geometry/plate4.ply"]
     # Shape "trianglemesh" "string filename" ["geometry/plate4.obj"]
 AttributeEnd
 
 AttributeBegin
-    Material "matte" "color Kd" [0.4 0.4 0.4]
+    Material "matte" "color Kd" [0.8 0.8 0.8]
     Shape "plymesh" "string filename" ["geometry/floor.ply"]
     # Shape "trianglemesh" "string filename" ["geometry/floor.obj"]
 AttributeEnd
