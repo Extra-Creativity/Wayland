@@ -23,10 +23,19 @@ struct Payload
     glm::vec3 throughput;
     glm::vec3 rayPos;
     glm::vec3 rayDir;
-    /* Normal of last hit surface*/
-    glm::vec3 lastNormal;
-    /* cosine / sample pdf*/
-    float lastTraceTerm;
+    /* Last surface's rayDir */
+    glm::vec3 lastRayDir;
+    /* Last surface's Ns */
+    glm::vec3 lastNs;
+    /* Last surface's Ng */
+    glm::vec3 lastNg;
+    /* BSDF * cosine / pdf */
+    glm::vec3 lastTraceTerm;
+    /* Last surface's texcolor */
+    glm::vec3 lastTexcolor;
+    /* Last bsdf sampling pdf */
+    float lastPdf;
+    Device::DisneyMaterial *lastMat;
     uint32_t depth;
     uint32_t seed;
     bool done;

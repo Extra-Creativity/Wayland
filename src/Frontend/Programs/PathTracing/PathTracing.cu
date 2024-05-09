@@ -25,11 +25,11 @@ enum STRATEGY
     STRATEGY_MAX
 };
 
-__constant__ STRATEGY strategy = MIS;
+__constant__ STRATEGY strategy = UPT;
 
 static __forceinline__ __device__ float UptMisWeight(float uptPdf, float neePdf)
 {
-    assert(uptPdf + neePdf > 0);
+    //assert(uptPdf + neePdf > 0);
     return uptPdf / (uptPdf + neePdf);
 }
 
@@ -54,8 +54,8 @@ extern "C" __global__ void __raygen__RenderFrame()
         prd.depth = 0;
         prd.done = false;
         prd.radiance = { 0, 0, 0 };
-        prd.throughput = { 1, 1, 1 };
-        prd.lastTraceTerm = 1.f;
+        prd.throughput = { 1.f, 1.f, 1.f };
+        prd.lastTraceTerm = { 1.f, 1.f, 1.f };
         prd.rayPos = param.camera.pos;
         prd.rayDir = PinholeGenerateRay({ idx_x, idx_y }, param.fbSize,
                                         param.camera, prd.seed);
@@ -101,14 +101,23 @@ extern "C" __global__ void __raygen__RenderFrame()
                 if (vis > 0)
                 {
                     float cosTheta1 = glm::dot(ls.N, visRay);
-                    float cosTheta2 = glm::dot(prd.lastNormal, visRay);
+                    float cosTheta2 = glm::dot(prd.lastNs, visRay);
                     auto &lt = param.areaLights[ls.areaLightID];
-                    if ((lt.twoSided || cosTheta1 < 0) && cosTheta2 > 0)
+                    if (lt.twoSided || cosTheta1 < 0)
                     {
                         float neePdf = ls.pdf * dist * dist / fabsf(cosTheta1);
-                        float uptPdf = (strategy == NEE) ? 0 : RECIP_2PI;
-                        prd.radiance += prd.throughput * cosTheta2 * lt.L /
-                                        neePdf *
+                        float uptPdf = 0.f;
+                        if (strategy != NEE)
+                        {
+                            uptPdf = PdfDisneyBSDF(*prd.lastMat, prd.lastNs,
+                                                   prd.lastNg,
+                                                   -prd.lastRayDir, visRay);
+                        }
+                        glm::vec3 BSDFVal = EvalDisneyBSDF(
+                            *prd.lastMat, prd.lastNs, prd.lastNg,
+                            -prd.lastRayDir, visRay, prd.lastTexcolor);
+                        prd.radiance += prd.throughput * BSDFVal * cosTheta2 *
+                                        lt.L / neePdf *
                                         (1 - UptMisWeight(uptPdf, neePdf));
                     }
                 }
@@ -190,10 +199,10 @@ extern "C" __global__ void __closesthit__radiance()
     if (mat->areaLightID < INVALID_INDEX)
     {
         auto &lt = param.areaLights[mat->areaLightID];
-        if ((prd->depth == 1) || (strategy != NEE &&
-            (lt.twoSided || glm::dot(Ns, prd->rayDir) < 0)))
+        if ((prd->depth == 1) ||
+            (strategy != NEE && (lt.twoSided || glm::dot(Ns, prd->rayDir) < 0)))
         {
-            /* Directly hit light, NEE does not participate*/
+            /* Hit light directly */
             float neePdf = 0.f;
             if (strategy != UPT && prd->depth > 1)
             {
@@ -203,12 +212,13 @@ extern "C" __global__ void __closesthit__radiance()
                 PdfAreaLightPos(param.areaLightCount, param.areaLights, primIdx,
                                 ls);
                 float dist = optixGetRayTmax();
-                neePdf = ls.pdf * dist * dist / fabsf(-glm::dot(Ns, prd->rayDir));
+                neePdf =
+                    ls.pdf * dist * dist / fabsf(-glm::dot(Ns, prd->rayDir));
             }
 
-            float uptPdf = RECIP_2PI;
-            prd->radiance += prd->throughput * lt.L *
-                             prd->lastTraceTerm * UptMisWeight(uptPdf, neePdf);
+            float uptPdf = prd->lastPdf;
+            prd->radiance += prd->throughput * lt.L * prd->lastTraceTerm *
+                             UptMisWeight(uptPdf, neePdf);
         }
         prd->done = true;
         return;
@@ -228,30 +238,35 @@ extern "C" __global__ void __closesthit__radiance()
             Ns = -Ns;
     }
 
-    float pdf;
-    glm::vec3 rayDir = SampleCosineHemisphere(Ns, pdf, prd->seed);
+    float pdf = 1.f;
+
+    glm::vec3 rayDir =
+        SampleDisneyBSDF(mat->disneyMat, Ns, Ng, -prd->rayDir, prd->seed);
+    pdf = PdfDisneyBSDF(mat->disneyMat, Ns, Ng, -prd->rayDir, rayDir);
 
     auto cosWeight = fmaxf(0.f, glm::dot(rayDir, Ns));
 
-    glm::vec3 texColor = {1.f, 1.f, 1.f};
+    glm::vec3 texColor = { 1.f, 1.f, 1.f };
     if (mat->hasTexture)
     {
         glm::vec2 tc = BarycentricByIndices(mat->texcoords, indices,
                                             optixGetTriangleBarycentrics());
         texColor = UniUtils::ToVec4<glm::vec4>(
             tex2D<float4>(mat->texture, tc.x, tc.y));
-	}
-
-    auto albedo = texColor * mat->disneyMat.color;
-
-    //prd->throughput *= albedo / PI; // albedo = kd / pi
-    prd->throughput *=
-        EvalDisneyBSDF(mat->disneyMat, Ns, Ng, -prd->rayDir, rayDir, texColor); 
+    }
+    /* Compute last BSDF */
     prd->throughput *= prd->lastTraceTerm;
-    prd->lastTraceTerm = cosWeight / pdf;
+    prd->lastTraceTerm =
+        EvalDisneyBSDF(mat->disneyMat, Ns, Ng, -prd->rayDir, rayDir, texColor) *
+        cosWeight / pdf;
     prd->rayPos = hitPos;
+    prd->lastRayDir = prd->rayDir;
+    prd->lastTexcolor = texColor;
     prd->rayDir = rayDir;
-    prd->lastNormal = Ns;
+    prd->lastNs = Ns;
+    prd->lastNg = Ng;
+    prd->lastPdf = pdf;
+    prd->lastMat = &mat->disneyMat;
 
     return;
 }
