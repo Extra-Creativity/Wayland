@@ -6,6 +6,8 @@
 #include "Device/Pdf.h"
 #include "Device/Sample.h"
 #include "Device/Scene.h"
+#include "Device/Material.h"
+#include "Device/Evaluate.h"
 
 #include "RandomWalkLaunchParams.h"
 
@@ -96,64 +98,66 @@ extern "C" __global__ void __closesthit__radiance()
 
     uint32_t primIdx = optixGetPrimitiveIndex();
     glm::ivec3 indices = mat->indices[optixGetPrimitiveIndex()];
-    glm::vec3 N;
+    glm::vec3 Ns;
+    glm::vec3 Ng;
+    Ng = GetGeometryNormal(mat->vertices, indices);
     if (mat->hasNormal)
     {
-        N = BarycentricByIndices(mat->normals, indices,
-                                 optixGetTriangleBarycentrics());
+        Ns = glm::normalize(BarycentricByIndices(
+            mat->normals, indices, optixGetTriangleBarycentrics()));
     }
     else
     {
-        glm::vec3 v0 = mat->vertices[indices.x];
-        glm::vec3 v1 = mat->vertices[indices.y];
-        glm::vec3 v2 = mat->vertices[indices.z];
-        N = glm::cross(v1 - v0, v2 - v0);
+        Ns = Ng;
     }
-
-    N = glm::normalize(N);
-
     glm::vec3 hitPos = GetHitPosition();
 
     /* Hit light */
     if (mat->areaLightID < INVALID_INDEX)
     {
         auto &lt = param.areaLights[mat->areaLightID];
-        if (lt.twoSided || glm::dot(N, prd->rayDir) < 0)
+        if (lt.twoSided || glm::dot(Ns, prd->rayDir) < 0)
         {
-            prd->radiance = prd->radiance * lt.L;
+            prd->radiance *= lt.L;
+        }
+        else
+        {
+            prd->radiance = { 0, 0, 0 };
         }
         prd->done = true;
         return;
     }
     if (prd->depth >= 25)
     {
-        prd->throughput = { 0, 0, 0 };
+        prd->radiance = { 0, 0, 0 };
         prd->done = true;
         return;
     }
-    if (glm::dot(N, prd->rayDir) > 0)
-        N = -N;
+    if (mat->disneyMat.trans < 0.1)
+    {
+        if (glm::dot(Ng, prd->rayDir) > 0)
+            Ng = -Ng;
+        if (glm::dot(Ns, prd->rayDir) > 0)
+            Ns = -Ns;
+    }
 
     float pdf;
-    glm::vec3 rayDir = SampleUniformHemisphere(N, pdf, prd->seed);
+    glm::vec3 rayDir = SampleUniformHemisphere(Ns, pdf, prd->seed);
 
-    glm::vec3 albedo;
+    glm::vec3 texColor = { 1.f, 1.f, 1.f };
     if (mat->hasTexture)
     {
         glm::vec2 tc = BarycentricByIndices(mat->texcoords, indices,
                                             optixGetTriangleBarycentrics());
-        glm::vec4 texColor = UniUtils::ToVec4<glm::vec4>(
+        texColor = UniUtils::ToVec4<glm::vec4>(
             tex2D<float4>(mat->texture, tc.x, tc.y));
-        albedo = texColor;
-	}
-    else
-    {
-		albedo = mat->Kd;
-	}
+    }
 
-    auto cosWeight = fmaxf(0.f, glm::dot(rayDir, N));
+    auto cosWeight = fmaxf(0.f, glm::dot(rayDir, Ns));
 
-    prd->radiance = prd->radiance * mat->Kd * cosWeight * 2.f;
+    prd->radiance *=
+        EvalDisneyBSDF(mat->disneyMat, Ns, Ng, -prd->rayDir, rayDir, texColor);
+    prd->radiance *= cosWeight / pdf;
     prd->rayPos = hitPos;
     prd->rayDir = rayDir;
     return;
