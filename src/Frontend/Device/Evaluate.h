@@ -7,69 +7,6 @@
 namespace EasyRender::Device
 {
 
-namespace MaterialMath
-{
-
-__host__ __device__ __forceinline__ float SchlickFresnel(float u)
-{
-    float m = clamp(1.0f - u, 0.0f, 1.0f);
-    float m2 = m * m;
-    return m2 * m2 * m; // pow(m,5)
-}
-
-__host__ __device__ __forceinline__ float Fresnel(float cos_theta_i,
-                                                 float cos_theta_t,
-                                         float eta)
-{
-    const float rs =
-        (cos_theta_i - cos_theta_t * eta) / (cos_theta_i + eta * cos_theta_t);
-    const float rp =
-        (cos_theta_i * eta - cos_theta_t) / (cos_theta_i * eta + cos_theta_t);
-    return 0.5f * (rs * rs + rp * rp);
-}
-
-__host__ __device__ __forceinline__ float GTR1(float NDotH, float a)
-{
-    if (a >= 1.0f)
-        return (1.0f / PI);
-    float a2 = a * a;
-    float t = 1.0f + (a2 - 1.0f) * NDotH * NDotH;
-    return (a2 - 1.0f) / (PI * logf(a2) * t);
-}
-
-__host__ __device__ __forceinline__ float GTR2(float NDotH, float a)
-{
-    float a2 = a * a;
-    float t = 1.0f + (a2 - 1.0f) * NDotH * NDotH;
-    return a2 / (PI * t * t);
-}
-
-__host__ __host__ __device__ __forceinline__ float SmithG_GGX(float NDotv,
-                                                             float alphaG)
-{
-    float a = alphaG * alphaG;
-    float b = NDotv * NDotv;
-    return 1.0f / (NDotv + sqrtf(a + b - a * b));
-}
-
-__host__ __device__ __forceinline__ float Lambda(const glm::vec3 &w,
-                                                const glm::vec3 &n)
-{
-    // BeckmannDistribution
-    const float alphax = 0.5f;
-    // const float alphay = 0.5f;
-    float wDotn = glm::dot(w, n);
-    float absTanTheta = fabsf(glm::length(glm::cross(w, n)) / wDotn);
-    if (isinf(absTanTheta))
-        return 0.;
-    // Compute _alpha_ for direction _w_
-    float alpha = alphax;
-    float a = 1 / (alpha * absTanTheta);
-    if (a >= 1.6f)
-        return 0;
-    return (1 - 1.259f * a + 0.396f * a * a) / (3.535f * a + 2.181f * a * a);
-}
-
 __host__ __device__ __forceinline__ glm::vec3 EvalDisneyTransmit(
     const DisneyMaterial &mat, const glm::vec3 &Ns, const glm::vec3 &Ng,
     const glm::vec3 &V_vec,
@@ -77,6 +14,7 @@ __host__ __device__ __forceinline__ glm::vec3 EvalDisneyTransmit(
     glm::vec3 texColor = glm::vec3{ 1.f, 1.f, 1.f }
 )
 {
+    using namespace MaterialMath;
     glm::vec3 N = Ns;
     glm::vec3 V = V_vec;
     glm::vec3 L = L_vec;
@@ -136,8 +74,6 @@ __host__ __device__ __forceinline__ glm::vec3 EvalDisneyTransmit(
                           (NDotL * NDotL * sqrtDenom * sqrtDenom));
     return out;
 }
-
-} // namespace MaterialMath
 
 __host__ __device__ __forceinline__ glm::vec3 EvalDisneyBSDF(
     const DisneyMaterial &mat, const glm::vec3 &Ns_,
