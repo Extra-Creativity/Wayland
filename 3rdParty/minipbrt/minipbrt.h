@@ -673,7 +673,7 @@ namespace minipbrt {
 
 
   struct DisneyMaterial : public Material {
-    ColorTex color            = { kInvalidIndex, {0.5f, 0.5f, 0.5f} };
+    ColorTex color            = { kInvalidIndex, {1.0, 1.0f, 1.0f} };
     FloatTex anisotropic      = { kInvalidIndex, 0.0f               };
     FloatTex clearcoat        = { kInvalidIndex, 0.0f               };
     FloatTex clearcoatgloss   = { kInvalidIndex, 1.0f               };
@@ -748,7 +748,7 @@ namespace minipbrt {
 
 
   struct MatteMaterial : public Material {
-    ColorTex Kd         = { kInvalidIndex, {0.5f, 0.5f, 0.5f} };
+    ColorTex Kd         = { kInvalidIndex, {1.0f, 1.0f, 1.0f} };
     FloatTex sigma      = { kInvalidIndex, 0.0f };
 
     virtual ~MatteMaterial() override {}
