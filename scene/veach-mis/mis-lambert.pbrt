@@ -29,10 +29,10 @@ AttributeBegin
     Translate 10.0 10.0 4.0
     Shape "trianglemesh"
         "point2 uv" [ 0 0 1 0 1 1 0 1 ]
-        "normal N" [ -0.7071068 0 -0.7071068
-                     -0.7071068 0 -0.7071068
-                     -0.7071068 0 -0.7071068
-                     -0.7071068 0 -0.7071068 ]
+        # "normal N" [ -0.7071068 0 -0.7071068
+        #              -0.7071068 0 -0.7071068
+        #              -0.7071068 0 -0.7071068
+        #              -0.7071068 0 -0.7071068 ]
         "point3 P" [ -1 -1  1
                       1 -1 -1
                       1  1 -1
@@ -55,10 +55,10 @@ AttributeBegin
     Translate -1.25 0.0 0.0
     Shape "trianglemesh"
         "point2 uv" [ 0 0 1 0 1 1 0 1 ]
-        "normal N" [ 0 0 1
-                     0 0 1
-                     0 0 1
-                     0 0 1 ]
+        # "normal N" [ 0 0 1
+        #              0 0 1
+        #              0 0 1
+        #              0 0 1 ]
         "point3 P" [ 0.075 -0.06 -0.045
                      0.075  0.06  0.045
                     -0.075  0.06  0.045
@@ -80,10 +80,10 @@ AttributeBegin
     Translate -3.75 0.0 0.0
     Shape "trianglemesh"
         "point2 uv" [ 0 0 1 0 1 1 0 1 ]
-        "normal N" [ 0 0 1
-                     0 0 1
-                     0 0 1
-                     0 0 1 ]
+        # "normal N" [ 0 0 1
+        #              0 0 1
+        #              0 0 1
+        #              0 0 1 ]
         "point3 P" [ 0.025 -0.02 -0.015
                      0.025  0.02  0.015
                     -0.025  0.02  0.015
@@ -105,10 +105,10 @@ AttributeBegin
     Translate 1.25 0.0 0.0
     Shape "trianglemesh"
         "point2 uv" [ 0 0 1 0 1 1 0 1 ]
-        "normal N" [ 0 0 1
-                     0 0 1
-                     0 0 1
-                     0 0 1 ]
+        # "normal N" [ 0 0 1
+        #              0 0 1
+        #              0 0 1
+        #              0 0 1 ]
         "point3 P" [ 0.25 -0.2 -0.15
                      0.25  0.2  0.15
                     -0.25  0.2  0.15
@@ -130,10 +130,10 @@ AttributeBegin
     Translate 3.75 0.0 0.0
     Shape "trianglemesh"
         "point2 uv" [ 0 0 1 0 1 1 0 1 ]
-        "normal N" [ 0 0 1
-                     0 0 1
-                     0 0 1
-                     0 0 1 ]
+        # "normal N" [ 0 0 1
+        #              0 0 1
+        #              0 0 1
+        #              0 0 1 ]
         "point3 P" [ 0.75 -0.6 -0.45
                      0.75  0.6  0.45
                     -0.75  0.6  0.45
