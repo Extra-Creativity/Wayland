@@ -28,6 +28,9 @@ public:
         param.camera.right =
             pCam->right * (float(param.fbSize.x) / param.fbSize.y);
 
+        int bSize = param.fbSize.x * param.fbSize.y * sizeof(glm::vec4);
+        cudaMalloc(&param.radianceBuffer, bSize);
+        cudaMemset(param.radianceBuffer, 0, bSize);
     }
 
     void Update()

@@ -50,8 +50,20 @@ extern "C" __global__ void __raygen__RenderFrame()
                    RADIANCE_TYPE, u0, u1);
     } while (prd.depth < 1000 && !prd.done);
 
-    glm::vec3 res = prd.radiance * 255.f;
-    param.colorBuffer[idx] = glm::u8vec4{ res.x, res.y, res.z, 0xFF };
+
+    int frameID = param.frameID;
+    glm::dvec4 thisFrame = { prd.radiance.x, prd.radiance.y, prd.radiance.z, 1.0f };
+    if (frameID == 0)
+        param.radianceBuffer[idx] = thisFrame;
+    else
+    {
+        glm::dvec4 lastFrame = param.radianceBuffer[idx];
+        param.radianceBuffer[idx] =
+            lastFrame * double(frameID / (frameID + 1.0f)) +
+            thisFrame * double(1.0f / (frameID + 1.0f));
+    }
+    param.colorBuffer[idx] =
+        glm::clamp(param.radianceBuffer[idx], 0.f, 1.f) * 255.0f;
 }
 
 extern "C" __global__ void __miss__radiance()
@@ -65,7 +77,7 @@ extern "C" __global__ void __closesthit__radiance()
 {
     auto *prd = GetPRD<Payload>();
     float2 w = optixGetTriangleBarycentrics();
-    float e = 0.01;
+    float e = 0.03;
     if (w.x < e || w.x > 1 - e || w.y < e || w.y > 1 - e)
     {
         prd->radiance = { 1, 0, 0 };
