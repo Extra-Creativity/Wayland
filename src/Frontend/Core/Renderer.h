@@ -58,6 +58,7 @@ public:
     RendererSetting();
     RendererSetting(int argc, char **argv);
     ~RendererSetting() = default;
+    void SetFrameLimit(int f);
     void SetTimeLimit(float time);
     void SetScenePath(std::string_view src);
     void SetOutputPath(std::string_view dst);
@@ -70,11 +71,13 @@ private:
 
 public:
     float timeLimit;
+    int frameLimit;
     std::string scenePath;
     std::string outputPath;
     glm::ivec2 resolution;
     ProgramType program;
     std::string sceneName;
+    bool writeOutput;
 
     std::unordered_map<std::string, ProgramType> programMap;
 };
@@ -88,6 +91,7 @@ public:
 
 private:
     void SetProgram(ProgramType pgType);
+    void WriteOutput(float renderTime, uint32_t frameCnt);
 
 public:
     MainWindow window;

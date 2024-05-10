@@ -1,11 +1,18 @@
 #include "Core/Renderer.h"
 #include "Programs/Programs-All.h"
 
+ #define STB_IMAGE_WRITE_IMPLEMENTATION
+ #include "stb_image_write.h"
+
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <cstring>
+#include <chrono>
+#include <ctime>
 
 using namespace std;
+using namespace chrono;
 
 namespace EasyRender
 {
@@ -21,14 +28,81 @@ Renderer::Renderer(RendererSetting &mySet)
 void Renderer::Run()
 {
     program->Setup();
+
+    high_resolution_clock::time_point TP1 = high_resolution_clock::now();
+    duration<size_t, std::nano> dur;
+    int frameCnt = 0;
+
     while (!window.ShouldClose())
     {
         device.Launch(program.get(), window.size);
         device.DownloadFrameBuffer(window);
         window.Update();
         program->Update();
+
+        ++frameCnt;
+        high_resolution_clock::time_point TP2 = high_resolution_clock::now();
+        dur = TP2 - TP1;
+        bool outTime =
+            setting.timeLimit > 0 &&
+            setting.timeLimit * 1000 < duration_cast<milliseconds>(dur).count();
+        bool outFrame =
+            setting.frameLimit > 0 && frameCnt >= setting.frameLimit;
+        if (outTime || outFrame)
+            break;
     }
+    if (setting.writeOutput)
+        WriteOutput(float(duration_cast<microseconds>(dur).count()) / 1000.f /
+                        1000.f, frameCnt);
     program->End();
+}
+
+/* RenderTime in seconds */
+void Renderer::WriteOutput(float renderTime, uint32_t frameCnt)
+{
+    time_t now = time(0);
+    string curStr = ctime(&now);
+    curStr = curStr.substr(0, curStr.find("\n"));
+    curStr.replace(curStr.find(":"), 1, "_");
+    curStr.replace(curStr.find(":"), 1, "_");
+    curStr = string("[") + curStr + string("]");
+
+    string renderTimeStr = to_string(renderTime);
+    renderTimeStr = renderTimeStr.substr(0, renderTimeStr.find(".") + 2) + "s";
+
+    string fileStr = setting.outputPath + "/" + setting.sceneName;
+    fileStr += "-" + PROGRAM_NAME[(int)programType];
+    fileStr += "-" + renderTimeStr + "-" + curStr;
+
+    string txtStr = fileStr + ".txt";
+
+    ostringstream oss;
+    ofstream ofs;
+    ofs.open(txtStr);
+    ofs << "{\n";
+    ofs << "\tScene: " << setting.sceneName << "\n";
+    ofs << "\tProgram: " << PROGRAM_NAME[(int)programType] << "\n";
+    ofs << "\tResolution: " << setting.resolution.x << " "
+        << setting.resolution.y << "\n";
+    ofs << "\tRenderTime: " << renderTime << "\n";
+    ofs << "\tFrameCount: " << frameCnt << "\n";
+    ofs << "\tFrameTime: " << renderTime / float(frameCnt) << "\n";
+    ofs << "\tFramesPerSecond: " << float(frameCnt) / renderTime << "\n";
+    ofs << "}\n";
+    ofs.close();
+
+    string imgStr = fileStr + ".png";
+
+    vector<glm::u8vec4> imgBuffer = window.frameBuffer;
+    reverse(imgBuffer.begin(), imgBuffer.end());
+    for (int i = 0; i < window.size.y; ++i)
+    {
+        auto begin = imgBuffer.begin() + i * window.size.x;
+        reverse(begin, begin + window.size.x);
+    }
+
+    stbi_write_png(imgStr.c_str(), window.size.x, window.size.y, 4,
+                   imgBuffer.data(), window.size.x * 4);
 }
 
 void Renderer::SetProgram(ProgramType pgType)
@@ -87,7 +161,7 @@ RendererSetting::RendererSetting(int argc, char **argv)
 	{
 		if (strcmp(argv[i], "-t") == 0)
 		{
-			timeLimit = atof(argv[++i]);
+			timeLimit = static_cast<float>(atof(argv[++i]));
 		}
 		else if (strcmp(argv[i], "-s") == 0)
 		{
@@ -108,17 +182,20 @@ RendererSetting::RendererSetting(int argc, char **argv)
 			resolution.x = atoi(argv[++i]);
 			resolution.y = atoi(argv[++i]);
 		}
-	}
+    }
+    writeOutput = true;
 }
 
 void RendererSetting::SetDefault()
 {
+    frameLimit = -1;
     timeLimit = -1.f;
     scenePath = R"(..\..\..\scene\cornell-box\cbox.pbrt)";
     SetSceneName();
-    outputPath = R"(.)";
+    outputPath = R"(..\..\..)";
     program = ProgramType::PathTracing;
     resolution = glm::ivec2(1000, 1000);
+    writeOutput = false;
 
     programMap.clear();
     for (int i = 0; i < (int)ProgramType::ProgramTypeMax; i++)
@@ -137,6 +214,11 @@ void RendererSetting::SetSceneName()
     sceneName = sceneName.substr(0, pos2);
 }
 
+void RendererSetting::SetFrameLimit(int f)
+{
+    frameLimit = f;
+}
+
 void RendererSetting::SetTimeLimit(float time)
 {
     timeLimit = time;
@@ -151,6 +233,7 @@ void RendererSetting::SetScenePath(std::string_view src)
 void RendererSetting::SetOutputPath(std::string_view dst)
 {
     outputPath = dst;
+    writeOutput = true;
 }
 
 void RendererSetting::SetResolution(int x, int y)

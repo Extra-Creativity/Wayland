@@ -16,12 +16,12 @@ std::string sceneSrc =
     //R"(..\..\..\scene\dragon\dragon-metal-black.pbrt)";
     //R"(..\..\..\scene\veach-mis\mis-lambert.pbrt)";
     //R"(..\..\..\scene\veach-mis\mis.pbrt)";
-    //R"(..\..\..\scene\veach-bidir\bidir.pbrt)";
+    R"(..\..\..\scene\veach-bidir\bidir.pbrt)";
     //R"(..\..\..\scene\water-caustic\water.pbrt)";
     //R"(..\..\..\scene\veach-ajar\ajar.pbrt)";
      //R"(..\..\..\scene\staircase\staircase.pbrt)";
      //R"(..\..\..\scene\glass-of-water\glass-of-water.pbrt)";
-     R"(..\..\..\scene\kitchen\kitchen.pbrt)";
+     //R"(..\..\..\scene\kitchen\kitchen.pbrt)";
 
 
 int main(int argc, char **argv)
@@ -29,9 +29,10 @@ int main(int argc, char **argv)
     try
     {
         RendererSetting mySet(argc, argv);
-        mySet.SetScenePath(sceneSrc);
-        mySet.SetProgram(ProgramType::PathTracing);
-        mySet.SetResolution(1280, 720);
+        //mySet.SetScenePath(sceneSrc);
+        //mySet.SetProgram(ProgramType::PathTracing);
+        //mySet.SetResolution(1000, 1000);
+        mySet.SetFrameLimit(1);
 
         EasyRender::Renderer app(mySet);
         app.Run();
