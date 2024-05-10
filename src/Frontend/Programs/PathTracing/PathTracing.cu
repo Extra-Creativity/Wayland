@@ -48,7 +48,7 @@ extern "C" __global__ void __raygen__RenderFrame()
 
     glm::dvec4 thisFrame = { 0.f, 0.f, 0.f, 1.f };
 
-    int pixelSampleCount = 4;
+    int pixelSampleCount = 1;
     for (int i = 0; i < pixelSampleCount; ++i)
     {
 
@@ -152,10 +152,10 @@ extern "C" __global__ void __raygen__RenderFrame()
             lastFrame * double(frameID / (frameID + 1.0f)) +
             thisFrame * double(1.0f / (frameID + 1.0f));
     }
-    param.colorBuffer[idx] =
+    //param.colorBuffer[idx] =
         glm::clamp(param.radianceBuffer[idx], 0.f, 1.f) * 255.0f;
-    //glm::vec3 rad = glm::clamp(param.radianceBuffer[idx], 0.f, 1e30f);
-    //param.colorBuffer[idx] = glm::vec4{ AceApprox(rad), 1.0f } * 255.0f;
+    glm::vec3 rad = glm::clamp(param.radianceBuffer[idx], 0.f, 1e30f);
+    param.colorBuffer[idx] = glm::vec4{ AceApprox(rad), 1.0f } * 255.0f;
     //param.colorBuffer[idx] = glm::vec4{ Reinhard(rad), 1.0f } * 255.0f;
 }
 
