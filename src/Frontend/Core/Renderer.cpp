@@ -1,16 +1,21 @@
 #include "Core/Renderer.h"
 #include "Programs/Programs-All.h"
 
+#include <iostream>
+#include <string>
+#include <cstring>
+
 using namespace std;
 
 namespace EasyRender
 {
 
-Renderer::Renderer(glm::ivec2 s, ProgramType pgType, std::string_view sceneSrc)
-    : window(s), scene(sceneSrc), device()
+Renderer::Renderer(RendererSetting &mySet)
+    : window(mySet.resolution), scene(mySet.scenePath), device()
 {
-    SetProgram(pgType);
-    device.SetupOptix(scene, window, programSrc, program.get());
+    SetProgram(mySet.program);
+	device.SetupOptix(scene, window, programSrc, program.get());
+    setting = mySet;
 }
 
 void Renderer::Run()
@@ -62,9 +67,100 @@ void Renderer::SetProgram(ProgramType pgType)
     case ProgramType::RandomWalk:
         program = make_unique<RandomWalkProgramManager>(this);
         break;
+    case ProgramType::BDPT:
+        program = make_unique<BDPTProgramManager>(this);
+        break;
     default:
         assert(0);
     }
 }
 
+RendererSetting::RendererSetting()
+{
+	SetDefault();
+}
+
+RendererSetting::RendererSetting(int argc, char **argv)
+{
+    SetDefault();
+    for (int i = 1; i < argc; i++)
+	{
+		if (strcmp(argv[i], "-t") == 0)
+		{
+			timeLimit = atof(argv[++i]);
+		}
+		else if (strcmp(argv[i], "-s") == 0)
+		{
+			scenePath = argv[++i];
+			SetSceneName();
+		}
+		else if (strcmp(argv[i], "-o") == 0)
+		{
+			outputPath = argv[++i];
+		}
+		else if (strcmp(argv[i], "-p") == 0)
+		{
+            if (programMap.find(argv[++i]) != programMap.end())
+                program = programMap[argv[i]];
+		}
+		else if (strcmp(argv[i], "-r") == 0)
+		{
+			resolution.x = atoi(argv[++i]);
+			resolution.y = atoi(argv[++i]);
+		}
+	}
+}
+
+void RendererSetting::SetDefault()
+{
+    timeLimit = -1.f;
+    scenePath = R"(..\..\..\scene\cornell-box\cbox.pbrt)";
+    SetSceneName();
+    outputPath = R"(.)";
+    program = ProgramType::PathTracing;
+    resolution = glm::ivec2(1000, 1000);
+
+    programMap.clear();
+    for (int i = 0; i < (int)ProgramType::ProgramTypeMax; i++)
+    {
+        programMap[PROGRAM_NAME[i]] = (ProgramType)(i);
+    }
+}
+
+void RendererSetting::SetSceneName()
+{
+    std::size_t pos1 = scenePath.rfind(R"(\)");
+    assert(pos1 != std::string::npos);
+    sceneName = scenePath.substr(pos1 + 1);
+    std::size_t pos2 = sceneName.rfind(".");
+    assert(pos2 != std::string::npos);
+    sceneName = sceneName.substr(0, pos2);
+}
+
+void RendererSetting::SetTimeLimit(float time)
+{
+    timeLimit = time;
+}
+
+void RendererSetting::SetScenePath(std::string_view src)
+{
+    scenePath = src;
+    SetSceneName();
+}
+
+void RendererSetting::SetOutputPath(std::string_view dst)
+{
+    outputPath = dst;
+}
+
+void RendererSetting::SetResolution(int x, int y)
+{
+    resolution = { x, y };
+}
+
+void RendererSetting::SetProgram(ProgramType pg)
+{
+    program = pg;
+}
+        
 } // namespace EasyRender
