@@ -7,7 +7,7 @@
 using namespace EasyRender;
 
 std::string sceneSrc =
-    //R"(..\..\..\scene\cornell-box\cbox.pbrt)";
+    R"(..\..\..\scene\cornell-box\cbox.pbrt)";
     //R"(..\..\..\scene\cornell-box\cbox-texture.pbrt)";
     //R"(..\..\..\scene\dragon\dragon.pbrt)";
     //R"(..\..\..\scene\dragon\dragon-color.pbrt)";
@@ -16,7 +16,7 @@ std::string sceneSrc =
     //R"(..\..\..\scene\dragon\dragon-metal-black.pbrt)";
     //R"(..\..\..\scene\veach-mis\mis-lambert.pbrt)";
     //R"(..\..\..\scene\veach-mis\mis.pbrt)";
-    R"(..\..\..\scene\veach-bidir\bidir.pbrt)";
+    //R"(..\..\..\scene\veach-bidir\bidir.pbrt)";
     //R"(..\..\..\scene\water-caustic\water.pbrt)";
     //R"(..\..\..\scene\veach-ajar\ajar.pbrt)";
      //R"(..\..\..\scene\staircase\staircase.pbrt)";
@@ -29,10 +29,10 @@ int main(int argc, char **argv)
     try
     {
         RendererSetting mySet(argc, argv);
-        //mySet.SetScenePath(sceneSrc);
-        //mySet.SetProgram(ProgramType::PathTracing);
-        //mySet.SetResolution(1000, 1000);
-        mySet.SetFrameLimit(1);
+        mySet.SetScenePath(sceneSrc);
+        mySet.SetProgram(ProgramType::BDPT);
+        mySet.SetResolution(1000, 800);
+        mySet.SetOutputPath(R"(C:\Users\60995\Desktop\Grad_Design\EasyRender-Results\result\)");
 
         EasyRender::Renderer app(mySet);
         app.Run();

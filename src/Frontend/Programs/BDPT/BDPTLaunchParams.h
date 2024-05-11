@@ -19,26 +19,17 @@ enum
 /* OptixTrace Payload */
 struct Payload
 {
-    glm::vec3 radiance;
-    glm::vec3 throughput;
     glm::vec3 rayPos;
-    glm::vec3 rayDir;
-    /* Last surface's rayDir */
-    glm::vec3 lastRayDir;
-    /* Last surface's Ns */
-    glm::vec3 lastNs;
-    /* Last surface's Ng */
-    glm::vec3 lastNg;
-    /* BSDF * cosine / pdf */
-    glm::vec3 lastTraceTerm;
-    /* Last surface's texcolor */
-    glm::vec3 lastTexcolor;
-    /* Last bsdf sampling pdf */
-    float lastPdf;
-    Device::DisneyMaterial *lastMat;
-    uint32_t depth;
+    glm::vec3 Ns;
+    glm::vec3 Ng;
+    glm::vec3 texcolor;
+    Device::DisneyMaterial *mat;
+    Device::DeviceAreaLight *light;
+
+    int depth;
     uint32_t seed;
-    bool done;
+    bool miss;
+    bool hitLight;
 };
 
 struct LaunchParams

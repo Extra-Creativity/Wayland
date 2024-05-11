@@ -1,5 +1,5 @@
-#include "UniUtils/ConversionUtils.h"
 #include "glm/glm.hpp"
+#include "cuda_runtime.h"
 #include <optix_device.h>
 
 #include "Device/Common.h"
@@ -11,6 +11,7 @@
 #include "Device/Tonemap.h"
 
 #include "BDPTLaunchParams.h"
+#include "BDPT.h"
 
 using namespace EasyRender;
 using namespace EasyRender::Device;
@@ -18,142 +19,134 @@ using namespace EasyRender::Programs::BDPT;
  
 __constant__ float EPSILON = 1e-3;
 
-enum STRATEGY
-{
-    UPT = 0,
-    NEE = 1,
-    MIS = 2,
-    STRATEGY_MAX
-};
+extern "C" __constant__ Programs::BDPT::LaunchParams param;
 
-__constant__ STRATEGY strategy = MIS;
 
-static __forceinline__ __device__ float UptMisWeight(float uptPdf, float neePdf)
+__device__ __forceinline__ void InitPayload(Payload &prd)
 {
-    //assert(uptPdf + neePdf > 0);
-    return uptPdf / (uptPdf + neePdf);
+    prd.depth = 0;
+    prd.miss = false;
+    prd.hitLight = false;
+    prd.light = nullptr;
 }
 
-extern "C" __constant__ Programs::BDPT::LaunchParams param;
+__device__ __forceinline__ int TraceEyeSubpath(BDPTVertex *eyePath, int maxSize, uint32_t &seed,
+                    glm::ivec2 idx, glm::vec3 &radiance)
+{
+    Payload prd;
+    InitPayload(prd);
+    prd.seed = seed;
+    prd.rayPos = param.camera.pos;
+    glm::vec3 rayDir = PinholeGenerateRay(idx, param.fbSize, param.camera, prd.seed);
+
+    std::uint32_t u0, u1;
+    PackPointer(&prd, u0, u1);
+
+    while (prd.depth < maxSize)
+    {
+        optixTrace(param.traversable, UniUtils::ToFloat3(prd.rayPos),
+                   UniUtils::ToFloat3(rayDir), EPSILON, 1e30, 0,
+                   OptixVisibilityMask(255), OPTIX_RAY_FLAG_DISABLE_ANYHIT,
+                   RADIANCE_TYPE, RAY_TYPE_COUNT, RADIANCE_TYPE, u0, u1);
+        if (prd.miss)
+        {
+            break;
+        }
+
+        int vIdx = prd.depth - 1;
+        BDPTVertex &e = eyePath[vIdx];
+
+
+        e.pos = prd.rayPos;
+        e.Ns = prd.Ns;
+        e.Ng = prd.Ng;
+        e.Wi = -rayDir;
+        e.texcolor = prd.texcolor;
+        e.mat = prd.mat;
+        e.light = prd.light;
+        e.depth = prd.depth;
+
+        if (vIdx == 0)
+            e.tput = glm::vec3{ 1.f,1.f,1.f };
+        else {
+            BDPTVertex &le = eyePath[vIdx - 1];
+            glm::vec3 bsdfTerm = EvalDisneyBSDF(*le.mat, le.Ns, le.Ng, le.Wi,
+                                                rayDir, le.texcolor);
+            float cosWeight = glm::dot(rayDir, le.Ns);
+            e.tput = le.tput * clamp(bsdfTerm, 0.f, 1e30f) * fabsf(cosWeight) / le.pdf;
+        }
+
+        if (prd.hitLight)
+        {
+            if (!prd.light->twoSided) {
+                if (glm::dot(e.Ns, rayDir) > 0)
+                    break;
+            }
+            if (vIdx == 0)
+                radiance = prd.light->L;
+            else
+            {
+                /* Compute radiance */
+                radiance = prd.light->L * e.tput;
+            }
+            break;
+        }
+
+
+        /* Sample next direction */
+        float samplePdf = 1.f;
+        rayDir = SampleDisneyBSDF(*e.mat, e.Ns, e.Ng, e.Wi, prd.seed);
+        rayDir = glm::normalize(rayDir);
+        samplePdf = PdfDisneyBSDF(*e.mat, e.Ns, e.Ng, e.Wi, rayDir);
+        /* Bad sample*/
+        if (samplePdf < 0.0f || isnan(samplePdf))
+            break;
+        e.pdf = samplePdf;
+    }
+
+    seed = prd.seed;
+    return prd.depth;
+}
+
 
 /* PG id - 0 */
 extern "C" __global__ void __raygen__RenderFrame()
 {
     auto idx_x = optixGetLaunchIndex().x, idx_y = optixGetLaunchIndex().y;
     auto idx = (std::size_t)optixGetLaunchDimensions().x * idx_y + idx_x;
-    Payload prd;
 
     /* Generate random seed */
-    prd.seed = tea<4>(idx, param.frameID);
+    uint32_t seed = tea<4>(idx, param.frameID);
 
-    glm::dvec4 thisFrame = { 0.f, 0.f, 0.f, 1.f };
+    glm::vec3 thisFrame = { 0.f, 0.f, 0.f};
 
     int pixelSampleCount = 1;
     for (int i = 0; i < pixelSampleCount; ++i)
     {
+        /* Trace Eye Subpath */
+        BDPTVertex eyeSubPath[10];
+        glm::vec3 radiance{0.f, 0.f, 0.f};
+        int eyePathSize = TraceEyeSubpath(eyeSubPath, 10, seed,
+                                          glm::ivec2{ idx_x, idx_y }, radiance);
+        thisFrame += radiance / float(pixelSampleCount);
+        if (eyePathSize == 0)
+            continue;
 
-        prd.depth = 0;
-        prd.done = false;
-        prd.radiance = { 0, 0, 0 };
-        prd.throughput = { 1.f, 1.f, 1.f };
-        prd.lastTraceTerm = { 1.f, 1.f, 1.f };
-        prd.lastPdf = 1.0f;
-        prd.rayPos = param.camera.pos;
-        prd.rayDir = PinholeGenerateRay({ idx_x, idx_y }, param.fbSize,
-                                        param.camera, prd.seed);
-
-        std::uint32_t u0, u1;
-        PackPointer(&prd, u0, u1);
-
-        float RR_rate = 0.9;
-        while (true)
-        {
-
-            optixTrace(param.traversable, UniUtils::ToFloat3(prd.rayPos),
-                       UniUtils::ToFloat3(prd.rayDir), EPSILON, 1e30, 0,
-                       OptixVisibilityMask(255), OPTIX_RAY_FLAG_DISABLE_ANYHIT,
-                       RADIANCE_TYPE, RAY_TYPE_COUNT, RADIANCE_TYPE, u0, u1);
-            if (prd.done)
-            {
-                break;
-            }
-
-            if (strategy != UPT)
-            {
-                LightSample ls;
-                SampleAreaLightPos(param.areaLightCount, param.areaLights, ls,
-                                   prd.seed);
-
-                /* Visibility test */
-                glm::vec3 visRay = ls.pos - prd.rayPos;
-                float dist = glm::length(visRay);
-                visRay /= dist;
-                std::uint32_t vis = 0;
-                optixTrace(
-                    param.traversable, UniUtils::ToFloat3(prd.rayPos),
-                    UniUtils::ToFloat3(visRay), EPSILON, dist * (1 - EPSILON),
-                    0, OptixVisibilityMask(255),
-                    // For shadow rays: skip any/closest hit shaders and
-                    // terminate on first intersection with anything. The
-                    // miss shader is used to mark if the light was visible.
-                    OPTIX_RAY_FLAG_DISABLE_ANYHIT |
-                        OPTIX_RAY_FLAG_TERMINATE_ON_FIRST_HIT |
-                        OPTIX_RAY_FLAG_DISABLE_CLOSESTHIT,
-                    SHADOW_TYPE, RAY_TYPE_COUNT, SHADOW_TYPE, vis);
-                if (vis > 0)
-                {
-                    float cosTheta1 = glm::dot(ls.N, visRay);
-                    float cosTheta2 = glm::dot(prd.lastNs, visRay);
-                    auto &lt = param.areaLights[ls.areaLightID];
-                    if (lt.twoSided || cosTheta1 < 0)
-                    {
-                        float neePdf = ls.pdf * dist * dist / fabsf(cosTheta1);
-                        float uptPdf = 0.f;
-                        if (strategy != NEE)
-                        {
-                            uptPdf = PdfDisneyBSDF(*prd.lastMat, prd.lastNs,
-                                                   prd.lastNg,
-                                                   -prd.lastRayDir, visRay);
-                            if (uptPdf < 0 || isnan(uptPdf))
-                                uptPdf = 0.f;
-                        }
-                        glm::vec3 BSDFVal = EvalDisneyBSDF(
-                            *prd.lastMat, prd.lastNs, prd.lastNg,
-                            -prd.lastRayDir, visRay, prd.lastTexcolor);
-                        BSDFVal = clamp(BSDFVal, 0.f, 1e30f);
-                        prd.radiance += prd.throughput * BSDFVal * fabsf(cosTheta2) *
-                                        lt.L / neePdf *
-                                        (1 - UptMisWeight(uptPdf, neePdf));
-                    }
-                }
-            }
-            if (prd.depth > 10)
-            {
-                if (rnd(prd.seed) > RR_rate)
-                {
-                    prd.throughput = { 0, 0, 0 };
-                    break;
-                }
-                prd.throughput /= RR_rate;
-            }
-        }
-        thisFrame.x += prd.radiance.x / pixelSampleCount;
-        thisFrame.y += prd.radiance.y / pixelSampleCount;
-        thisFrame.z += prd.radiance.z / pixelSampleCount;
+        // BDPTVertex lightSubPath[10];
     }
 
     int frameID = param.frameID;
     if (frameID == 0)
-        param.radianceBuffer[idx] = thisFrame;
+        param.radianceBuffer[idx] = glm::vec4{ thisFrame,1.f};
     else
     {
-        glm::dvec4 lastFrame = param.radianceBuffer[idx];
+        glm::vec4 lastFrame = param.radianceBuffer[idx];
         param.radianceBuffer[idx] =
-            lastFrame * double(frameID / (frameID + 1.0f)) +
-            thisFrame * double(1.0f / (frameID + 1.0f));
+            lastFrame * float(frameID / (frameID + 1.0f)) +
+            glm::vec4{ thisFrame, 1.f } * float(1.0f / (frameID + 1.0f));
     }
     //param.colorBuffer[idx] =
-        glm::clamp(param.radianceBuffer[idx], 0.f, 1.f) * 255.0f;
+    //    glm::clamp(param.radianceBuffer[idx], 0.f, 1.f) * 255.0f;
     glm::vec3 rad = glm::clamp(param.radianceBuffer[idx], 0.f, 1e30f);
     param.colorBuffer[idx] = glm::vec4{ AceApprox(rad), 1.0f } * 255.0f;
     //param.colorBuffer[idx] = glm::vec4{ Reinhard(rad), 1.0f } * 255.0f;
@@ -163,11 +156,7 @@ extern "C" __global__ void __raygen__RenderFrame()
 extern "C" __global__ void __miss__radiance()
 {
     auto *prd = GetPRD<Payload>();
-
-    prd->radiance +=
-        prd->throughput *
-        reinterpret_cast<MissData *>(optixGetSbtDataPointer())->bg_color;
-    prd->done = true;
+    prd->miss = true;
 }
 
 /* PG id - 2 */
@@ -206,56 +195,17 @@ extern "C" __global__ void __closesthit__radiance()
     /* Hit light */
     if (mat->areaLightID < INVALID_INDEX)
     {
-        auto &lt = param.areaLights[mat->areaLightID];
-        if ((prd->depth == 1) ||
-            (strategy != NEE && (lt.twoSided || glm::dot(Ns, prd->rayDir) < 0)))
-        {
-            /* Hit light directly */
-            float neePdf = 0.f;
-            if (strategy != UPT && prd->depth > 1)
-            {
-                LightSample ls;
-                ls.pos = hitPos;
-                ls.areaLightID = mat->areaLightID;
-                PdfAreaLightPos(param.areaLightCount, param.areaLights, primIdx,
-                                ls);
-                float dist = optixGetRayTmax();
-                neePdf =
-                    ls.pdf * dist * dist / fabsf(glm::dot(Ns, prd->rayDir));
-            }
-
-            float uptPdf = prd->lastPdf;
-            prd->radiance += prd->throughput * lt.L * prd->lastTraceTerm *
-                             UptMisWeight(uptPdf, neePdf);
-        }
-        prd->done = true;
-        return;
+        prd->hitLight = true;
+        prd->light = &param.areaLights[mat->areaLightID];
     }
-
-    if (prd->depth >= 50)
+    else if (mat->disneyMat.trans < 0.1)
     {
-        prd->throughput = { 0, 0, 0 };
-        prd->done = true;
-        return;
-    }
-
-    if (mat->disneyMat.trans < 0.1)
-    {
-        if (glm::dot(Ng, prd->rayDir) > 0)
+        glm::vec3 rayDir =
+            UniUtils::ToVec3<glm::vec3>(optixGetWorldRayDirection());
+        if (glm::dot(Ng, rayDir) > 0)
             Ng = -Ng;
-        if (glm::dot(Ns, prd->rayDir) > 0)
+        if (glm::dot(Ns, rayDir) > 0)
             Ns = -Ns;
-    }
-
-    float pdf = 1.f;
-
-    glm::vec3 rayDir =
-        SampleDisneyBSDF(mat->disneyMat, Ns, Ng, -prd->rayDir, prd->seed);
-    rayDir = glm::normalize(rayDir);
-    pdf = PdfDisneyBSDF(mat->disneyMat, Ns, Ng, -prd->rayDir, rayDir);
-    if (pdf < 0.0f || isnan(pdf)) {
-        prd->done = true;
-        return;
     }
 
     glm::vec3 texColor = { 1.f, 1.f, 1.f };
@@ -266,24 +216,12 @@ extern "C" __global__ void __closesthit__radiance()
         texColor = UniUtils::ToVec4<glm::vec4>(
             tex2D<float4>(mat->texture, tc.x, tc.y));
     }
-    /* Compute last BSDF */
-    prd->throughput *= prd->lastTraceTerm;
-
-    float cosWeight = glm::dot(rayDir, Ns);
-    glm::vec3 BsdfTerm =
-        EvalDisneyBSDF(mat->disneyMat, Ns, Ng, -prd->rayDir, rayDir, texColor);
-    BsdfTerm = clamp(BsdfTerm, 0.f, 1e30f); 
-    prd->lastTraceTerm = BsdfTerm * fabsf(cosWeight) / pdf;
 
     prd->rayPos = hitPos;
-    prd->lastRayDir = prd->rayDir;
-    prd->lastTexcolor = texColor;
-    prd->rayDir = rayDir;
-    prd->lastNs = Ns;
-    prd->lastNg = Ng;
-    prd->lastPdf = pdf;
-    prd->lastMat = &mat->disneyMat;
-
+    prd->texcolor = texColor;
+    prd->Ns = Ns;
+    prd->Ng = Ng;
+    prd->mat = &mat->disneyMat;
     return;
 }
 

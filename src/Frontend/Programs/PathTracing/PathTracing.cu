@@ -270,10 +270,10 @@ extern "C" __global__ void __closesthit__radiance()
     prd->throughput *= prd->lastTraceTerm;
 
     float cosWeight = glm::dot(rayDir, Ns);
-    glm::vec3 BsdfTerm =
+    glm::vec3 bsdfTerm =
         EvalDisneyBSDF(mat->disneyMat, Ns, Ng, -prd->rayDir, rayDir, texColor);
-    BsdfTerm = clamp(BsdfTerm, 0.f, 1e30f); 
-    prd->lastTraceTerm = BsdfTerm * fabsf(cosWeight) / pdf;
+    bsdfTerm = clamp(bsdfTerm, 0.f, 1e30f); 
+    prd->lastTraceTerm = bsdfTerm * fabsf(cosWeight) / pdf;
 
     prd->rayPos = hitPos;
     prd->lastRayDir = prd->rayDir;

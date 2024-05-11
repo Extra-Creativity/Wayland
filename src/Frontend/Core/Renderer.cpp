@@ -159,7 +159,11 @@ RendererSetting::RendererSetting(int argc, char **argv)
     SetDefault();
     for (int i = 1; i < argc; i++)
 	{
-		if (strcmp(argv[i], "-t") == 0)
+        if (strcmp(argv[i], "-fr") == 0)
+        {
+            frameLimit = atoi(argv[++i]);
+        }
+		else if (strcmp(argv[i], "-t") == 0)
 		{
 			timeLimit = static_cast<float>(atof(argv[++i]));
 		}
@@ -170,7 +174,8 @@ RendererSetting::RendererSetting(int argc, char **argv)
 		}
 		else if (strcmp(argv[i], "-o") == 0)
 		{
-			outputPath = argv[++i];
+            outputPath = argv[++i];
+            writeOutput = true;
 		}
 		else if (strcmp(argv[i], "-p") == 0)
 		{
@@ -183,7 +188,6 @@ RendererSetting::RendererSetting(int argc, char **argv)
 			resolution.y = atoi(argv[++i]);
 		}
     }
-    writeOutput = true;
 }
 
 void RendererSetting::SetDefault()
