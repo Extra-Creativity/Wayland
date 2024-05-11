@@ -31,7 +31,7 @@ int main(int argc, char **argv)
         RendererSetting mySet(argc, argv);
         mySet.SetScenePath(sceneSrc);
         mySet.SetProgram(ProgramType::BDPT);
-        mySet.SetResolution(1000, 800);
+        mySet.SetResolution(1000, 1000);
         mySet.SetOutputPath(R"(C:\Users\60995\Desktop\Grad_Design\EasyRender-Results\result\)");
 
         EasyRender::Renderer app(mySet);

@@ -142,7 +142,10 @@ extern "C" __global__ void __closesthit__radiance()
     }
 
     float pdf;
-    glm::vec3 rayDir = SampleUniformHemisphere(Ns, pdf, prd->seed);
+    glm::vec3 tmp = Ns;
+    if (mat->disneyMat.trans < 0.1f && rnd(prd->seed) > 0.5f)
+        tmp = -Ns;
+    glm::vec3 rayDir = SampleUniformHemisphere(tmp, pdf, prd->seed);
 
     glm::vec3 texColor = { 1.f, 1.f, 1.f };
     if (mat->hasTexture)

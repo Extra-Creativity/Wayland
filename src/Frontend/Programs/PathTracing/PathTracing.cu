@@ -232,7 +232,7 @@ extern "C" __global__ void __closesthit__radiance()
         return;
     }
 
-    if (prd->depth >= 50)
+    if (prd->depth >= 25)
     {
         prd->throughput = { 0, 0, 0 };
         prd->done = true;

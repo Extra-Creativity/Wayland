@@ -91,9 +91,9 @@ __host__ __device__ __forceinline__ glm::vec3 EvalDisneyBSDF(
     float NDotV = glm::dot(Ns, V);
     float gNDotV = glm::dot(Ng, V);
     float eta = 1 / mateta;
-    if (mat.trans < 0.1 && (gNDotL * gNDotV <= 0.0f || NDotL * NDotV <= 0))
+    if (mat.trans < 0.1f && (gNDotL * gNDotV <= 0.0f || NDotL * NDotV <= 0))
         return glm::vec3{ 0.f, 0.f, 0.f };
-    if (mat.trans > 0.9 && (gNDotL * gNDotV * NDotL * NDotV <= 0))
+    if (mat.trans > 0.9f && (gNDotL * gNDotV * NDotL * NDotV <= 0))
         return glm::vec3{ 0.f, 0.f, 0.f };
     if (NDotL * NDotV <= 0)
         return EvalDisneyTransmit(mat, Ns, Ng, V, L, texColor);

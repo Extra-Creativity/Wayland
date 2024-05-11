@@ -9,6 +9,22 @@
 namespace EasyRender::Device
 {
 
+    __host__ __device__ __forceinline__ float PdfCosineHemisphere(
+    const glm::vec3 &wo, const glm::vec3 &Ns)
+{
+    return glm::dot(wo, Ns) * RECIP_PI;
+}
+
+__host__ __device__ __forceinline__ float PdfAreaLightPos(
+    uint32_t lightNum, DeviceAreaLight &areaLight, uint32_t primIdx)
+{
+    float pdf = 1.0f / lightNum;
+    pdf /= areaLight.triangleNum;
+    glm::ivec3 indices = areaLight.indices[primIdx];
+    pdf /= GetTriangleArea(areaLight.vertices, indices);
+    return pdf;
+}
+
 __host__ __device__ __forceinline__ void PdfAreaLightPos(
     uint32_t lightNum, DeviceAreaLight *areaLights, uint32_t primIdx,
     LightSample &ls)
@@ -60,7 +76,7 @@ __host__ __device__ __forceinline__ float PdfDisneyBSDF(
     // Calculate diffuse and specular pdfs and mix ratio
     float ratio = 1.0f / (1.0f + mat.clearcoat);
     float pdfSpec =
-        lerp(pdfGTR1, pdfGTR2, ratio) / (4.0 * fabsf(glm::dot(L, half)));
+        lerp(pdfGTR1, pdfGTR2, ratio) / (4.0f * fabsf(glm::dot(L, half)));
     float pdfDiff = fabsf(glm::dot(L, Ns)) * RECIP_PI;
 
     float cosThetaI = fabsf(glm::dot(wh, V));

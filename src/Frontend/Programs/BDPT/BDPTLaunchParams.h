@@ -27,6 +27,7 @@ struct Payload
     Device::DeviceAreaLight *light;
 
     int depth;
+    uint32_t primIdx; 
     uint32_t seed;
     bool miss;
     bool hitLight;
