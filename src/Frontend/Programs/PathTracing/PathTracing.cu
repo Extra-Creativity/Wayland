@@ -127,7 +127,7 @@ extern "C" __global__ void __raygen__RenderFrame()
                     }
                 }
             }
-            if (prd.depth > 10)
+            if (prd.depth > 5)
             {
                 if (rnd(prd.seed) > RR_rate)
                 {

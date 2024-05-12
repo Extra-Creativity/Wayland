@@ -238,6 +238,7 @@ __device__ __forceinline__ int TraceEyeSubpath(BDPTVertex *eyePath, int maxSize,
 
     std::uint32_t u0, u1;
     PackPointer(&prd, u0, u1);
+    float RR_k = 1.f;
 
     while (prd.depth < maxSize)
     {
@@ -270,7 +271,8 @@ __device__ __forceinline__ int TraceEyeSubpath(BDPTVertex *eyePath, int maxSize,
             e.tput = glm::vec3{ 1.f, 1.f, 1.f };
             e.pdf = 1.f;
         }
-        else {
+        else
+        {
             BDPTVertex &le = eyePath[vIdx - 1];
             glm::vec3 bsdfTerm = EvalDisneyBSDF(*le.mat, le.Ns, le.Ng, le.Wi,
                                                 rayDir, le.texcolor);
@@ -278,8 +280,8 @@ __device__ __forceinline__ int TraceEyeSubpath(BDPTVertex *eyePath, int maxSize,
 
             float pdf = PdfDisneyBSDF(*le.mat, le.Ns, le.Ng, le.Wi, rayDir);
             pdf = clamp(pdf, 1e-30f, 1e30f);
-            e.tput =
-                le.tput * clamp(bsdfTerm, 0.f, 1e30f) * fabsf(cosWeight) / pdf;
+            e.tput = le.tput * clamp(bsdfTerm, 0.f, 1e30f) * fabsf(cosWeight) /
+                     pdf * RR_k;
 
             glm::vec3 d = e.pos - le.pos;
             float dist2 = glm::dot(d, d);
@@ -287,7 +289,8 @@ __device__ __forceinline__ int TraceEyeSubpath(BDPTVertex *eyePath, int maxSize,
         }
 
         /* Compute pdfInverse */
-        if (vIdx >= 2) {
+        if (vIdx >= 2)
+        {
             BDPTVertex &le = eyePath[vIdx - 1];
             BDPTVertex &lle = eyePath[vIdx - 2];
             le.pdfInverse = ComputePdfForward(-e.Wi, le, lle);
@@ -295,7 +298,8 @@ __device__ __forceinline__ int TraceEyeSubpath(BDPTVertex *eyePath, int maxSize,
 
         if (prd.hitLight)
         {
-            if (!prd.light->twoSided) {
+            if (!prd.light->twoSided)
+            {
                 if (glm::dot(e.Ns, rayDir) > 0)
                     break;
             }
@@ -307,13 +311,26 @@ __device__ __forceinline__ int TraceEyeSubpath(BDPTVertex *eyePath, int maxSize,
                 BDPTVertex &le = eyePath[vIdx - 1];
 
                 e.pdfInverse = ComputePdfLightDir(e, le);
-                e.pdfLight = PdfAreaLightPos(param.areaLightCount, *e.light, prd.primIdx);
+                e.pdfLight = PdfAreaLightPos(param.areaLightCount, *e.light,
+                                             prd.primIdx);
 
                 /* Compute radiance */
-                radiance = prd.light->L * e.tput * MISweight(eyePath, &e,
-                                                          prd.depth-1, -1);
+                radiance = prd.light->L * e.tput *
+                           MISweight(eyePath, &e, prd.depth - 1, -1);
             }
             break;
+        }
+
+        float RR_rate = 1.2f - prd.depth * 0.5f;
+        RR_rate = clamp(RR_rate, 0.1f, 1.f);
+        RR_k = 1.f;
+        if (prd.depth > 10)
+        {
+            if (rnd(prd.seed) > RR_rate)
+            {
+                break;
+            }
+            RR_k = 1.f / RR_rate;
         }
 
         /* Sample next direction */
@@ -356,6 +373,7 @@ __device__ __forceinline__ int TraceLightSubpath(BDPTVertex *lightPath,
 
     std::uint32_t u0, u1;
     PackPointer(&prd, u0, u1);
+    float RR_k = 1.f;
     while (prd.depth < maxSize)
     {
         optixTrace(param.traversable, UniUtils::ToFloat3(prd.rayPos),
@@ -390,7 +408,8 @@ __device__ __forceinline__ int TraceLightSubpath(BDPTVertex *lightPath,
             glm::vec3 d = v.pos - lv.pos;
             float dist = glm::length(d);
             d /= dist;
-            v.tput = lightPath[0].tput * fabsf((glm::dot(d, lv.Ns)))/ lightDirPdf;
+            v.tput = lightPath[0].tput * fabsf((glm::dot(d, lv.Ns))) /
+                     lightDirPdf * RR_k;
             lv.pdfInverse = lightDirPdf * fabsf(glm::dot(rayDir, v.Ns)) / (dist * dist);
         }
         else
@@ -401,13 +420,25 @@ __device__ __forceinline__ int TraceLightSubpath(BDPTVertex *lightPath,
 
             float pdf = PdfDisneyBSDF(*lv.mat, lv.Ns, lv.Ng, lv.Wi, rayDir);
             pdf = clamp(pdf, 1e-30f, 1e30f);
-            v.tput =
-                lv.tput * clamp(bsdfTerm, 0.f, 1e30f) * fabsf(cosWeight) / pdf;
+            v.tput = lv.tput * clamp(bsdfTerm, 0.f, 1e30f) * fabsf(cosWeight) /
+                     pdf * RR_k;
             glm::vec3 d = v.pos - lv.pos;
             lv.pdfInverse = pdf * fabsf(glm::dot(v.Wi, v.Ns)) / glm::dot(d, d);
 
             BDPTVertex &llv = lightPath[vIdx - 2];
             llv.pdf = ComputePdfForward(-v.Wi, lv, llv);
+        }
+
+        float RR_rate = 1.2f - prd.depth * 0.5f;
+        RR_rate = clamp(RR_rate, 0.1f, 1.f);
+        RR_k = 1.f;
+        if (prd.depth > 10)
+        {
+            if (rnd(prd.seed) > RR_rate)
+            {
+                break;
+            }
+            RR_k = 1.f / RR_rate;
         }
 
         /* Sample next direction */
@@ -474,6 +505,8 @@ __device__ __forceinline__ glm::vec3 ConnectSubpaths(BDPTVertex *eyePath,
     {
         for (int j = 0; j < lightSize; ++j)
         {
+            if (PT_MODE && j > 0)
+                continue;
             BDPTVertex &eyeEnd = eyePath[i];
             BDPTVertex &lightEnd = lightPath[j];
             glm::vec3 contri = EvalContri(eyeEnd, lightEnd);

@@ -7,7 +7,7 @@
 using namespace EasyRender;
 
 std::string sceneSrc =
-    R"(..\..\..\scene\cornell-box\cbox.pbrt)";
+    //R"(..\..\..\scene\cornell-box\cbox.pbrt)";
     //R"(..\..\..\scene\cornell-box\cbox-texture.pbrt)";
     //R"(..\..\..\scene\dragon\dragon.pbrt)";
     //R"(..\..\..\scene\dragon\dragon-color.pbrt)";
@@ -18,7 +18,7 @@ std::string sceneSrc =
     //R"(..\..\..\scene\veach-mis\mis.pbrt)";
     //R"(..\..\..\scene\veach-bidir\bidir.pbrt)";
     //R"(..\..\..\scene\water-caustic\water.pbrt)";
-    //R"(..\..\..\scene\veach-ajar\ajar.pbrt)";
+    R"(..\..\..\scene\veach-ajar\ajar.pbrt)";
      //R"(..\..\..\scene\staircase\staircase.pbrt)";
      //R"(..\..\..\scene\glass-of-water\glass-of-water.pbrt)";
      //R"(..\..\..\scene\kitchen\kitchen.pbrt)";
@@ -30,8 +30,8 @@ int main(int argc, char **argv)
     {
         RendererSetting mySet(argc, argv);
         mySet.SetScenePath(sceneSrc);
-        mySet.SetProgram(ProgramType::BDPT);
-        mySet.SetResolution(1000, 1000);
+        mySet.SetProgram(ProgramType::PathTracing);
+        mySet.SetResolution(1280, 720);
         mySet.SetOutputPath(R"(C:\Users\60995\Desktop\Grad_Design\EasyRender-Results\result\)");
 
         EasyRender::Renderer app(mySet);
